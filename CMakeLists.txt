@@ -12,10 +12,12 @@ find_package(SDL3_mixer REQUIRED)
 find_package(box2d CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/src/*.cpp")
+
 if(ANDROID)
-    add_library(MyPlatformer SHARED src/main.cpp)
+    add_library(MyPlatformer SHARED ${SOURCES})
 else()
-    add_executable(MyPlatformer src/main.cpp)
+    add_executable(MyPlatformer ${SOURCES})
 endif()
 
 target_include_directories(MyPlatformer PRIVATE src)
