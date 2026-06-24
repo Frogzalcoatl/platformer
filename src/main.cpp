@@ -1,9 +1,36 @@
+#include "colors.hpp"
+#include "debugUi.hpp"
+#include "physicsStep.hpp"
+#include "player.hpp"
+#include "windowManager.hpp"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 #include <box2d/box2d.h>
-#include <imgui.h>
-#include <imgui_impl_sdl3.h>
-#include <imgui_impl_sdlrenderer3.h>
+#include <vector>
+
+static std::vector<GameObject*> gameObjects = {};
+
+void addTestObjects(b2WorldId world) {
+    gameObjects.push_back(
+        new GameObject{world, {50.f, 0.5f}, {0.f, 0.5f}, std::nullopt, std::nullopt, Colors.GrassGreen});
+    gameObjects.push_back(new GameObject{world, {0.5f, 10.f}, {-18.f, 11.f}, std::nullopt, std::nullopt, Colors.Gray});
+    gameObjects.push_back(new GameObject{world, {0.5f, 10.f}, {18.f, 11.f}, std::nullopt, std::nullopt, Colors.Gray});
+    b2BodyDef logBodyDef = b2DefaultBodyDef();
+    logBodyDef.type = b2_dynamicBody;
+    logBodyDef.linearDamping = 0.5f;
+    gameObjects.push_back(new GameObject{world, {0.5f, 2.f}, {10.f, 3.f}, logBodyDef, std::nullopt, Colors.Brown});
+    gameObjects.push_back(new GameObject{world, {0.5f, 1.f}, {-10.f, 2.f}, logBodyDef, std::nullopt, Colors.Brown});
+}
+
+void shutDown(b2WorldId world, WindowManager* window) {
+    b2DestroyWorld(world);
+    ImGui_ImplSDLRenderer3_Shutdown();
+    ImGui_ImplSDL3_Shutdown();
+    ImGui::DestroyContext();
+    SDL_DestroyRenderer(window->sdlRenderer);
+    SDL_DestroyWindow(window->sdlWindow);
+    SDL_Quit();
+}
 
 int main(int argc, char* argv[]) {
     (void)argc;
@@ -12,21 +39,13 @@ int main(int argc, char* argv[]) {
         SDL_Log("SDL Initialization failed: %s", SDL_GetError());
         return -1;
     }
-
-    SDL_Window* window = SDL_CreateWindow("C++ Platformer", 1280, 720, SDL_WINDOW_RESIZABLE);
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, nullptr);
-
-    // Initialize ImGui
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
-    ImGui_ImplSDLRenderer3_Init(renderer);
-
-    // Initialize Box2D (Using v3.0 C-style API as an example, adjust if using v2.4 C++ classes)
-    b2WorldDef worldDef = b2DefaultWorldDef(); // Initializes defaults
-    worldDef.gravity = {0.0f, -9.8f};          // Overwrite gravity
-    b2WorldId world = b2CreateWorld(&worldDef); // Cleanly pass the address
-
+    WindowManager window{};
+    b2WorldDef worldDef = b2DefaultWorldDef();
+    worldDef.gravity = {0.0f, -22.0f};
+    b2WorldId world = b2CreateWorld(&worldDef);
+    addTestObjects(world);
+    Player player(world, {0.5f, 0.5f}, {0.f, 4.f}, Colors.Purple);
+    lastTime = SDL_GetTicks();
     bool running = true;
     while (running) {
         SDL_Event event;
@@ -34,42 +53,21 @@ int main(int argc, char* argv[]) {
             ImGui_ImplSDL3_ProcessEvent(&event);
             if (event.type == SDL_EVENT_QUIT) {
                 running = false;
+            } else if (event.type == SDL_EVENT_WINDOW_RESIZED) {
+                window.handleResize(event.window.data1, event.window.data2);
+                continue;
             }
+            player.handleSDLKeyEvent(&event);
         }
-
-        // Start UI Frame
-        ImGui_ImplSDLRenderer3_NewFrame();
-        ImGui_ImplSDL3_NewFrame();
-        ImGui::NewFrame();
-
-        // 1. Step Physics
-        b2World_Step(world, 1.0f / 60.0f, 4);
-
-        // 2. Render Game Logic (Use standard C++ container loops for DSA practice)
-        SDL_SetRenderDrawColor(renderer, 20, 20, 30, 255); // Dark blue background
-        SDL_RenderClear(renderer);
-
-        // 3. Simple UI Overlays
-        ImGui::Begin("Debug Menu");
-        ImGui::Text("Refresh C++ Syntax & DSA");
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-        ImGui::End();
-
-        // Render ImGui
-        ImGui::Render();
-        ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
-
-        SDL_RenderPresent(renderer);
+        handlePhysicsStep(world, &player);
+        window.clearFrame();
+        player.draw(&window);
+        drawUI(&window, &player);
+        for (GameObject* object : gameObjects) {
+            object->draw(&window);
+        }
+        SDL_RenderPresent(window.sdlRenderer);
     }
-
-    // Cleanup
-    b2DestroyWorld(world);
-    ImGui_ImplSDLRenderer3_Shutdown();
-    ImGui_ImplSDL3_Shutdown();
-    ImGui::DestroyContext();
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
-
+    shutDown(world, &window);
     return 0;
 }
