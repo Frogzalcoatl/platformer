@@ -26,9 +26,11 @@ Platformer::Platformer(void) : camera(Camera(nullptr, window)) {
     dynamicBodyDef.linearDamping = DynamicEntityDefaults::LinearDamping;
     b2ShapeDef shapeDef = b2DefaultShapeDef();
     entities.push_back(
-        new Entity{world, {0.5f, 2.f}, {10.f, 3.f}, Colors.Brown, false, dynamicBodyDef, shapeDef});
-    entities.push_back(new Entity{
-        world, {0.5f, 1.f}, {-10.f, 2.f}, Colors.Brown, false, dynamicBodyDef, shapeDef});
+        new Entity{world, {0.5f, 2.f}, {10.f, 3.f}, Colors.Brown, false, dynamicBodyDef, shapeDef}
+    );
+    entities.push_back(
+        new Entity{world, {0.5f, 1.f}, {-10.f, 2.f}, Colors.Brown, false, dynamicBodyDef, shapeDef}
+    );
 }
 
 void Platformer::handleSdlEvent(void) {
@@ -99,28 +101,36 @@ void Platformer::handleGameEvent(void) {
 
 void Platformer::drawDebugUi(void) {
     ImGui::Begin("Debug Menu");
-    ImGui::Text("\nApplication average %.3f ms/frame (%.1f FPS)",
-                1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    ImGui::Text(
+        "\nApplication average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate,
+        ImGui::GetIO().Framerate
+    );
     WindowDimensions offset = window.getOffsetPixels();
     WindowDimensions windowSizePixels = window.getSizePixels();
     b2Vec2 windowSizeWorld = window.getSizeWorld();
     float scaleFactor = window.getScaleFactor();
     float scaleMultiplier = window.getScaleMultiplier();
-    ImGui::Text("\nWindow:\nSize Pixels: %d, %d\nSize World: %.1f, %.1f\nRender Offset: %d, "
-                "%d\nScale: %.2f (Factor %.2f)",
-                windowSizePixels.x, windowSizePixels.y, windowSizeWorld.x, windowSizeWorld.y,
-                offset.x, offset.y, scaleMultiplier, scaleFactor);
+    ImGui::Text(
+        "\nWindow:\nSize Pixels: %d, %d\nSize World: %.1f, %.1f\nRender Offset: %d, "
+        "%d\nScale: %.2f (Factor %.2f)",
+        windowSizePixels.x, windowSizePixels.y, windowSizeWorld.x, windowSizeWorld.y, offset.x,
+        offset.y, scaleMultiplier, scaleFactor
+    );
     if (player) {
         b2Vec2 position = b2Body_GetPosition(player->bodyId);
         b2Vec2 velocity = b2Body_GetLinearVelocity(player->bodyId);
-        ImGui::Text("\nPlayer:\nInput: %d %d %d %d\nPosition: %.2f, %.2f\nVelocity: %.2f, %.2f",
-                    player->movement[EntityMovement_Up], player->movement[EntityMovement_Down],
-                    player->movement[EntityMovement_Left], player->movement[EntityMovement_Right],
-                    position.x, position.y, velocity.x, velocity.y);
+        ImGui::Text(
+            "\nPlayer:\nInput: %d %d %d %d\nPosition: %.2f, %.2f\nVelocity: %.2f, %.2f",
+            player->movement[EntityMovement_Up], player->movement[EntityMovement_Down],
+            player->movement[EntityMovement_Left], player->movement[EntityMovement_Right],
+            position.x, position.y, velocity.x, velocity.y
+        );
         b2Vec2 safeAreaSize = camera.getSafeAreaSize();
         b2Vec2 safeAreaValue = camera.getEntitySafeAreaValue();
-        ImGui::Text("\nSafe Area:\nSize: %.2f, %.2f\nRatio from Center: %.2f, %.2f", safeAreaSize.x,
-                    safeAreaSize.y, safeAreaValue.x, safeAreaValue.y);
+        ImGui::Text(
+            "\nSafe Area:\nSize: %.2f, %.2f\nRatio from Center: %.2f, %.2f", safeAreaSize.x,
+            safeAreaSize.y, safeAreaValue.x, safeAreaValue.y
+        );
     }
     ImGui::End();
     ImGui::Render();

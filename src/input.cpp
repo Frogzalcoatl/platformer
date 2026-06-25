@@ -94,12 +94,13 @@ static const std::vector<FullBinding> defaultVerbBindings = {
     {InputVerb_ZoomIn, SDL_SCANCODE_EQUALS, true},
     {InputVerb_ZoomOut, SDL_SCANCODE_MINUS, true},
     {InputVerb_ResetZoom, SDL_SCANCODE_0},
-    {InputVerb_ResetZoom, SDL_SCANCODE_KP_0}};
+    {InputVerb_ResetZoom, SDL_SCANCODE_KP_0}
+};
 
 void connectDefaultVerbMappings(void) {
     for (FullBinding binding : defaultVerbBindings) {
-        bindScancodeToVerb(binding.verb,
-                           ScancodeBinding{binding.scancode, binding.activateOnRepeat},
-                           std::nullopt);
+        bindScancodeToVerb(
+            binding.verb, ScancodeBinding{binding.scancode, binding.activateOnRepeat}, std::nullopt
+        );
     }
 }

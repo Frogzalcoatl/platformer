@@ -17,8 +17,10 @@ void Camera::run(void) {
     const b2Vec2 entityOffset = {entityPos.x - camPos.x, entityPos.y - camPos.y};
     const float halfDeadZoneX = (windowSizeWorld.x * 0.5f) * safeArea.x;
     const float halfDeadZoneY = (windowSizeWorld.y * 0.5f) * safeArea.y;
-    entitySafeAreaVal = {SDL_fabsf(entityOffset.x) / (windowSizeWorld.x * 0.5f),
-                         SDL_fabsf(entityOffset.y) / (windowSizeWorld.y * 0.5f)};
+    entitySafeAreaVal = {
+        SDL_fabsf(entityOffset.x) / (windowSizeWorld.x * 0.5f),
+        SDL_fabsf(entityOffset.y) / (windowSizeWorld.y * 0.5f)
+    };
     safeAreaSize = {windowSizeWorld.x * safeArea.x, windowSizeWorld.y * safeArea.y};
     b2Vec2 newCamPos = camPos;
     if (entityOffset.x > halfDeadZoneX) {

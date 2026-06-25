@@ -10,8 +10,10 @@ static b2ShapeDef defaultShapeDef = b2DefaultShapeDef();
 Entity::Entity(b2WorldId world, b2Vec2 size, b2Vec2 position, SDL_Color color, bool isStatic)
     : Entity(world, size, position, color, isStatic, defaultBodyDef, defaultShapeDef) {}
 
-Entity::Entity(b2WorldId world, b2Vec2 size, b2Vec2 position, SDL_Color color, bool isStatic,
-               b2BodyDef bodyDef, b2ShapeDef shapeDef)
+Entity::Entity(
+    b2WorldId world, b2Vec2 size, b2Vec2 position, SDL_Color color, bool isStatic,
+    b2BodyDef bodyDef, b2ShapeDef shapeDef
+)
     : isStatic(isStatic) {
     bodyDef.position = position;
     if (!this->isStatic) {

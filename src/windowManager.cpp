@@ -22,8 +22,10 @@ void WindowManager::clearFrame(void) {
     ImGui_ImplSDLRenderer3_NewFrame();
     ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();
-    SDL_SetRenderDrawColor(sdlRenderer, Colors.BackGround.r, Colors.BackGround.g,
-                           Colors.BackGround.b, Colors.BackGround.a);
+    SDL_SetRenderDrawColor(
+        sdlRenderer, Colors.BackGround.r, Colors.BackGround.g, Colors.BackGround.b,
+        Colors.BackGround.a
+    );
     SDL_RenderClear(sdlRenderer);
 }
 
