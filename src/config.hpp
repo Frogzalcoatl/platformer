@@ -1,2 +1,2 @@
 #pragma once
-#define PLAT_WINDOW_NAME "C++ Platformer"
+#define WindowName "C++ Platformer"

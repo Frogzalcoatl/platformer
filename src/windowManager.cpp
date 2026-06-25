@@ -2,12 +2,9 @@
 #include "colors.hpp"
 #include "config.hpp"
 #include <box2d/box2d.h>
-#include <imgui.h>
-#include <imgui_impl_sdl3.h>
-#include <imgui_impl_sdlrenderer3.h>
 
 WindowManager::WindowManager(void) {
-    sdlWindow = SDL_CreateWindow(PLAT_WINDOW_NAME, 1280, 720, SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED);
+    sdlWindow = SDL_CreateWindow(WindowName, 1280, 720, SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED);
     sdlRenderer = SDL_CreateRenderer(sdlWindow, nullptr);
     SDL_SetRenderVSync(sdlRenderer, 1);
     IMGUI_CHECKVERSION();
@@ -38,4 +35,9 @@ void WindowManager::clearFrame(void) {
     SDL_SetRenderDrawColor(sdlRenderer, Colors.BackGround.r, Colors.BackGround.g, Colors.BackGround.b,
                            Colors.BackGround.a);
     SDL_RenderClear(sdlRenderer);
+}
+
+void WindowManager::toggleFullscreen(void) {
+    isFullscreen = !isFullscreen;
+    SDL_SetWindowFullscreen(sdlWindow, isFullscreen);
 }

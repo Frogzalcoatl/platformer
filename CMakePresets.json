@@ -44,24 +44,6 @@
           "type": "FILEPATH"
         }
       }
-    },
-    {
-      "name": "android-arm64",
-      "displayName": "Android (ARM64)",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/android-arm64",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "VCPKG_TARGET_TRIPLET": "arm64-android",
-        "CMAKE_TOOLCHAIN_FILE": {
-          "value": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
-          "type": "FILEPATH"
-        },
-        "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": {
-          "value": "$env{ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake",
-          "type": "FILEPATH"
-        }
-      }
     }
   ]
 }

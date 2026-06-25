@@ -1,0 +1,29 @@
+#pragma once
+#include "entity.hpp"
+#include "windowManager.hpp"
+#include <box2d/box2d.h>
+#include <vector>
+
+class Platformer {
+  private:
+    WindowManager window;
+    b2WorldId world;
+    bool running;
+    std::vector<Entity*> entities;
+    Entity* player;
+
+    uint64_t currentTime = 0;
+    uint64_t lastTime = 0;
+    float accumulator = 0.f;
+    const float physicsStep = 1.0f / 60.0f;
+    void physicsStepHandler(void);
+
+    void handleSdlEvent(void);
+    void handleGameEvent(void);
+    void drawDebugUi(void);
+
+  public:
+    Platformer(void);
+    void run(void);
+    void close(void);
+};
