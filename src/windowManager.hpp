@@ -1,9 +1,7 @@
 #pragma once
 #include <SDL3/SDL.h>
 #include <box2d/box2d.h>
-#include <imgui.h>
-#include <imgui_impl_sdl3.h>
-#include <imgui_impl_sdlrenderer3.h>
+#include <optional>
 
 struct WindowDimensions {
     int x;
@@ -12,12 +10,14 @@ struct WindowDimensions {
 
 class WindowManager {
   private:
-    int sizeX;
-    int sizeY;
-    int offsetX;
-    int offsetY;
-    int scaleFactor;
+    WindowDimensions size;
+    WindowDimensions offsetPixels;
+    b2Vec2 offsetWorld = {0.f, 0.f};
+    float scaleFactor;
+    float scaleMultiplier = 1.f;
     bool isFullscreen = false;
+
+    void updateScaleFactor(void);
 
   public:
     SDL_Renderer* sdlRenderer;
@@ -25,10 +25,17 @@ class WindowManager {
 
     WindowManager(void);
 
-    WindowDimensions getSize(void);
-    WindowDimensions getOffset(void);
-    int getScaleFactor(void);
-    void handleResize(int sizeX, int sizeY);
     void clearFrame(void);
     void toggleFullscreen(void);
+    void handleResize(int sizeX, int sizeY);
+    void incrementScaleMultiplierBy(float amount);
+    void resetScaleMultiplier(void);
+    void updateOffset(std::optional<b2Vec2> worldPosition);
+
+    WindowDimensions getSizePixels(void);
+    b2Vec2 getSizeWorld(void);
+    WindowDimensions getOffsetPixels(void);
+    b2Vec2 getOffsetWorld(void);
+    float getScaleFactor(void);
+    float getScaleMultiplier(void);
 };

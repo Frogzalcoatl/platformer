@@ -1,4 +1,5 @@
 #pragma once
+#include "camera.hpp"
 #include "entity.hpp"
 #include "windowManager.hpp"
 #include <box2d/box2d.h>
@@ -11,6 +12,7 @@ class Platformer {
     bool running;
     std::vector<Entity*> entities;
     Entity* player;
+    Camera camera;
 
     uint64_t currentTime = 0;
     uint64_t lastTime = 0;

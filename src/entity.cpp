@@ -4,11 +4,17 @@
 
 void Entity::setColor(SDL_Color c) { color = colorToFColor(c.r, c.g, c.b); }
 
-Entity::Entity(b2WorldId world, b2Vec2 size, b2Vec2 position, SDL_Color color, bool isStatic) {
-    b2BodyDef bodyDef = b2DefaultBodyDef();
+static b2BodyDef defaultBodyDef = b2DefaultBodyDef();
+static b2ShapeDef defaultShapeDef = b2DefaultShapeDef();
+
+Entity::Entity(b2WorldId world, b2Vec2 size, b2Vec2 position, SDL_Color color, bool isStatic)
+    : Entity(world, size, position, color, isStatic, defaultBodyDef, defaultShapeDef) {}
+
+Entity::Entity(b2WorldId world, b2Vec2 size, b2Vec2 position, SDL_Color color, bool isStatic, b2BodyDef bodyDef,
+               b2ShapeDef shapeDef)
+    : isStatic(isStatic) {
     bodyDef.position = position;
-    b2ShapeDef shapeDef = b2DefaultShapeDef();
-    if (!isStatic) {
+    if (!this->isStatic) {
         bodyDef.type = b2_dynamicBody;
         bodyDef.linearDamping = DynamicEntityDefaults::LinearDamping;
         shapeDef.density = DynamicEntityDefaults::Density;
@@ -21,10 +27,12 @@ Entity::Entity(b2WorldId world, b2Vec2 size, b2Vec2 position, SDL_Color color, b
     spawnPoint = position;
 }
 
+bool Entity::getIsStatic(void) { return isStatic; }
+
 SDL_FPoint scaleB2Point(WindowManager* window, b2Transform transform, b2Vec2 point) {
     b2Vec2 worldPosition = b2TransformPoint(transform, point);
-    int scaleFactor = window->getScaleFactor();
-    WindowDimensions offset = window->getOffset();
+    float scaleFactor = window->getScaleFactor();
+    WindowDimensions offset = window->getOffsetPixels();
     worldPosition.x *= scaleFactor;
     worldPosition.y *= scaleFactor;
     worldPosition.y *= -1.f;
@@ -45,6 +53,9 @@ void Entity::draw(WindowManager* window) {
 }
 
 void Entity::update(void) {
+    if (isStatic) {
+        return;
+    }
     b2Vec2 velocity = b2Body_GetLinearVelocity(bodyId);
     b2Vec2 targetVelocity = {
         0.f,

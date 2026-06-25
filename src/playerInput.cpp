@@ -26,7 +26,6 @@ void handleInputEvent(InputEvent event, Entity& entity) {
             return;
         } else if (event.verb == InputVerb_Up) {
             entity.jump();
-            return;
         }
     }
     auto directionOpt = inputVerbToDirection(event.verb);

@@ -2,22 +2,31 @@
 #include "colors.hpp"
 #include "events.hpp"
 #include "playerInput.hpp"
+#include <imgui.h>
+#include <imgui_impl_sdl3.h>
+#include <imgui_impl_sdlrenderer3.h>
 
-Platformer::Platformer(void) {
+Platformer::Platformer(void) : camera(Camera(nullptr, window)) {
     b2WorldDef worldDef = b2DefaultWorldDef();
     worldDef.gravity = {0.0f, -22.0f};
     world = b2CreateWorld(&worldDef);
     player = new Entity(world, {0.5f, 0.5f}, {0.f, 4.f}, Colors.Purple, false);
     entities = {player};
+    camera.entityToFollow = player;
     running = false;
-    lastTime = SDL_GetTicks();
     connectDefaultVerbMappings();
+    camera.safeArea = b2Vec2{0.25f, 0.25f};
+    camera.minViewableY = 0.f;
     // Tempoaray test entities
     entities.push_back(new Entity{world, {50.f, 0.5f}, {0.f, 0.5f}, Colors.GrassGreen, true});
     entities.push_back(new Entity{world, {0.5f, 10.f}, {-18.f, 11.f}, Colors.Gray, true});
     entities.push_back(new Entity{world, {0.5f, 10.f}, {18.f, 11.f}, Colors.Gray, true});
-    entities.push_back(new Entity{world, {0.5f, 2.f}, {10.f, 3.f}, Colors.Brown, false});
-    entities.push_back(new Entity{world, {0.5f, 1.f}, {-10.f, 2.f}, Colors.Brown, false});
+    b2BodyDef dynamicBodyDef = b2DefaultBodyDef();
+    dynamicBodyDef.type = b2_dynamicBody;
+    dynamicBodyDef.linearDamping = DynamicEntityDefaults::LinearDamping;
+    b2ShapeDef shapeDef = b2DefaultShapeDef();
+    entities.push_back(new Entity{world, {0.5f, 2.f}, {10.f, 3.f}, Colors.Brown, false, dynamicBodyDef, shapeDef});
+    entities.push_back(new Entity{world, {0.5f, 1.f}, {-10.f, 2.f}, Colors.Brown, false, dynamicBodyDef, shapeDef});
 }
 
 void Platformer::handleSdlEvent(void) {
@@ -29,12 +38,20 @@ void Platformer::handleSdlEvent(void) {
         } else if (event.type == SDL_EVENT_WINDOW_RESIZED) {
             window.handleResize(event.window.data1, event.window.data2);
             continue;
-        } else if ((event.type == SDL_EVENT_KEY_DOWN || event.type == SDL_EVENT_KEY_UP) && !event.key.repeat) {
-            auto verbResult = getVerbFromScancode(event.key.scancode);
+        } else if ((event.type == SDL_EVENT_KEY_DOWN || event.type == SDL_EVENT_KEY_UP)) {
+            auto verbResult = getBindingFromScancode(event.key.scancode);
             if (verbResult.has_value()) {
-                InputVerb verb = verbResult.value();
-                InputState state = event.type == SDL_EVENT_KEY_DOWN ? InputState_Pressed : InputState_Released;
-                GameEventInput(verb, state);
+                VerbBinding binding = verbResult.value();
+                if (binding.activateOnRepeat || !event.key.repeat) {
+                    InputState state = event.type == SDL_EVENT_KEY_DOWN ? InputState_Pressed : InputState_Released;
+                    GameEventInput(binding.verb, state);
+                }
+            }
+        } else if (event.type == SDL_EVENT_MOUSE_WHEEL) {
+            if (event.wheel.integer_y > 0) {
+                GameEventInput(InputVerb_ZoomIn, InputState_Pressed);
+            } else if (event.wheel.integer_y < 0) {
+                GameEventInput(InputVerb_ZoomOut, InputState_Pressed);
             }
         }
     }
@@ -54,12 +71,23 @@ void Platformer::handleGameEvent(void) {
             window.toggleFullscreen();
         }; break;
         case GameEventTypes_Input: {
-            if (event.input.verb == InputVerb_ToggleFullscreen && event.input.state == InputState_Pressed) {
-                GameEventToggleFullscreen();
-            } else {
-                if (player) {
-                    handleInputEvent(event.input, *player);
+            if (event.input.state == InputState_Pressed) {
+                switch (event.input.verb) {
+                case InputVerb_ToggleFullscreen:
+                    GameEventToggleFullscreen();
+                    break;
+                case InputVerb_ZoomIn:
+                    window.incrementScaleMultiplierBy(0.05f);
+                    break;
+                case InputVerb_ZoomOut:
+                    window.incrementScaleMultiplierBy(-0.05f);
+                    break;
+                case InputVerb_ResetZoom:
+                    window.resetScaleMultiplier();
                 }
+            }
+            if (player) {
+                handleInputEvent(event.input, *player);
             }
         }; break;
         }
@@ -70,11 +98,15 @@ void Platformer::drawDebugUi(void) {
     ImGui::Begin("Debug Menu");
     ImGui::Text("\nApplication average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate,
                 ImGui::GetIO().Framerate);
-    WindowDimensions offset = window.getOffset();
-    WindowDimensions windowSize = window.getSize();
-    int scaleFactor = window.getScaleFactor();
-    ImGui::Text("\nWindow:\nSize: %d, %d\nRender Offset: %d, %d\nScale Factor: %d", windowSize.x, windowSize.y,
-                offset.x, offset.y, scaleFactor);
+    WindowDimensions offset = window.getOffsetPixels();
+    WindowDimensions windowSizePixels = window.getSizePixels();
+    b2Vec2 windowSizeWorld = window.getSizeWorld();
+    float scaleFactor = window.getScaleFactor();
+    float scaleMultiplier = window.getScaleMultiplier();
+    ImGui::Text(
+        "\nWindow:\nSize Pixels: %d, %d\nSize World: %.1f, %.1f\nRender Offset: %d, %d\nScale: %.2f (Factor %.2f)",
+        windowSizePixels.x, windowSizePixels.y, windowSizeWorld.x, windowSizeWorld.y, offset.x, offset.y,
+        scaleMultiplier, scaleFactor);
     if (player) {
         b2Vec2 position = b2Body_GetPosition(player->bodyId);
         b2Vec2 velocity = b2Body_GetLinearVelocity(player->bodyId);
@@ -82,6 +114,10 @@ void Platformer::drawDebugUi(void) {
                     player->movement[EntityMovement_Up], player->movement[EntityMovement_Down],
                     player->movement[EntityMovement_Left], player->movement[EntityMovement_Right], position.x,
                     position.y, velocity.x, velocity.y);
+        b2Vec2 safeAreaSize = camera.getSafeAreaSize();
+        b2Vec2 safeAreaValue = camera.getEntitySafeAreaValue();
+        ImGui::Text("\nSafe Area:\nSize: %.2f, %.2f\nRatio from Center: %.2f, %.2f", safeAreaSize.x, safeAreaSize.y,
+                    safeAreaValue.x, safeAreaValue.y);
     }
     ImGui::End();
     ImGui::Render();
@@ -97,8 +133,10 @@ void Platformer::physicsStepHandler(void) {
     }
     accumulator += deltaTime;
     while (accumulator >= physicsStep) {
-        if (player) {
-            player->update();
+        for (Entity* entity : entities) {
+            if (entity && !entity->getIsStatic()) {
+                entity->update();
+            }
         }
         b2World_Step(world, physicsStep, 4);
         accumulator -= physicsStep;
@@ -106,6 +144,7 @@ void Platformer::physicsStepHandler(void) {
 }
 
 void Platformer::run(void) {
+    lastTime = SDL_GetTicks();
     running = true;
     while (running) {
         handleSdlEvent();
@@ -113,6 +152,7 @@ void Platformer::run(void) {
         physicsStepHandler();
         window.clearFrame();
         drawDebugUi();
+        camera.run();
         for (Entity* entity : entities) {
             entity->draw(&window);
         }

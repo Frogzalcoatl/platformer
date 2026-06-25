@@ -24,9 +24,12 @@ constexpr float Friction = 0.3f;
 class Entity {
   private:
     SDL_FColor color;
+    const bool isStatic;
 
   public:
     Entity(b2WorldId world, b2Vec2 size, b2Vec2 position, SDL_Color color, bool isStatic);
+    Entity(b2WorldId world, b2Vec2 size, b2Vec2 position, SDL_Color color, bool isStatic, b2BodyDef bodyDef,
+           b2ShapeDef shapeDef);
     b2BodyId bodyId;
     b2Polygon polygon;
     b2Vec2 spawnPoint = {0.f, 0.f};
@@ -41,4 +44,5 @@ class Entity {
     void teleport(b2Vec2 location);
     void respawn(void);
     void setColor(SDL_Color);
+    bool getIsStatic(void);
 };
