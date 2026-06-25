@@ -1,7 +1,8 @@
 #include "input.hpp"
 #include <assert.h>
 
-static std::array<std::array<ScancodeBinding, MaxBindsPerVerb>, InputVerb_Count> verbScancodeBindings = {};
+static std::array<std::array<ScancodeBinding, MaxBindsPerVerb>, InputVerb_Count>
+    verbScancodeBindings = {};
 
 void bindScancodeToVerb(InputVerb verb, ScancodeBinding binding, std::optional<int> atIndexOpt) {
     assert(verb >= 0 && verb < InputVerb_Count);
@@ -13,7 +14,8 @@ void bindScancodeToVerb(InputVerb verb, ScancodeBinding binding, std::optional<i
     Differences between reference and pointer:
     - References are not a memory address, rather a direct reference to an existing variable.
     - References are never null since they are attached to existing values.
-    - reassigning the below verbBinds variable to something else would also reassign the array above.
+    - reassigning the below verbBinds variable to something else would also reassign the array
+    above.
     - Cleaner syntax
     */
     auto& verbBinds = verbScancodeBindings[verb];
@@ -74,27 +76,30 @@ struct FullBinding {
     SDL_Scancode scancode;
     bool activateOnRepeat = false;
 };
-static const std::vector<FullBinding> defaultVerbBindings = {{InputVerb_Up, SDL_SCANCODE_W},
-                                                             {InputVerb_Up, SDL_SCANCODE_UP},
-                                                             {InputVerb_Down, SDL_SCANCODE_S},
-                                                             {InputVerb_Down, SDL_SCANCODE_DOWN},
-                                                             {InputVerb_Left, SDL_SCANCODE_A},
-                                                             {InputVerb_Left, SDL_SCANCODE_LEFT},
-                                                             {InputVerb_Right, SDL_SCANCODE_D},
-                                                             {InputVerb_Right, SDL_SCANCODE_RIGHT},
-                                                             {InputVerb_Confirm, SDL_SCANCODE_RETURN},
-                                                             {InputVerb_Cancel, SDL_SCANCODE_ESCAPE},
-                                                             {InputVerb_ToggleFullscreen, SDL_SCANCODE_F11},
-                                                             {InputVerb_Respawn, SDL_SCANCODE_R},
-                                                             {InputVerb_ZoomIn, SDL_SCANCODE_KP_PLUS, true},
-                                                             {InputVerb_ZoomOut, SDL_SCANCODE_KP_MINUS, true},
-                                                             {InputVerb_ZoomIn, SDL_SCANCODE_EQUALS, true},
-                                                             {InputVerb_ZoomOut, SDL_SCANCODE_MINUS, true},
-                                                             {InputVerb_ResetZoom, SDL_SCANCODE_0},
-                                                             {InputVerb_ResetZoom, SDL_SCANCODE_KP_0}};
+static const std::vector<FullBinding> defaultVerbBindings = {
+    {InputVerb_Up, SDL_SCANCODE_W},
+    {InputVerb_Up, SDL_SCANCODE_UP},
+    {InputVerb_Down, SDL_SCANCODE_S},
+    {InputVerb_Down, SDL_SCANCODE_DOWN},
+    {InputVerb_Left, SDL_SCANCODE_A},
+    {InputVerb_Left, SDL_SCANCODE_LEFT},
+    {InputVerb_Right, SDL_SCANCODE_D},
+    {InputVerb_Right, SDL_SCANCODE_RIGHT},
+    {InputVerb_Confirm, SDL_SCANCODE_RETURN},
+    {InputVerb_Cancel, SDL_SCANCODE_ESCAPE},
+    {InputVerb_ToggleFullscreen, SDL_SCANCODE_F11},
+    {InputVerb_Respawn, SDL_SCANCODE_R},
+    {InputVerb_ZoomIn, SDL_SCANCODE_KP_PLUS, true},
+    {InputVerb_ZoomOut, SDL_SCANCODE_KP_MINUS, true},
+    {InputVerb_ZoomIn, SDL_SCANCODE_EQUALS, true},
+    {InputVerb_ZoomOut, SDL_SCANCODE_MINUS, true},
+    {InputVerb_ResetZoom, SDL_SCANCODE_0},
+    {InputVerb_ResetZoom, SDL_SCANCODE_KP_0}};
 
 void connectDefaultVerbMappings(void) {
     for (FullBinding binding : defaultVerbBindings) {
-        bindScancodeToVerb(binding.verb, ScancodeBinding{binding.scancode, binding.activateOnRepeat}, std::nullopt);
+        bindScancodeToVerb(binding.verb,
+                           ScancodeBinding{binding.scancode, binding.activateOnRepeat},
+                           std::nullopt);
     }
 }

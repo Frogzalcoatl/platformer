@@ -8,7 +8,8 @@
 
 WindowManager::WindowManager(void) {
     size = WindowDimensions{1280, 720};
-    sdlWindow = SDL_CreateWindow(WindowName, size.x, size.y, SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED);
+    sdlWindow =
+        SDL_CreateWindow(WindowName, size.x, size.y, SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED);
     sdlRenderer = SDL_CreateRenderer(sdlWindow, nullptr);
     SDL_SetRenderVSync(sdlRenderer, 1);
     IMGUI_CHECKVERSION();
@@ -21,8 +22,8 @@ void WindowManager::clearFrame(void) {
     ImGui_ImplSDLRenderer3_NewFrame();
     ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();
-    SDL_SetRenderDrawColor(sdlRenderer, Colors.BackGround.r, Colors.BackGround.g, Colors.BackGround.b,
-                           Colors.BackGround.a);
+    SDL_SetRenderDrawColor(sdlRenderer, Colors.BackGround.r, Colors.BackGround.g,
+                           Colors.BackGround.b, Colors.BackGround.a);
     SDL_RenderClear(sdlRenderer);
 }
 
@@ -32,7 +33,9 @@ void WindowManager::toggleFullscreen(void) {
 }
 
 WindowDimensions WindowManager::getSizePixels(void) { return size; }
-b2Vec2 WindowManager::getSizeWorld(void) { return b2Vec2{size.x / scaleFactor, size.y / scaleFactor}; }
+b2Vec2 WindowManager::getSizeWorld(void) {
+    return b2Vec2{size.x / scaleFactor, size.y / scaleFactor};
+}
 WindowDimensions WindowManager::getOffsetPixels(void) { return offsetPixels; }
 b2Vec2 WindowManager::getOffsetWorld(void) { return offsetWorld; }
 float WindowManager::getScaleFactor(void) { return scaleFactor; }

@@ -28,8 +28,8 @@ class Entity {
 
   public:
     Entity(b2WorldId world, b2Vec2 size, b2Vec2 position, SDL_Color color, bool isStatic);
-    Entity(b2WorldId world, b2Vec2 size, b2Vec2 position, SDL_Color color, bool isStatic, b2BodyDef bodyDef,
-           b2ShapeDef shapeDef);
+    Entity(b2WorldId world, b2Vec2 size, b2Vec2 position, SDL_Color color, bool isStatic,
+           b2BodyDef bodyDef, b2ShapeDef shapeDef);
     b2BodyId bodyId;
     b2Polygon polygon;
     b2Vec2 spawnPoint = {0.f, 0.f};
