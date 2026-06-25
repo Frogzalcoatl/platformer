@@ -21,12 +21,12 @@ enum InputVerb {
 
 enum InputState { InputState_Pressed, InputState_Released };
 
-struct VerbBinding {
+struct InputVerbInfo {
     InputVerb verb;
     bool activateOnRepeat = false;
 };
 
-struct ScancodeBinding {
+struct ScancodeInfo {
     SDL_Scancode scancode;
     bool activateOnRepeat = false;
 };
@@ -38,8 +38,8 @@ struct InputEvent {
 
 constexpr int MaxBindsPerVerb = 4;
 
-void bindScancodeToVerb(InputVerb verb, ScancodeBinding binding, std::optional<int> atIndexOpt);
+void bindScancodeToVerb(InputVerb verb, ScancodeInfo binding, std::optional<int> atIndexOpt);
 void unbindScancodeFromVerb(InputVerb verb, SDL_Scancode scancode);
 void clearVerbScancodeIndex(InputVerb verb, int index);
-std::optional<VerbBinding> getBindingFromScancode(SDL_Scancode scancode);
+std::optional<InputVerbInfo> getBindingFromScancode(SDL_Scancode scancode);
 void connectDefaultVerbMappings(void);

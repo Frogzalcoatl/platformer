@@ -1,4 +1,5 @@
 #include "platformer.hpp"
+#include <imgui.h>
 
 int main(int argc, char* argv[]) {
     (void)argc;
@@ -7,6 +8,8 @@ int main(int argc, char* argv[]) {
         SDL_Log("SDL Initialization failed: %s", SDL_GetError());
         return false;
     }
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
     Platformer game;
     game.run();
     game.close();

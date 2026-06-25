@@ -17,7 +17,7 @@ static std::optional<EntityMovement> inputVerbToDirection(InputVerb verb) {
     }
 }
 
-void handleInputEvent(InputEvent event, Entity& entity) {
+void controlEntity(InputEvent event, Entity& entity) {
     assert(event.state == InputState_Pressed || event.state == InputState_Released);
     assert(event.verb >= 0 && event.verb < InputVerb_Count);
     if (event.state == InputState_Pressed) {

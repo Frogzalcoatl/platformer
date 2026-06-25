@@ -6,24 +6,34 @@
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_sdlrenderer3.h>
 
-Platformer::Platformer(void) : camera(Camera(nullptr, window)) {
+Platformer::Platformer(void)
+    : camera(Camera(nullptr, window)), window{"C++ Platformer", Colors.BackGround} {
     b2WorldDef worldDef = b2DefaultWorldDef();
     worldDef.gravity = {0.0f, -22.0f};
     world = b2CreateWorld(&worldDef);
-    player = new Entity(world, {0.5f, 0.5f}, {0.f, 4.f}, Colors.Purple, false);
-    entities = {player};
-    camera.entityToFollow = player;
     running = false;
     connectDefaultVerbMappings();
     camera.safeArea = b2Vec2{0.25f, 0.25f};
     camera.minViewableY = 0.f;
+    // Test player
+    b2BodyDef playerBodyDef = b2DefaultBodyDef();
+    playerBodyDef.linearDamping = 0.5f;
+    playerBodyDef.fixedRotation = true;
+    b2ShapeDef playerShapeDef = b2DefaultShapeDef();
+    playerShapeDef.density = 1.f;
+    playerShapeDef.material.friction = 0.3f;
+    player = new Entity(
+        world, {0.5f, 0.5f}, {0.f, 4.f}, Colors.Purple, false, playerBodyDef, playerShapeDef
+    );
+    entities = {player};
+    camera.entityToFollow = player;
     // Tempoaray test entities
     entities.push_back(new Entity{world, {50.f, 0.5f}, {0.f, 0.5f}, Colors.GrassGreen, true});
     entities.push_back(new Entity{world, {0.5f, 10.f}, {-18.f, 11.f}, Colors.Gray, true});
     entities.push_back(new Entity{world, {0.5f, 10.f}, {18.f, 11.f}, Colors.Gray, true});
     b2BodyDef dynamicBodyDef = b2DefaultBodyDef();
     dynamicBodyDef.type = b2_dynamicBody;
-    dynamicBodyDef.linearDamping = DynamicEntityDefaults::LinearDamping;
+    dynamicBodyDef.linearDamping = 0.5f;
     b2ShapeDef shapeDef = b2DefaultShapeDef();
     entities.push_back(
         new Entity{world, {0.5f, 2.f}, {10.f, 3.f}, Colors.Brown, false, dynamicBodyDef, shapeDef}
@@ -37,34 +47,43 @@ void Platformer::handleSdlEvent(void) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
         ImGui_ImplSDL3_ProcessEvent(&event);
-        if (event.type == SDL_EVENT_QUIT) {
+        switch (event.type) {
+        case SDL_EVENT_QUIT: {
             running = false;
-        } else if (event.type == SDL_EVENT_WINDOW_RESIZED) {
+            break;
+        }
+        case SDL_EVENT_WINDOW_RESIZED: {
             window.handleResize(event.window.data1, event.window.data2);
-            continue;
-        } else if ((event.type == SDL_EVENT_KEY_DOWN || event.type == SDL_EVENT_KEY_UP)) {
+            break;
+        }
+        case SDL_EVENT_KEY_DOWN:
+        case SDL_EVENT_KEY_UP: {
             auto verbResult = getBindingFromScancode(event.key.scancode);
             if (verbResult.has_value()) {
-                VerbBinding binding = verbResult.value();
+                InputVerbInfo& binding = verbResult.value();
                 if (binding.activateOnRepeat || !event.key.repeat) {
                     InputState state =
                         event.type == SDL_EVENT_KEY_DOWN ? InputState_Pressed : InputState_Released;
-                    GameEventInput(binding.verb, state);
+                    GameEvents::Input(binding.verb, state);
                 }
             }
-        } else if (event.type == SDL_EVENT_MOUSE_WHEEL) {
+            break;
+        }
+        case SDL_EVENT_MOUSE_WHEEL: {
             if (event.wheel.integer_y > 0) {
-                GameEventInput(InputVerb_ZoomIn, InputState_Pressed);
+                GameEvents::Input(InputVerb_ZoomIn, InputState_Pressed);
             } else if (event.wheel.integer_y < 0) {
-                GameEventInput(InputVerb_ZoomOut, InputState_Pressed);
+                GameEvents::Input(InputVerb_ZoomOut, InputState_Pressed);
             }
+            break;
+        }
         }
     }
 }
 
 void Platformer::handleGameEvent(void) {
     GameEvent event;
-    while (GameEventPoll(event)) {
+    while (GameEvents::Poll(event)) {
         switch (event.type) {
         case GameEventTypes_CloseWindow: {
             running = false;
@@ -79,7 +98,7 @@ void Platformer::handleGameEvent(void) {
             if (event.input.state == InputState_Pressed) {
                 switch (event.input.verb) {
                 case InputVerb_ToggleFullscreen:
-                    GameEventToggleFullscreen();
+                    GameEvents::ToggleFullscreen();
                     break;
                 case InputVerb_ZoomIn:
                     window.incrementScaleMultiplierBy(0.05f);
@@ -92,7 +111,7 @@ void Platformer::handleGameEvent(void) {
                 }
             }
             if (player) {
-                handleInputEvent(event.input, *player);
+                controlEntity(event.input, *player);
             }
         }; break;
         }
@@ -109,12 +128,11 @@ void Platformer::drawDebugUi(void) {
     WindowDimensions windowSizePixels = window.getSizePixels();
     b2Vec2 windowSizeWorld = window.getSizeWorld();
     float scaleFactor = window.getScaleFactor();
-    float scaleMultiplier = window.getScaleMultiplier();
     ImGui::Text(
         "\nWindow:\nSize Pixels: %d, %d\nSize World: %.1f, %.1f\nRender Offset: %d, "
         "%d\nScale: %.2f (Factor %.2f)",
         windowSizePixels.x, windowSizePixels.y, windowSizeWorld.x, windowSizeWorld.y, offset.x,
-        offset.y, scaleMultiplier, scaleFactor
+        offset.y, window.scaleMultiplier, scaleFactor
     );
     if (player) {
         b2Vec2 position = b2Body_GetPosition(player->bodyId);
@@ -125,6 +143,8 @@ void Platformer::drawDebugUi(void) {
             player->movement[EntityMovement_Left], player->movement[EntityMovement_Right],
             position.x, position.y, velocity.x, velocity.y
         );
+    }
+    if (camera.entityToFollow) {
         b2Vec2 safeAreaSize = camera.getSafeAreaSize();
         b2Vec2 safeAreaValue = camera.getEntitySafeAreaValue();
         ImGui::Text(
@@ -147,7 +167,7 @@ void Platformer::physicsStepHandler(void) {
     accumulator += deltaTime;
     while (accumulator >= physicsStep) {
         for (Entity* entity : entities) {
-            if (entity && !entity->getIsStatic()) {
+            if (entity) {
                 entity->update();
             }
         }

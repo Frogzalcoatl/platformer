@@ -1,19 +1,17 @@
 #include "windowManager.hpp"
 #include "colors.hpp"
-#include "config.hpp"
 #include <box2d/box2d.h>
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_sdlrenderer3.h>
 
-WindowManager::WindowManager(void) {
+WindowManager::WindowManager(const char* windowName, SDL_Color backgroundColor)
+    : backgroundColor(backgroundColor) {
     size = WindowDimensions{1280, 720};
     sdlWindow =
-        SDL_CreateWindow(WindowName, size.x, size.y, SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED);
+        SDL_CreateWindow(windowName, size.x, size.y, SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED);
     sdlRenderer = SDL_CreateRenderer(sdlWindow, nullptr);
     SDL_SetRenderVSync(sdlRenderer, 1);
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
     ImGui_ImplSDL3_InitForSDLRenderer(sdlWindow, sdlRenderer);
     ImGui_ImplSDLRenderer3_Init(sdlRenderer);
 }
@@ -23,8 +21,7 @@ void WindowManager::clearFrame(void) {
     ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();
     SDL_SetRenderDrawColor(
-        sdlRenderer, Colors.BackGround.r, Colors.BackGround.g, Colors.BackGround.b,
-        Colors.BackGround.a
+        sdlRenderer, backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.a
     );
     SDL_RenderClear(sdlRenderer);
 }
@@ -35,13 +32,16 @@ void WindowManager::toggleFullscreen(void) {
 }
 
 WindowDimensions WindowManager::getSizePixels(void) { return size; }
+
 b2Vec2 WindowManager::getSizeWorld(void) {
     return b2Vec2{size.x / scaleFactor, size.y / scaleFactor};
 }
+
 WindowDimensions WindowManager::getOffsetPixels(void) { return offsetPixels; }
+
 b2Vec2 WindowManager::getOffsetWorld(void) { return offsetWorld; }
+
 float WindowManager::getScaleFactor(void) { return scaleFactor; }
-float WindowManager::getScaleMultiplier(void) { return scaleMultiplier; }
 
 void WindowManager::updateScaleFactor(void) {
     int dividend = b2MinInt(size.x, size.y);

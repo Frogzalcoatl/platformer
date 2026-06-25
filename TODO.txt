@@ -1,0 +1,10 @@
+Finish camera center on entity func for zoom reset.
+
+Asset manager. not using packer since it would be overkill for right now
+
+figure out fcolortocolor func
+
+improve draw entity func using the website you found online. additionally add draw borders function with thickness param
+    Make these draw funcs separate from the entity class then just call them inside the entity methods
+
+add controller support. copy connect4 for this

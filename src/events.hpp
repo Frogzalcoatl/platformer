@@ -14,18 +14,17 @@ struct GameEvent {
     GameEventTypes type;
     union {
         struct {
-            bool androidRemoveTask;
-        } closeWindow;
-        struct {
             int soundId;
         } playSound;
         InputEvent input;
     };
 };
 
-bool GameEventPoll(GameEvent& event);
-void GameEventPush(GameEvent event);
-void GameEventCloseWindow(bool androidRemoveTask);
-void GameEventPlaySound(int soundId);
-void GameEventToggleFullscreen(void);
-void GameEventInput(InputVerb inputVerb, InputState state);
+namespace GameEvents {
+bool Poll(GameEvent& event);
+void Push(GameEvent event);
+void CloseWindow();
+void PlaySound(int soundId);
+void ToggleFullscreen(void);
+void Input(InputVerb inputVerb, InputState state);
+} // namespace GameEvents

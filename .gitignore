@@ -2,7 +2,5 @@ build/
 out/
 .cache/
 .vs/
-.vscode/*
-!.vscode/extensions.json
 compile_commands.json
 generated/

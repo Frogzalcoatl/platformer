@@ -2,8 +2,6 @@
 #include "colors.hpp"
 #include <assert.h>
 
-void Entity::setColor(SDL_Color c) { color = colorToFColor(c.r, c.g, c.b); }
-
 static b2BodyDef defaultBodyDef = b2DefaultBodyDef();
 static b2ShapeDef defaultShapeDef = b2DefaultShapeDef();
 
@@ -18,9 +16,6 @@ Entity::Entity(
     bodyDef.position = position;
     if (!this->isStatic) {
         bodyDef.type = b2_dynamicBody;
-        bodyDef.linearDamping = DynamicEntityDefaults::LinearDamping;
-        shapeDef.density = DynamicEntityDefaults::Density;
-        shapeDef.material.friction = DynamicEntityDefaults::Friction;
     }
     setColor(color);
     bodyId = b2CreateBody(world, &bodyDef);
@@ -29,9 +24,9 @@ Entity::Entity(
     spawnPoint = position;
 }
 
-bool Entity::getIsStatic(void) { return isStatic; }
+void Entity::setColor(SDL_Color c) { color = colorToFColor(c.r, c.g, c.b); }
 
-SDL_FPoint scaleB2Point(WindowManager* window, b2Transform transform, b2Vec2 point) {
+static SDL_FPoint scaleB2Point(WindowManager* window, b2Transform transform, b2Vec2 point) {
     b2Vec2 worldPosition = b2TransformPoint(transform, point);
     float scaleFactor = window->getScaleFactor();
     WindowDimensions offset = window->getOffsetPixels();
@@ -64,15 +59,15 @@ void Entity::update(void) {
         0.f,
     };
     if (movement[EntityMovement_Down]) {
-        targetVelocity.y -= downwardSpeed;
+        targetVelocity.y -= downwardAcceleration;
     }
     if (movement[EntityMovement_Left]) {
-        targetVelocity.x -= maxSpeed;
+        targetVelocity.x -= maxHorizontalSpeed;
     }
     if (movement[EntityMovement_Right]) {
-        targetVelocity.x += maxSpeed;
+        targetVelocity.x += maxHorizontalSpeed;
     }
-    velocity.x = velocity.x + (targetVelocity.x - velocity.x) * movementAcceleration;
+    velocity.x = velocity.x + (targetVelocity.x - velocity.x) * horizontalAcceleration;
     velocity.y += targetVelocity.y;
     b2Body_SetLinearVelocity(bodyId, velocity);
 }

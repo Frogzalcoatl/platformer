@@ -4,6 +4,7 @@ Camera::Camera(Entity* followEntity, WindowManager& window)
     : entityToFollow(followEntity), window(window) {}
 
 b2Vec2 Camera::getEntitySafeAreaValue(void) { return entitySafeAreaVal; }
+
 b2Vec2 Camera::getSafeAreaSize(void) { return safeAreaSize; }
 
 void Camera::run(void) {
@@ -33,39 +34,57 @@ void Camera::run(void) {
     } else if (entityOffset.y < -halfDeadZoneY) {
         newCamPos.y = entityPos.y + halfDeadZoneY;
     }
+    newCamPos = applyViewableLimits(newCamPos);
+    window.updateOffset(newCamPos);
+}
+
+b2Vec2 Camera::applyViewableLimits(b2Vec2 camPos) {
+    const b2Vec2 windowSizeWorld = window.getSizeWorld();
     if (minViewableX.has_value() && maxViewableX.has_value() &&
         (maxViewableX.value() - minViewableX.value() < windowSizeWorld.x)) {
-        newCamPos.x = (minViewableX.value() + maxViewableX.value()) / 2.f;
+        camPos.x = (minViewableX.value() + maxViewableX.value()) / 2.f;
     } else {
         if (minViewableX.has_value()) {
             const float minCamX = minViewableX.value() + windowSizeWorld.x / 2.f;
-            if (newCamPos.x < minCamX) {
-                newCamPos.x = minCamX;
+            if (camPos.x < minCamX) {
+                camPos.x = minCamX;
             }
         }
         if (maxViewableX.has_value()) {
             const float maxCamX = maxViewableX.value() - windowSizeWorld.x / 2.f;
-            if (newCamPos.x > maxCamX) {
-                newCamPos.x = maxCamX;
+            if (camPos.x > maxCamX) {
+                camPos.x = maxCamX;
             }
         }
     }
     if (minViewableY.has_value() && maxViewableY.has_value() &&
         (maxViewableY.value() - minViewableY.value() < windowSizeWorld.y)) {
-        newCamPos.y = (minViewableY.value() + maxViewableY.value()) / 2.f;
+        camPos.y = (minViewableY.value() + maxViewableY.value()) / 2.f;
     } else {
         if (minViewableY.has_value()) {
             const float minCamY = minViewableY.value() + windowSizeWorld.y / 2.f;
-            if (newCamPos.y < minCamY) {
-                newCamPos.y = minCamY;
+            if (camPos.y < minCamY) {
+                camPos.y = minCamY;
             }
         }
         if (maxViewableY.has_value()) {
             const float maxCamY = maxViewableY.value() - windowSizeWorld.y / 2.f;
-            if (newCamPos.y > maxCamY) {
-                newCamPos.y = maxCamY;
+            if (camPos.y > maxCamY) {
+                camPos.y = maxCamY;
             }
         }
     }
-    window.updateOffset(newCamPos);
+    return camPos;
 }
+
+/*
+void Camera::centerOnEntity(void) {
+    if (!entityToFollow) {
+        return;
+    }
+    const b2Vec2 currentOffsetWorld = window.getOffsetWorld();
+    b2Vec2 camPos = {-currentOffsetWorld.x, currentOffsetWorld.y};
+    b2Vec2 entityPos = b2Body_GetPosition(entityToFollow->bodyId);
+    const b2Vec2 windowSizeWorld = window.getSizeWorld();
+}
+*/

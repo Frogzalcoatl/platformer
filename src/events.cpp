@@ -8,7 +8,7 @@ static std::array<GameEvent, EventQueueSize> eventQueue = {};
 static int head = 0;
 static int tail = 0;
 
-void GameEventPush(GameEvent event) {
+void GameEvents::Push(GameEvent event) {
     int nextHead = (head + 1) % EventQueueSize;
     if (nextHead == tail) {
         SDL_Log("Event Queue Overflow. Dropping event type %d", event.type);
@@ -18,7 +18,7 @@ void GameEventPush(GameEvent event) {
     head = nextHead;
 }
 
-bool GameEventPoll(GameEvent& event) {
+bool GameEvents::Poll(GameEvent& event) {
     if (head == tail) {
         // Queue is empty
         return false;
@@ -28,29 +28,28 @@ bool GameEventPoll(GameEvent& event) {
     return true;
 }
 
-void GameEventCloseWindow(bool androidRemoveTask) {
+void GameEvents::CloseWindow() {
     GameEvent event;
     event.type = GameEventTypes_CloseWindow;
-    event.closeWindow.androidRemoveTask = androidRemoveTask;
-    GameEventPush(event);
+    GameEvents::Push(event);
 }
 
-void GameEventPlaySound(int soundId) {
+void GameEvents::PlaySound(int soundId) {
     GameEvent event;
     event.type = GameEventTypes_PlaySound;
     event.playSound.soundId = soundId;
-    GameEventPush(event);
+    GameEvents::Push(event);
 }
 
-void GameEventToggleFullscreen(void) {
+void GameEvents::ToggleFullscreen(void) {
     GameEvent event;
     event.type = GameEventTypes_ToggleFullscreen;
-    GameEventPush(event);
+    GameEvents::Push(event);
 }
 
-void GameEventInput(InputVerb inputVerb, InputState state) {
+void GameEvents::Input(InputVerb inputVerb, InputState state) {
     GameEvent event;
     event.type = GameEventTypes_Input;
     event.input = InputEvent{inputVerb, state};
-    GameEventPush(event);
+    GameEvents::Push(event);
 }

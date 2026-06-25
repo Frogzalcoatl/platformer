@@ -15,16 +15,9 @@ enum EntityMovement {
     EntityMovement_Count
 };
 
-namespace DynamicEntityDefaults {
-constexpr float LinearDamping = 0.5;
-constexpr float Density = 1.f;
-constexpr float Friction = 0.3f;
-}; // namespace DynamicEntityDefaults
-
 class Entity {
   private:
     SDL_FColor color;
-    const bool isStatic;
 
   public:
     Entity(b2WorldId world, b2Vec2 size, b2Vec2 position, SDL_Color color, bool isStatic);
@@ -34,11 +27,12 @@ class Entity {
     );
     b2BodyId bodyId;
     b2Polygon polygon;
+    const bool isStatic;
     b2Vec2 spawnPoint = {0.f, 0.f};
-    float jumpForceNewtons = 15.f;
-    float maxSpeed = 20.f;
-    float movementAcceleration = 0.25f;
-    float downwardSpeed = 5.f;
+    const float jumpForceNewtons = 15.f;
+    const float maxHorizontalSpeed = 20.f;
+    const float horizontalAcceleration = 0.25f;
+    const float downwardAcceleration = 5.f;
     std::array<bool, EntityMovement_Count> movement = {false};
     void draw(WindowManager* window);
     void jump(void);
@@ -46,5 +40,4 @@ class Entity {
     void teleport(b2Vec2 location);
     void respawn(void);
     void setColor(SDL_Color);
-    bool getIsStatic(void);
 };

@@ -4,7 +4,6 @@ project(MyPlatformer CXX C)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Find all packages
 find_package(SDL3 REQUIRED)
 find_package(SDL3_image REQUIRED)
 find_package(SDL3_ttf REQUIRED)
@@ -22,7 +21,6 @@ endif()
 
 target_include_directories(MyPlatformer PRIVATE src)
 
-# Link your dependencies
 target_link_libraries(MyPlatformer PRIVATE
     SDL3::SDL3
     SDL3_image::SDL3_image
