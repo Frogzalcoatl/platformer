@@ -75,7 +75,9 @@ void Entity::jump() {
 }
 
 void Entity::teleport(b2Vec2 location) {
-    b2Body_SetLinearVelocity(bodyId, b2Vec2{0.f, 0.f});
+    b2Body_SetLinearVelocity(
+        bodyId, b2Vec2{0.f, -0.01f}
+    ); // y not set to 0.f since that results in floating entity until its ineracted with.
     b2Body_SetTransform(bodyId, location, b2Body_GetRotation(bodyId));
 }
 

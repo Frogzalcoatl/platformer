@@ -19,8 +19,10 @@ bool addGamepadMappings() {
         return false;
     }
     std::filesystem::path basePath(rawPath);
-    std::filesystem::path communityResourcePath = basePath / "assets" / "gamecontrollerdb.txt";
-    std::filesystem::path personalPath = basePath / "assets" / "personalcontrollerdb.txt";
+    std::filesystem::path communityResourcePath =
+        basePath / "assets" / "gamepads" / "gamecontrollerdb.txt";
+    std::filesystem::path personalPath =
+        basePath / "assets" / "gamepads" / "personalcontrollerdb.txt";
     int mappingsAdded = 0;
     mappingsAdded += openMappingsFromPath(communityResourcePath);
     mappingsAdded += openMappingsFromPath(personalPath);

@@ -6,7 +6,7 @@
 #include <optional>
 #include <vector>
 
-enum EntityMovement {
+enum EntityMovement : uint8_t {
     EntityMovement_Up,
     EntityMovement_Down,
     EntityMovement_Left,
