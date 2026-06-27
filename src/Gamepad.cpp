@@ -2,10 +2,6 @@
 #include <cmath>
 #include <filesystem>
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
-
 static int openMappingsFromPath(std::filesystem::path& path) {
     std::string pathString = path.string();
     const char* fullPath = pathString.c_str();
