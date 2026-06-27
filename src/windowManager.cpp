@@ -45,7 +45,7 @@ float WindowManager::getScaleFactor() const { return scaleFactor; }
 
 void WindowManager::updateScaleFactor() {
     int dividend = b2MinInt(size.x, size.y);
-    scaleFactor = (dividend / 20.f) * scaleMultiplier;
+    scaleFactor = dividend / 20.f * scaleMultiplier;
 }
 
 void WindowManager::updateOffset(std::optional<b2Vec2> worldPosition) {

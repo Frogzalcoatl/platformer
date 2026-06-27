@@ -5,5 +5,3 @@ Asset manager. not using packer since it would be overkill for right now
 improve draw entity func (https://grokipedia.com/page/fan_triangulation). 
     Additionally add draw borders function with thickness param
     Make these draw funcs separate from the entity class then just call them inside the entity methods
-
-add controller support. copy connect4 for this
