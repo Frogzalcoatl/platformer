@@ -15,11 +15,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/src/*.cpp")
 
-if(ANDROID)
-    add_library(MyPlatformer SHARED ${SOURCES})
-else()
-    add_executable(MyPlatformer ${SOURCES})
-endif()
+add_executable(MyPlatformer ${SOURCES})
 
 target_include_directories(MyPlatformer PRIVATE src)
 
@@ -31,10 +27,6 @@ target_link_libraries(MyPlatformer PRIVATE
     box2d::box2d
     imgui::imgui
 )
-
-if(ANDROID) 
-    target_link_options(MyPlatformer PRIVATE "-u" "ANativeActivity_onCreate")
-endif()
 
 if(MSVC)
     target_compile_options(MyPlatformer PRIVATE /W4 /WX)
