@@ -6,14 +6,14 @@
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_sdlrenderer3.h>
 
-Platformer::Platformer(void)
-    : camera(Camera(nullptr, window)), window{"C++ Platformer", Colors.BackGround} {
+Platformer::Platformer()
+    : camera{Camera{nullptr, window}}, window{"C++ Platformer", Colors.BackGround} {
     b2WorldDef worldDef = b2DefaultWorldDef();
     worldDef.gravity = {0.0f, -22.0f};
     world = b2CreateWorld(&worldDef);
     running = false;
     connectDefaultVerbMappings();
-    camera.safeArea = b2Vec2{0.25f, 0.25f};
+    camera.safeArea = b2Vec2{0.15f, 0.15f};
     camera.minViewableY = 0.f;
     // Test player
     b2BodyDef playerBodyDef = b2DefaultBodyDef();
@@ -22,28 +22,44 @@ Platformer::Platformer(void)
     b2ShapeDef playerShapeDef = b2DefaultShapeDef();
     playerShapeDef.density = 1.f;
     playerShapeDef.material.friction = 0.3f;
-    player = new Entity(
-        world, {0.5f, 0.5f}, {0.f, 4.f}, Colors.Purple, false, playerBodyDef, playerShapeDef
+    auto uniquePlayer = std::make_unique<Entity>(
+        world, b2Vec2{0.5f, 0.5f}, b2Vec2{0.f, 4.f}, Colors.Purple, false, playerBodyDef,
+        playerShapeDef
     );
-    entities = {player};
+    player = uniquePlayer.get();
+    entities.push_back(std::move(uniquePlayer));
     camera.entityToFollow = player;
     // Tempoaray test entities
-    entities.push_back(new Entity{world, {50.f, 0.5f}, {0.f, 0.5f}, Colors.GrassGreen, true});
-    entities.push_back(new Entity{world, {0.5f, 10.f}, {-18.f, 11.f}, Colors.Gray, true});
-    entities.push_back(new Entity{world, {0.5f, 10.f}, {18.f, 11.f}, Colors.Gray, true});
+    entities.push_back(
+        std::make_unique<Entity>(
+            world, b2Vec2{50.f, 0.5f}, b2Vec2{0.f, 0.5f}, Colors.GrassGreen, true
+        )
+    );
+    entities.push_back(
+        std::make_unique<Entity>(world, b2Vec2{0.5f, 10.f}, b2Vec2{-18.f, 11.f}, Colors.Gray, true)
+    );
+    entities.push_back(
+        std::make_unique<Entity>(world, b2Vec2{0.5f, 10.f}, b2Vec2{18.f, 11.f}, Colors.Gray, true)
+    );
     b2BodyDef dynamicBodyDef = b2DefaultBodyDef();
     dynamicBodyDef.type = b2_dynamicBody;
     dynamicBodyDef.linearDamping = 0.5f;
     b2ShapeDef shapeDef = b2DefaultShapeDef();
     entities.push_back(
-        new Entity{world, {0.5f, 2.f}, {10.f, 3.f}, Colors.Brown, false, dynamicBodyDef, shapeDef}
+        std::make_unique<Entity>(
+            world, b2Vec2{0.5f, 2.f}, b2Vec2{10.f, 3.f}, Colors.Brown, false, dynamicBodyDef,
+            shapeDef
+        )
     );
     entities.push_back(
-        new Entity{world, {0.5f, 1.f}, {-10.f, 2.f}, Colors.Brown, false, dynamicBodyDef, shapeDef}
+        std::make_unique<Entity>(
+            world, b2Vec2{0.5f, 1.f}, b2Vec2{-10.f, 2.f}, Colors.Brown, false, dynamicBodyDef,
+            shapeDef
+        )
     );
 }
 
-void Platformer::handleSdlEvent(void) {
+void Platformer::handleSdlEvent() {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
         ImGui_ImplSDL3_ProcessEvent(&event);
@@ -64,16 +80,16 @@ void Platformer::handleSdlEvent(void) {
                 if (binding.activateOnRepeat || !event.key.repeat) {
                     InputState state =
                         event.type == SDL_EVENT_KEY_DOWN ? InputState_Pressed : InputState_Released;
-                    GameEvents::Input(binding.verb, state);
+                    GameEvents::Push(GameEventTypes::Input{binding.verb, state});
                 }
             }
             break;
         }
         case SDL_EVENT_MOUSE_WHEEL: {
             if (event.wheel.integer_y > 0) {
-                GameEvents::Input(InputVerb_ZoomIn, InputState_Pressed);
+                GameEvents::Push(GameEventTypes::Input{InputVerb_ZoomIn, InputState_Pressed});
             } else if (event.wheel.integer_y < 0) {
-                GameEvents::Input(InputVerb_ZoomOut, InputState_Pressed);
+                GameEvents::Push(GameEventTypes::Input{InputVerb_ZoomOut, InputState_Pressed});
             }
             break;
         }
@@ -81,24 +97,20 @@ void Platformer::handleSdlEvent(void) {
     }
 }
 
-void Platformer::handleGameEvent(void) {
+void Platformer::handleGameEvent() {
     GameEvent event;
     while (GameEvents::Poll(event)) {
-        switch (event.type) {
-        case GameEventTypes_CloseWindow: {
+        if (std::holds_alternative<GameEventTypes::CloseWindow>(event)) {
             running = false;
-        }; break;
-        case GameEventTypes_PlaySound: {
-
-        }; break;
-        case GameEventTypes_ToggleFullscreen: {
+        } else if (std::holds_alternative<GameEventTypes::ToggleFullscreen>(event)) {
             window.toggleFullscreen();
-        }; break;
-        case GameEventTypes_Input: {
-            if (event.input.state == InputState_Pressed) {
-                switch (event.input.verb) {
+        } else if (const auto* playSound = std::get_if<GameEventTypes::PlaySound>(&event)) {
+            // Not finished
+        } else if (const auto* input = std::get_if<GameEventTypes::Input>(&event)) {
+            if (input->state == InputState_Pressed) {
+                switch (input->verb) {
                 case InputVerb_ToggleFullscreen:
-                    GameEvents::ToggleFullscreen();
+                    GameEvents::Push(GameEventTypes::ToggleFullscreen{});
                     break;
                 case InputVerb_ZoomIn:
                     window.incrementScaleMultiplierBy(0.05f);
@@ -111,14 +123,13 @@ void Platformer::handleGameEvent(void) {
                 }
             }
             if (player) {
-                controlEntity(event.input, *player);
+                controlEntity(*input, *player);
             }
-        }; break;
         }
     }
 }
 
-void Platformer::drawDebugUi(void) {
+void Platformer::drawDebugUi() const {
     ImGui::Begin("Debug Menu");
     ImGui::Text(
         "\nApplication average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate,
@@ -157,7 +168,7 @@ void Platformer::drawDebugUi(void) {
     ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), window.sdlRenderer);
 }
 
-void Platformer::physicsStepHandler(void) {
+void Platformer::physicsStepHandler() {
     currentTime = SDL_GetTicks();
     float deltaTime = (float)(currentTime - lastTime) / 1000.0f;
     lastTime = currentTime;
@@ -166,7 +177,7 @@ void Platformer::physicsStepHandler(void) {
     }
     accumulator += deltaTime;
     while (accumulator >= physicsStep) {
-        for (Entity* entity : entities) {
+        for (const auto& entity : entities) {
             if (entity) {
                 entity->update();
             }
@@ -176,7 +187,7 @@ void Platformer::physicsStepHandler(void) {
     }
 }
 
-void Platformer::run(void) {
+void Platformer::run() {
     lastTime = SDL_GetTicks();
     running = true;
     while (running) {
@@ -184,20 +195,19 @@ void Platformer::run(void) {
         handleGameEvent();
         physicsStepHandler();
         window.clearFrame();
-        drawDebugUi();
         camera.run();
-        for (Entity* entity : entities) {
-            entity->draw(&window);
+        for (const auto& entity : entities) {
+            if (entity) {
+                entity->draw(&window);
+            }
         }
+        drawDebugUi();
         SDL_RenderPresent(window.sdlRenderer);
     }
 }
 
-void Platformer::close(void) {
+void Platformer::close() {
     b2DestroyWorld(world);
-    for (Entity* entity : entities) {
-        delete entity;
-    }
     entities.clear();
     ImGui_ImplSDLRenderer3_Shutdown();
     ImGui_ImplSDL3_Shutdown();

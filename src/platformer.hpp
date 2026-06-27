@@ -3,6 +3,7 @@
 #include "entity.hpp"
 #include "windowManager.hpp"
 #include <box2d/box2d.h>
+#include <memory>
 #include <vector>
 
 class Platformer {
@@ -10,7 +11,7 @@ class Platformer {
     WindowManager window;
     b2WorldId world;
     bool running;
-    std::vector<Entity*> entities;
+    std::vector<std::unique_ptr<Entity>> entities;
     Entity* player;
     Camera camera;
 
@@ -18,14 +19,14 @@ class Platformer {
     uint64_t lastTime = 0;
     float accumulator = 0.f;
     const float physicsStep = 1.0f / 60.0f;
-    void physicsStepHandler(void);
+    void physicsStepHandler();
 
-    void handleSdlEvent(void);
-    void handleGameEvent(void);
-    void drawDebugUi(void);
+    void handleSdlEvent();
+    void handleGameEvent();
+    void drawDebugUi() const;
 
   public:
-    Platformer(void);
-    void run(void);
-    void close(void);
+    Platformer();
+    void run();
+    void close();
 };

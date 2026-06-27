@@ -1,12 +1,8 @@
 #include "entity.hpp"
 #include "colors.hpp"
-#include <assert.h>
-
-static b2BodyDef defaultBodyDef = b2DefaultBodyDef();
-static b2ShapeDef defaultShapeDef = b2DefaultShapeDef();
 
 Entity::Entity(b2WorldId world, b2Vec2 size, b2Vec2 position, SDL_Color color, bool isStatic)
-    : Entity(world, size, position, color, isStatic, defaultBodyDef, defaultShapeDef) {}
+    : Entity(world, size, position, color, isStatic, b2DefaultBodyDef(), b2DefaultShapeDef()) {}
 
 Entity::Entity(
     b2WorldId world, b2Vec2 size, b2Vec2 position, SDL_Color color, bool isStatic,
@@ -24,7 +20,9 @@ Entity::Entity(
     spawnPoint = position;
 }
 
-void Entity::setColor(SDL_Color c) { color = colorToFColor(c.r, c.g, c.b); }
+Entity::~Entity() { b2DestroyBody(bodyId); }
+
+void Entity::setColor(SDL_Color c) { color = colorToFColor(c); }
 
 static SDL_FPoint scaleB2Point(WindowManager* window, b2Transform transform, b2Vec2 point) {
     b2Vec2 worldPosition = b2TransformPoint(transform, point);
@@ -38,7 +36,7 @@ static SDL_FPoint scaleB2Point(WindowManager* window, b2Transform transform, b2V
     return SDL_FPoint{worldPosition.x, worldPosition.y};
 }
 
-void Entity::draw(WindowManager* window) {
+void Entity::draw(WindowManager* window) const {
     b2Transform transform = b2Body_GetTransform(bodyId);
     SDL_Vertex sdlVertices[B2_MAX_POLYGON_VERTICES] = {0};
     for (int i = 0; i < polygon.count; i++) {
@@ -49,7 +47,7 @@ void Entity::draw(WindowManager* window) {
     SDL_RenderGeometry(window->sdlRenderer, NULL, sdlVertices, polygon.count, indices, 6);
 }
 
-void Entity::update(void) {
+void Entity::update() {
     if (isStatic) {
         return;
     }
@@ -72,7 +70,7 @@ void Entity::update(void) {
     b2Body_SetLinearVelocity(bodyId, velocity);
 }
 
-void Entity::jump(void) {
+void Entity::jump() {
     b2Body_ApplyLinearImpulseToCenter(bodyId, b2Vec2{0.f, jumpForceNewtons}, true);
 }
 
@@ -81,4 +79,4 @@ void Entity::teleport(b2Vec2 location) {
     b2Body_SetTransform(bodyId, location, b2Body_GetRotation(bodyId));
 }
 
-void Entity::respawn(void) { teleport(spawnPoint); }
+void Entity::respawn() { teleport(spawnPoint); }

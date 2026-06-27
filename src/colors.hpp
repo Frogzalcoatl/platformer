@@ -1,8 +1,16 @@
 #pragma once
 #include <SDL3/SDL.h>
 
-inline SDL_FColor colorToFColor(int r, int g, int b) {
-    return SDL_FColor{r / 255.f, g / 255.f, b / 255.f, 1.f};
+inline SDL_FColor colorToFColor(const SDL_Color& color) {
+    return SDL_FColor{color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f};
+}
+
+inline SDL_Color fColorToColor(const SDL_FColor& color) {
+    return SDL_Color{
+        static_cast<Uint8>(SDL_roundf(color.r * 255)),
+        static_cast<Uint8>(SDL_roundf(color.g * 255)),
+        static_cast<Uint8>(SDL_roundf(color.b * 255)), static_cast<Uint8>(SDL_roundf(color.a * 255))
+    };
 }
 
 inline struct Colors {

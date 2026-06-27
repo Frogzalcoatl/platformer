@@ -16,7 +16,7 @@ WindowManager::WindowManager(const char* windowName, SDL_Color backgroundColor)
     ImGui_ImplSDLRenderer3_Init(sdlRenderer);
 }
 
-void WindowManager::clearFrame(void) {
+void WindowManager::clearFrame() {
     ImGui_ImplSDLRenderer3_NewFrame();
     ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();
@@ -26,24 +26,24 @@ void WindowManager::clearFrame(void) {
     SDL_RenderClear(sdlRenderer);
 }
 
-void WindowManager::toggleFullscreen(void) {
+void WindowManager::toggleFullscreen() {
     isFullscreen = !isFullscreen;
     SDL_SetWindowFullscreen(sdlWindow, isFullscreen);
 }
 
-WindowDimensions WindowManager::getSizePixels(void) { return size; }
+WindowDimensions WindowManager::getSizePixels() const { return size; }
 
-b2Vec2 WindowManager::getSizeWorld(void) {
+b2Vec2 WindowManager::getSizeWorld() const {
     return b2Vec2{size.x / scaleFactor, size.y / scaleFactor};
 }
 
-WindowDimensions WindowManager::getOffsetPixels(void) { return offsetPixels; }
+WindowDimensions WindowManager::getOffsetPixels() const { return offsetPixels; }
 
-b2Vec2 WindowManager::getOffsetWorld(void) { return offsetWorld; }
+b2Vec2 WindowManager::getOffsetWorld() const { return offsetWorld; }
 
-float WindowManager::getScaleFactor(void) { return scaleFactor; }
+float WindowManager::getScaleFactor() const { return scaleFactor; }
 
-void WindowManager::updateScaleFactor(void) {
+void WindowManager::updateScaleFactor() {
     int dividend = b2MinInt(size.x, size.y);
     scaleFactor = (dividend / 20.f) * scaleMultiplier;
 }
@@ -75,7 +75,7 @@ void WindowManager::incrementScaleMultiplierBy(float amount) {
     updateScaleFactor();
 }
 
-void WindowManager::resetScaleMultiplier(void) {
+void WindowManager::resetScaleMultiplier() {
     scaleMultiplier = 1.f;
     updateScaleFactor();
 }

@@ -1,5 +1,5 @@
 #pragma once
+#include "Events.hpp"
 #include "entity.hpp"
-#include "input.hpp"
 
-void controlEntity(InputEvent event, Entity& entity);
+void controlEntity(GameEventTypes::Input event, Entity& entity);

@@ -1,6 +1,7 @@
 #include "playerInput.hpp"
 #include "entity.hpp"
-#include <assert.h>
+#include "events.hpp"
+#include <cassert>
 
 static std::optional<EntityMovement> inputVerbToDirection(InputVerb verb) {
     switch (verb) {
@@ -17,7 +18,7 @@ static std::optional<EntityMovement> inputVerbToDirection(InputVerb verb) {
     }
 }
 
-void controlEntity(InputEvent event, Entity& entity) {
+void controlEntity(GameEventTypes::Input event, Entity& entity) {
     assert(event.state == InputState_Pressed || event.state == InputState_Released);
     assert(event.verb >= 0 && event.verb < InputVerb_Count);
     if (event.state == InputState_Pressed) {

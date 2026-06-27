@@ -1,5 +1,5 @@
 #include "input.hpp"
-#include <assert.h>
+#include <cassert>
 
 static std::array<std::array<ScancodeInfo, MaxBindsPerVerb>, InputVerb_Count> bindings = {};
 
@@ -14,7 +14,7 @@ void bindScancodeToVerb(InputVerb verb, ScancodeInfo scancodeInfo, std::optional
     Differences between reference and pointer:
     - References are not a memory address, rather a direct reference to an existing variable.
     - References are never null since they are attached to existing values.
-    - reassigning the below verbBinds variable to something else would also reassign the array
+    - reassigning the below verbBinds variable to something else would also overwrite the array
     above.
     - Cleaner syntax
     */
@@ -62,7 +62,7 @@ void clearVerbScancodeIndex(InputVerb verb, int index) {
 
 std::optional<InputVerbInfo> getBindingFromScancode(SDL_Scancode scancode) {
     for (int i = 0; i < InputVerb_Count; i++) {
-        for (ScancodeInfo binding : bindings[i]) {
+        for (ScancodeInfo& binding : bindings[i]) {
             if (binding.scancode == scancode) {
                 return InputVerbInfo{static_cast<InputVerb>(i), binding.activateOnRepeat};
             }
@@ -97,8 +97,8 @@ static const std::vector<DefaultBinding> defaultVerbBindings = {
     {InputVerb_ResetZoom, SDL_SCANCODE_KP_0}
 };
 
-void connectDefaultVerbMappings(void) {
-    for (DefaultBinding binding : defaultVerbBindings) {
+void connectDefaultVerbMappings() {
+    for (const DefaultBinding& binding : defaultVerbBindings) {
         bindScancodeToVerb(
             binding.verb, ScancodeInfo{binding.scancode, binding.activateOnRepeat}, std::nullopt
         );

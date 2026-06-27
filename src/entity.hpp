@@ -25,6 +25,7 @@ class Entity {
         b2WorldId world, b2Vec2 size, b2Vec2 position, SDL_Color color, bool isStatic,
         b2BodyDef bodyDef, b2ShapeDef shapeDef
     );
+    ~Entity();
     b2BodyId bodyId;
     b2Polygon polygon;
     const bool isStatic;
@@ -34,10 +35,10 @@ class Entity {
     const float horizontalAcceleration = 0.25f;
     const float downwardAcceleration = 5.f;
     std::array<bool, EntityMovement_Count> movement = {false};
-    void draw(WindowManager* window);
-    void jump(void);
-    void update(void);
+    void draw(WindowManager* window) const;
+    void jump();
+    void update();
     void teleport(b2Vec2 location);
-    void respawn(void);
+    void respawn();
     void setColor(SDL_Color);
 };

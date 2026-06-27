@@ -4,7 +4,7 @@
 #include <optional>
 #include <vector>
 
-enum InputVerb {
+enum InputVerb : uint8_t {
     InputVerb_Up,
     InputVerb_Down,
     InputVerb_Left,
@@ -19,7 +19,7 @@ enum InputVerb {
     InputVerb_Count
 };
 
-enum InputState { InputState_Pressed, InputState_Released };
+enum InputState : uint8_t { InputState_Pressed, InputState_Released };
 
 struct InputVerbInfo {
     InputVerb verb;
@@ -31,15 +31,10 @@ struct ScancodeInfo {
     bool activateOnRepeat = false;
 };
 
-struct InputEvent {
-    InputVerb verb;
-    InputState state;
-};
-
 constexpr int MaxBindsPerVerb = 4;
 
 void bindScancodeToVerb(InputVerb verb, ScancodeInfo binding, std::optional<int> atIndexOpt);
 void unbindScancodeFromVerb(InputVerb verb, SDL_Scancode scancode);
 void clearVerbScancodeIndex(InputVerb verb, int index);
 std::optional<InputVerbInfo> getBindingFromScancode(SDL_Scancode scancode);
-void connectDefaultVerbMappings(void);
+void connectDefaultVerbMappings();

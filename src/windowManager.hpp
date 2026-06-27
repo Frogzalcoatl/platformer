@@ -13,10 +13,10 @@ class WindowManager {
     WindowDimensions size;
     WindowDimensions offsetPixels;
     b2Vec2 offsetWorld = {0.f, 0.f};
-    float scaleFactor;
+    float scaleFactor = 1.f;
     bool isFullscreen = false;
 
-    void updateScaleFactor(void);
+    void updateScaleFactor();
 
   public:
     SDL_Renderer* sdlRenderer;
@@ -26,16 +26,16 @@ class WindowManager {
 
     WindowManager(const char* windowName, SDL_Color backgroundColor);
 
-    void clearFrame(void);
-    void toggleFullscreen(void);
+    void clearFrame();
+    void toggleFullscreen();
     void handleResize(int sizeX, int sizeY);
     void incrementScaleMultiplierBy(float amount);
-    void resetScaleMultiplier(void);
+    void resetScaleMultiplier();
     void updateOffset(std::optional<b2Vec2> worldPosition);
 
-    WindowDimensions getSizePixels(void);
-    b2Vec2 getSizeWorld(void);
-    WindowDimensions getOffsetPixels(void);
-    b2Vec2 getOffsetWorld(void);
-    float getScaleFactor(void);
+    WindowDimensions getSizePixels() const;
+    b2Vec2 getSizeWorld() const;
+    WindowDimensions getOffsetPixels() const;
+    b2Vec2 getOffsetWorld() const;
+    float getScaleFactor() const;
 };

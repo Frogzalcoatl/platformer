@@ -6,7 +6,7 @@ int main(int argc, char* argv[]) {
     (void)argv;
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD | SDL_INIT_AUDIO)) {
         SDL_Log("SDL Initialization failed: %s", SDL_GetError());
-        return false;
+        return 1;
     }
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();

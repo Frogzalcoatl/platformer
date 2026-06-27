@@ -3,11 +3,11 @@
 Camera::Camera(Entity* followEntity, WindowManager& window)
     : entityToFollow(followEntity), window(window) {}
 
-b2Vec2 Camera::getEntitySafeAreaValue(void) { return entitySafeAreaVal; }
+b2Vec2 Camera::getEntitySafeAreaValue() const { return entitySafeAreaVal; }
 
-b2Vec2 Camera::getSafeAreaSize(void) { return safeAreaSize; }
+b2Vec2 Camera::getSafeAreaSize() const { return safeAreaSize; }
 
-void Camera::run(void) {
+void Camera::run() {
     if (!entityToFollow) {
         return;
     }
@@ -78,7 +78,7 @@ b2Vec2 Camera::applyViewableLimits(b2Vec2 camPos) {
 }
 
 /*
-void Camera::centerOnEntity(void) {
+void Camera::centerOnEntity() {
     if (!entityToFollow) {
         return;
     }

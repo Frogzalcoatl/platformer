@@ -1,30 +1,24 @@
 #pragma once
 #include "input.hpp"
+#include <variant>
 
-enum GameEventTypes {
-    GameEventTypes_None,
-    GameEventTypes_CloseWindow,
-    GameEventTypes_PlaySound,
-    GameEventTypes_ToggleFullscreen,
-    GameEventTypes_Input,
-    GameEventTypes_Count
+namespace GameEventTypes {
+struct CloseWindow {};
+struct PlaySound {
+    int soundId;
 };
+struct ToggleFullscreen {};
+struct Input {
+    InputVerb verb;
+    InputState state;
+};
+} // namespace GameEventTypes
 
-struct GameEvent {
-    GameEventTypes type;
-    union {
-        struct {
-            int soundId;
-        } playSound;
-        InputEvent input;
-    };
-};
+using GameEvent = std::variant<
+    GameEventTypes::CloseWindow, GameEventTypes::PlaySound, GameEventTypes::ToggleFullscreen,
+    GameEventTypes::Input>;
 
 namespace GameEvents {
 bool Poll(GameEvent& event);
 void Push(GameEvent event);
-void CloseWindow();
-void PlaySound(int soundId);
-void ToggleFullscreen(void);
-void Input(InputVerb inputVerb, InputState state);
 } // namespace GameEvents

@@ -11,7 +11,7 @@ static int tail = 0;
 void GameEvents::Push(GameEvent event) {
     int nextHead = (head + 1) % EventQueueSize;
     if (nextHead == tail) {
-        SDL_Log("Event Queue Overflow. Dropping event type %d", event.type);
+        SDL_Log("Event Queue Overflow. Dropping event type %zu", event.index());
         return;
     }
     eventQueue[head] = event;
@@ -26,30 +26,4 @@ bool GameEvents::Poll(GameEvent& event) {
     event = eventQueue[tail];
     tail = (tail + 1) % EventQueueSize;
     return true;
-}
-
-void GameEvents::CloseWindow() {
-    GameEvent event;
-    event.type = GameEventTypes_CloseWindow;
-    GameEvents::Push(event);
-}
-
-void GameEvents::PlaySound(int soundId) {
-    GameEvent event;
-    event.type = GameEventTypes_PlaySound;
-    event.playSound.soundId = soundId;
-    GameEvents::Push(event);
-}
-
-void GameEvents::ToggleFullscreen(void) {
-    GameEvent event;
-    event.type = GameEventTypes_ToggleFullscreen;
-    GameEvents::Push(event);
-}
-
-void GameEvents::Input(InputVerb inputVerb, InputState state) {
-    GameEvent event;
-    event.type = GameEventTypes_Input;
-    event.input = InputEvent{inputVerb, state};
-    GameEvents::Push(event);
 }
