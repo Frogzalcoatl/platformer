@@ -52,7 +52,7 @@ void unbindScancodeFromVerb(InputVerb verb, SDL_Scancode scancode) {
 }
 
 // Clears specific index of a verb mapping array
-void clearVerbScancodeIndex(InputVerb verb, int index) {
+void clearVerbMappingAtIndex(InputVerb verb, int index) {
     assert(verb >= 0 && verb < InputVerb_Count);
     assert(index >= 0 && index < MaxBindsPerVerb);
     auto& scancodeIfnoArr = bindings[verb];
@@ -60,7 +60,7 @@ void clearVerbScancodeIndex(InputVerb verb, int index) {
     scancodeIfnoArr[index].activateOnRepeat = false;
 }
 
-std::optional<InputVerbInfo> getBindingFromScancode(SDL_Scancode scancode) {
+std::optional<InputVerbInfo> getVerbFromScancode(SDL_Scancode scancode) {
     for (int i = 0; i < InputVerb_Count; i++) {
         for (ScancodeInfo& binding : bindings[i]) {
             if (binding.scancode == scancode) {

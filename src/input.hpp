@@ -35,6 +35,6 @@ constexpr int MaxBindsPerVerb = 4;
 
 void bindScancodeToVerb(InputVerb verb, ScancodeInfo binding, std::optional<int> atIndexOpt);
 void unbindScancodeFromVerb(InputVerb verb, SDL_Scancode scancode);
-void clearVerbScancodeIndex(InputVerb verb, int index);
-std::optional<InputVerbInfo> getBindingFromScancode(SDL_Scancode scancode);
+void clearVerbMappingAtIndex(InputVerb verb, int index);
+std::optional<InputVerbInfo> getVerbFromScancode(SDL_Scancode scancode);
 void connectDefaultVerbMappings();

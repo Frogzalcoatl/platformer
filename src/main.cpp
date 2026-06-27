@@ -1,3 +1,4 @@
+#include "Gamepad.hpp"
 #include "platformer.hpp"
 #include <imgui.h>
 
@@ -10,6 +11,7 @@ int main(int argc, char* argv[]) {
     }
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+    addGamepadMappings();
     Platformer game;
     game.run();
     game.close();

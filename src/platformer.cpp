@@ -1,4 +1,5 @@
 #include "platformer.hpp"
+#include "Gamepad.hpp"
 #include "colors.hpp"
 #include "events.hpp"
 #include "playerInput.hpp"
@@ -66,15 +67,13 @@ void Platformer::handleSdlEvent() {
         switch (event.type) {
         case SDL_EVENT_QUIT: {
             running = false;
-            break;
-        }
+        }; break;
         case SDL_EVENT_WINDOW_RESIZED: {
             window.handleResize(event.window.data1, event.window.data2);
-            break;
-        }
+        }; break;
         case SDL_EVENT_KEY_DOWN:
         case SDL_EVENT_KEY_UP: {
-            auto verbResult = getBindingFromScancode(event.key.scancode);
+            auto verbResult = getVerbFromScancode(event.key.scancode);
             if (verbResult.has_value()) {
                 InputVerbInfo& binding = verbResult.value();
                 if (binding.activateOnRepeat || !event.key.repeat) {
@@ -83,16 +82,23 @@ void Platformer::handleSdlEvent() {
                     GameEvents::Push(GameEventTypes::Input{binding.verb, state});
                 }
             }
-            break;
-        }
+        }; break;
         case SDL_EVENT_MOUSE_WHEEL: {
             if (event.wheel.integer_y > 0) {
                 GameEvents::Push(GameEventTypes::Input{InputVerb_ZoomIn, InputState_Pressed});
             } else if (event.wheel.integer_y < 0) {
                 GameEvents::Push(GameEventTypes::Input{InputVerb_ZoomOut, InputState_Pressed});
             }
-            break;
-        }
+        }; break;
+        case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+        case SDL_EVENT_GAMEPAD_BUTTON_UP: {
+            auto resultOpt = handleGamepadButtonEvent(event.gbutton);
+            if (!resultOpt.has_value()) {
+                break;
+            }
+            GameEventTypes::Input& result = resultOpt.value();
+            GameEvents::Push(result);
+        }; break;
         }
     }
 }
@@ -207,8 +213,8 @@ void Platformer::run() {
 }
 
 void Platformer::close() {
-    b2DestroyWorld(world);
     entities.clear();
+    b2DestroyWorld(world);
     ImGui_ImplSDLRenderer3_Shutdown();
     ImGui_ImplSDL3_Shutdown();
     ImGui::DestroyContext();

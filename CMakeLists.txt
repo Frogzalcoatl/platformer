@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 3.26)
 project(MyPlatformer CXX C)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -32,7 +32,7 @@ target_link_libraries(MyPlatformer PRIVATE
     imgui::imgui
 )
 
-if(ANDROID)
+if(ANDROID) 
     target_link_options(MyPlatformer PRIVATE "-u" "ANativeActivity_onCreate")
 endif()
 
@@ -41,3 +41,11 @@ if(MSVC)
 else()
     target_compile_options(MyPlatformer PRIVATE -Wall -Wextra -Werror)
 endif()
+
+add_custom_target(copy_assets ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+            "${CMAKE_CURRENT_SOURCE_DIR}/assets"
+            "${CMAKE_BINARY_DIR}/bin/assets"
+    COMMENT "Copying modified assets to the build directory"
+)
+add_dependencies(MyPlatformer copy_assets)
