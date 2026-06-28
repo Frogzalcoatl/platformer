@@ -22,6 +22,10 @@ Entity::Entity(
 
 Entity::~Entity() { b2DestroyBody(bodyId); }
 
+b2BodyId Entity::getBodyId() { return bodyId; }
+
+b2Polygon Entity::getPolygon() { return polygon; }
+
 void Entity::setColor(SDL_Color c) { color = colorToFColor(c); }
 
 static SDL_FPoint scaleB2Point(WindowManager* window, b2Transform transform, b2Vec2 point) {
