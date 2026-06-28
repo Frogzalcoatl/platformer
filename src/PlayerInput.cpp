@@ -1,6 +1,7 @@
 #include "playerInput.hpp"
-#include "entity.hpp"
-#include "events.hpp"
+#include "Camera.hpp"
+#include "Entity.hpp"
+#include "Events.hpp"
 #include <cassert>
 
 static std::optional<EntityMovement> inputVerbToDirection(InputVerb verb) {
@@ -18,12 +19,15 @@ static std::optional<EntityMovement> inputVerbToDirection(InputVerb verb) {
     }
 }
 
-void controlEntity(GameEventTypes::Input event, Entity& entity) {
+void controlEntity(GameEventTypes::Input event, Entity& entity, Camera& camera) {
     assert(event.state == InputState_Pressed || event.state == InputState_Released);
     assert(event.verb >= 0 && event.verb < InputVerb_Count);
     if (event.state == InputState_Pressed) {
         if (event.verb == InputVerb_Respawn) {
             entity.respawn();
+            if (camera.entityToFollow == &entity) {
+                camera.centerOnEntity();
+            }
             return;
         } else if (event.verb == InputVerb_Up) {
             entity.jump();

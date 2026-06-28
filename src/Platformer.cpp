@@ -1,8 +1,8 @@
-#include "platformer.hpp"
+#include "Platformer.hpp"
+#include "Colors.hpp"
+#include "Events.hpp"
 #include "Gamepad.hpp"
-#include "colors.hpp"
-#include "events.hpp"
-#include "playerInput.hpp"
+#include "PlayerInput.hpp"
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_sdlrenderer3.h>
@@ -129,7 +129,7 @@ void Platformer::handleGameEvent() {
                 }
             }
             if (player) {
-                controlEntity(*input, *player);
+                controlEntity(*input, *player, camera);
             }
         }
     }

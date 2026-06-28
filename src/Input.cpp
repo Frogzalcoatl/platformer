@@ -1,4 +1,4 @@
-#include "input.hpp"
+#include "Input.hpp"
 #include <cassert>
 
 static std::array<std::array<ScancodeInfo, MaxBindsPerVerb>, InputVerb_Count> bindings = {};

@@ -1,5 +1,6 @@
 #pragma once
+#include "Camera.hpp"
+#include "Entity.hpp"
 #include "Events.hpp"
-#include "entity.hpp"
 
-void controlEntity(GameEventTypes::Input event, Entity& entity);
+void controlEntity(GameEventTypes::Input event, Entity& entity, Camera& camera);

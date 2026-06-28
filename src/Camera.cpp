@@ -1,4 +1,4 @@
-#include "camera.hpp"
+#include "Camera.hpp"
 
 Camera::Camera(Entity* followEntity, WindowManager& window)
     : entityToFollow(followEntity), window(window) {}
@@ -34,11 +34,11 @@ void Camera::run() {
     } else if (entityOffset.y < -halfDeadZoneY) {
         newCamPos.y = entityPos.y + halfDeadZoneY;
     }
-    newCamPos = applyViewableLimits(newCamPos);
+    applyViewableLimits(newCamPos);
     window.updateOffset(newCamPos);
 }
 
-b2Vec2 Camera::applyViewableLimits(b2Vec2 camPos) {
+void Camera::applyViewableLimits(b2Vec2& camPos) {
     const b2Vec2 windowSizeWorld = window.getSizeWorld();
     if (minViewableX.has_value() && maxViewableX.has_value() &&
         (maxViewableX.value() - minViewableX.value() < windowSizeWorld.x)) {
@@ -74,17 +74,11 @@ b2Vec2 Camera::applyViewableLimits(b2Vec2 camPos) {
             }
         }
     }
-    return camPos;
 }
 
-/*
 void Camera::centerOnEntity() {
     if (!entityToFollow) {
         return;
     }
-    const b2Vec2 currentOffsetWorld = window.getOffsetWorld();
-    b2Vec2 camPos = {-currentOffsetWorld.x, currentOffsetWorld.y};
-    b2Vec2 entityPos = b2Body_GetPosition(entityToFollow->bodyId);
-    const b2Vec2 windowSizeWorld = window.getSizeWorld();
+    window.updateOffset(b2Body_GetPosition(entityToFollow->bodyId));
 }
-*/

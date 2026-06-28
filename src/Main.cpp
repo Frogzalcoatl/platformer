@@ -1,6 +1,6 @@
 #include "FormatLogs.hpp"
 #include "Gamepad.hpp"
-#include "platformer.hpp"
+#include "Platformer.hpp"
 #include <imgui.h>
 
 int main(int argc, char* argv[]) {

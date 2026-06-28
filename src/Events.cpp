@@ -1,4 +1,4 @@
-#include "events.hpp"
+#include "Events.hpp"
 #include <SDL3/SDL.h>
 #include <array>
 

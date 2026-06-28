@@ -1,5 +1,5 @@
 #pragma once
-#include "windowManager.hpp"
+#include "WindowManager.hpp"
 #include <SDL3/SDL.h>
 #include <array>
 #include <box2d/box2d.h>

@@ -1,5 +1,5 @@
-#include "entity.hpp"
-#include "colors.hpp"
+#include "Entity.hpp"
+#include "Colors.hpp"
 
 Entity::Entity(b2WorldId world, b2Vec2 size, b2Vec2 position, SDL_Color color, bool isStatic)
     : Entity(world, size, position, color, isStatic, b2DefaultBodyDef(), b2DefaultShapeDef()) {}

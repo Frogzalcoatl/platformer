@@ -1,7 +1,7 @@
 #pragma once
-#include "camera.hpp"
-#include "entity.hpp"
-#include "windowManager.hpp"
+#include "Camera.hpp"
+#include "Entity.hpp"
+#include "WindowManager.hpp"
 #include <box2d/box2d.h>
 #include <memory>
 #include <vector>
