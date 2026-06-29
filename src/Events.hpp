@@ -1,5 +1,5 @@
 #pragma once
-#include "Input.hpp"
+#include "InputManager.hpp"
 #include <variant>
 
 namespace GameEventTypes {

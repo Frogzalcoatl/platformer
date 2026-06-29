@@ -1,6 +1,7 @@
 #pragma once
 #include "Camera.hpp"
 #include "Entity.hpp"
+#include "InputManager.hpp"
 #include "WindowManager.hpp"
 #include <box2d/box2d.h>
 #include <memory>
@@ -9,10 +10,11 @@
 class Platformer {
   private:
     WindowManager window;
+    InputManager input;
     b2WorldId world;
-    bool running;
+    bool running = false;
     std::vector<std::unique_ptr<Entity>> entities;
-    Entity* player;
+    Entity* player = nullptr;
     Camera camera;
 
     uint64_t currentTime = 0;
@@ -23,7 +25,7 @@ class Platformer {
 
     void handleSdlEvent();
     void handleGameEvent();
-    void drawDebugUi() const;
+    void showDebugUi() const;
 
   public:
     Platformer();

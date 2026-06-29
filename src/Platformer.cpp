@@ -1,7 +1,7 @@
 #include "Platformer.hpp"
 #include "Colors.hpp"
 #include "Events.hpp"
-#include "Gamepad.hpp"
+#include "KeybindUi.hpp"
 #include "PlayerInput.hpp"
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
@@ -12,11 +12,6 @@ Platformer::Platformer()
     b2WorldDef worldDef = b2DefaultWorldDef();
     worldDef.gravity = {0.0f, -60.f};
     world = b2CreateWorld(&worldDef);
-    running = false;
-    bindDefaultScancodes();
-    initGamepadButtonBindings();
-    bindDefaultGamepadButtons();
-    camera.safeArea = b2Vec2{0.15f, 0.15f};
     camera.minViewableY = 0.f;
     // Test player
     b2BodyDef playerBodyDef = b2DefaultBodyDef();
@@ -73,7 +68,7 @@ void Platformer::handleSdlEvent() {
         }; break;
         case SDL_EVENT_KEY_DOWN:
         case SDL_EVENT_KEY_UP: {
-            std::vector<InputVerbInfo> verbs = getVerbsFromScancode(event.key.scancode);
+            std::vector<InputVerbInfo> verbs = input.getVerbsFromScancode(event.key.scancode);
             if (verbs.size() == 0) {
                 break;
             }
@@ -94,8 +89,9 @@ void Platformer::handleSdlEvent() {
         }; break;
         case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
         case SDL_EVENT_GAMEPAD_BUTTON_UP: {
-            std::vector<InputVerb> verbs =
-                getVerbsFromGamepadButton(static_cast<SDL_GamepadButton>(event.gbutton.button));
+            std::vector<InputVerb> verbs = input.getVerbsFromGamepadButton(
+                static_cast<SDL_GamepadButton>(event.gbutton.button)
+            );
             if (verbs.size() == 0) {
                 break;
             }
@@ -117,14 +113,14 @@ void Platformer::handleGameEvent() {
     while (GameEvents::Poll(event)) {
         if (std::holds_alternative<GameEventTypes::CloseWindow>(event)) {
             running = false;
-        } else if (const auto* playSound = std::get_if<GameEventTypes::PlaySound>(&event)) {
+        } else if (const auto* playSoundEvent = std::get_if<GameEventTypes::PlaySound>(&event)) {
             // Not finished
-        } else if (const auto* input = std::get_if<GameEventTypes::Input>(&event)) {
+        } else if (const auto* inputEvent = std::get_if<GameEventTypes::Input>(&event)) {
             if (
-                input->state == InputState::Pressed &&
-                !inputThisFrame[static_cast<size_t>(input->verb)] // Prevent duplicate input
+                inputEvent->state == InputState::Pressed &&
+                !inputThisFrame[static_cast<size_t>(inputEvent->verb)] // Prevent duplicate input
             ) {
-                switch (input->verb) {
+                switch (inputEvent->verb) {
                 case InputVerb::ToggleFullscreen:
                     window.toggleFullscreen();
                     break;
@@ -137,17 +133,17 @@ void Platformer::handleGameEvent() {
                 case InputVerb::ZoomReset:
                     window.resetScaleMultiplier();
                 }
-                inputThisFrame[static_cast<size_t>(input->verb)] = true;
+                inputThisFrame[static_cast<size_t>(inputEvent->verb)] = true;
             }
             if (player) {
-                controlEntity(*input, *player, camera);
+                controlEntity(*inputEvent, *player, camera);
             }
         }
     }
     inputThisFrame.fill(false);
 }
 
-void Platformer::drawDebugUi() const {
+void Platformer::showDebugUi() const {
     ImGui::Begin("Debug Menu");
     ImGui::Text(
         "\nApplication average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate,
@@ -184,8 +180,6 @@ void Platformer::drawDebugUi() const {
         );
     }
     ImGui::End();
-    ImGui::Render();
-    ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), window.sdlRenderer);
 }
 
 void Platformer::physicsStepHandler() {
@@ -221,7 +215,10 @@ void Platformer::run() {
                 entity->draw(&window);
             }
         }
-        drawDebugUi();
+        showDebugUi();
+        showKeybindUi();
+        ImGui::Render();
+        ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), window.sdlRenderer);
         SDL_RenderPresent(window.sdlRenderer);
     }
 }

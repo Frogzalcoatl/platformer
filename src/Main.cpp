@@ -1,5 +1,4 @@
 #include "FormatLogs.hpp"
-#include "Gamepad.hpp"
 #include "Platformer.hpp"
 #include <imgui.h>
 
@@ -13,7 +12,6 @@ int main(int argc, char* argv[]) {
     }
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    addGamepadMappingsFromFiles();
     Platformer game;
     game.run();
     game.close();
