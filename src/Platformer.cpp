@@ -13,6 +13,7 @@ Platformer::Platformer()
     worldDef.gravity = {0.0f, -60.f};
     world = b2CreateWorld(&worldDef);
     camera.minViewableY = 0.f;
+    updateKeybindsUi(input);
     // Test player
     b2BodyDef playerBodyDef = b2DefaultBodyDef();
     playerBodyDef.fixedRotation = true;

@@ -12,6 +12,7 @@ enum class InputVerb : uint8_t {
     Down,
     Left,
     Right,
+    Jump,
     Confirm,
     Cancel,
     Respawn,
@@ -19,9 +20,10 @@ enum class InputVerb : uint8_t {
     ZoomIn,
     ZoomOut,
     ZoomReset,
-    Jump,
     Count
 };
+
+std::string inputVerbToString(InputVerb verb);
 
 enum class InputState : uint8_t { Pressed, Released };
 
@@ -31,7 +33,7 @@ struct InputVerbInfo {
 };
 
 struct ScancodeInfo {
-    SDL_Scancode scancode;
+    SDL_Scancode scancode = SDL_SCANCODE_UNKNOWN;
     bool activateOnRepeat = false;
 };
 
@@ -72,6 +74,7 @@ class InputManager {
     std::vector<InputVerb> getVerbsFromGamepadButton(SDL_GamepadButton button);
     std::array<SDL_GamepadButton, MaxBindsPerVerb> getGamepadButtonsFromverb(InputVerb verb);
 
+    // Will probably remove default bindings vectors later, currently here for convenience
     const std::vector<DefaultScancodeBinding> defaultVerbBindings = {
         {InputVerb::Up, SDL_SCANCODE_W},
         {InputVerb::Up, SDL_SCANCODE_UP},
@@ -95,15 +98,12 @@ class InputManager {
         {InputVerb::Jump, SDL_SCANCODE_UP},
         {InputVerb::Jump, SDL_SCANCODE_SPACE}
     };
-
     const std::vector<DefaultButtonBinding> defaultButtonBindings = {
         {InputVerb::Up, SDL_GAMEPAD_BUTTON_DPAD_UP},
         {InputVerb::Down, SDL_GAMEPAD_BUTTON_DPAD_DOWN},
         {InputVerb::Left, SDL_GAMEPAD_BUTTON_DPAD_LEFT},
         {InputVerb::Right, SDL_GAMEPAD_BUTTON_DPAD_RIGHT},
-        // South is A on Xbox, X on PlayStation, B on Switch
         {InputVerb::Confirm, SDL_GAMEPAD_BUTTON_SOUTH},
-        // East is B on Xbox, O on PlayStation, A on Switch
         {InputVerb::Cancel, SDL_GAMEPAD_BUTTON_EAST},
         {InputVerb::Cancel, SDL_GAMEPAD_BUTTON_BACK},
         {InputVerb::Jump, SDL_GAMEPAD_BUTTON_SOUTH},

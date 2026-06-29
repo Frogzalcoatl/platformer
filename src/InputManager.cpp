@@ -1,6 +1,37 @@
 #include "InputManager.hpp"
 #include <cassert>
 
+std::string inputVerbToString(InputVerb verb) {
+    switch (verb) {
+    case InputVerb::Up:
+        return "Up";
+    case InputVerb::Down:
+        return "Down";
+    case InputVerb::Left:
+        return "Left";
+    case InputVerb::Right:
+        return "Right";
+    case InputVerb::Jump:
+        return "Jump";
+    case InputVerb::Confirm:
+        return "Confirm";
+    case InputVerb::Cancel:
+        return "Cancel";
+    case InputVerb::Respawn:
+        return "Respawn";
+    case InputVerb::ToggleFullscreen:
+        return "Toggle Fullscreen";
+    case InputVerb::ZoomIn:
+        return "Zoom In";
+    case InputVerb::ZoomOut:
+        return "Zoom Out";
+    case InputVerb::ZoomReset:
+        return "Zoom Reset";
+    default:
+        return "";
+    }
+}
+
 InputManager::InputManager() {
     addGamepadMappingsFromFiles();
     for (int i = 0; i < static_cast<int>(InputVerb::Count); i++) {
@@ -10,6 +41,9 @@ InputManager::InputManager() {
         bindScancodeToVerb(
             binding.verb, ScancodeInfo{binding.scancode, binding.activateOnRepeat}, std::nullopt
         );
+    }
+    for (const auto& binding : defaultButtonBindings) {
+        bindGamepadButtonToVerb(binding.verb, binding.button, std::nullopt);
     }
 }
 

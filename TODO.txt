@@ -1,5 +1,3 @@
-Keybind ui
-
 Look in to using SDL's built in camera struct.
 
 Look in to b2World_Draw(b2WorldId worldId, b2DebugDraw* draw)

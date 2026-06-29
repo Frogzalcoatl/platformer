@@ -1,4 +1,5 @@
 #pragma once
-#include "WindowManager.hpp"
+#include "InputManager.hpp"
 
+void updateKeybindsUi(InputManager& input);
 void showKeybindUi();
