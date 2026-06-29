@@ -213,7 +213,7 @@ void Platformer::run() {
         camera.run();
         for (const auto& entity : entities) {
             if (entity) {
-                entity->draw(&window);
+                entity->draw(window);
             }
         }
         showDebugUi();

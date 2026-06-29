@@ -30,10 +30,11 @@ class Entity {
     const float horizontalAcceleration = 0.1f;
     const float downwardAcceleration = 5.f;
     std::array<bool, static_cast<size_t>(EntityMovement::Count)> movement = {false};
-    void draw(WindowManager* window) const;
+    void draw(WindowManager& window) const;
     void jump();
     void update();
     void teleport(b2Vec2 location);
     void respawn();
     void setColor(SDL_Color color);
+    SDL_Color getColor();
 };

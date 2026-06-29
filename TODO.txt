@@ -1,9 +1,6 @@
-Look in to using SDL's built in camera struct.
-
-Look in to b2World_Draw(b2WorldId worldId, b2DebugDraw* draw)
-If above does not work out, improve draw entity func (https://grokipedia.com/page/fan_triangulation). 
-    Additionally add draw borders function with thickness param
-Make these draw funcs separate from the entity class then just call them inside the entity methods
+Draw shape borders
+Draw fan triangulation borders
+Account for polygon radius
 
 Asset manager. not using packer since it would be overkill for right now
 

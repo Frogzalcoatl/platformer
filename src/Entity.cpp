@@ -1,5 +1,6 @@
 #include "Entity.hpp"
 #include "Colors.hpp"
+#include "DrawPolygon.hpp"
 
 Entity::Entity(b2WorldId world, b2Vec2 size, b2Vec2 position, SDL_Color color, bool isStatic)
     : Entity(world, size, position, color, isStatic, b2DefaultBodyDef(), b2DefaultShapeDef()) {}
@@ -28,27 +29,11 @@ b2Polygon Entity::getPolygon() { return polygon; }
 
 void Entity::setColor(SDL_Color c) { color = colorToFColor(c); }
 
-static SDL_FPoint scaleB2Point(WindowManager* window, b2Transform transform, b2Vec2 point) {
-    b2Vec2 worldPosition = b2TransformPoint(transform, point);
-    float scaleFactor = window->getScaleFactor();
-    WindowDimensions offset = window->getOffsetPixels();
-    worldPosition.x *= scaleFactor;
-    worldPosition.y *= scaleFactor;
-    worldPosition.y *= -1.f;
-    worldPosition.x += offset.x;
-    worldPosition.y += offset.y;
-    return SDL_FPoint{worldPosition.x, worldPosition.y};
-}
+SDL_Color Entity::getColor() { return fColorToColor(color); }
 
-void Entity::draw(WindowManager* window) const {
+void Entity::draw(WindowManager& window) const {
     b2Transform transform = b2Body_GetTransform(bodyId);
-    SDL_Vertex sdlVertices[B2_MAX_POLYGON_VERTICES] = {0};
-    for (int i = 0; i < polygon.count; i++) {
-        sdlVertices[i].color = color;
-        sdlVertices[i].position = scaleB2Point(window, transform, polygon.vertices[i]);
-    }
-    const int indices[] = {0, 1, 2, 2, 3, 0};
-    SDL_RenderGeometry(window->sdlRenderer, NULL, sdlVertices, polygon.count, indices, 6);
+    drawPolygon(polygon, transform, window, color);
 }
 
 void Entity::update() {
