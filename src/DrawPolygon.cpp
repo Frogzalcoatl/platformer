@@ -1,5 +1,6 @@
 #include "DrawPolygon.hpp"
 #include <array>
+#include <cassert>
 #include <vector>
 
 static SDL_FPoint scaleB2Point(WindowManager& window, b2Transform transform, b2Vec2 point) {
@@ -28,6 +29,7 @@ static std::vector<int> fanTriangulation(int vertexCount) {
 void drawPolygon(
     const b2Polygon& polygon, b2Transform& transform, WindowManager& window, SDL_FColor color
 ) {
+    assert(polygon.count >= 3);
     std::array<SDL_Vertex, B2_MAX_POLYGON_VERTICES> sdlVertices = {0};
     for (int i = 0; i < polygon.count; i++) {
         sdlVertices[i].color = color;

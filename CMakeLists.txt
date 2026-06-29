@@ -15,11 +15,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/src/*.cpp")
 
-add_executable(MyPlatformer ${SOURCES})
+add_executable(${PROJECT_NAME} ${SOURCES})
 
-target_include_directories(MyPlatformer PRIVATE src)
+target_include_directories(${PROJECT_NAME} PRIVATE src)
 
-target_link_libraries(MyPlatformer PRIVATE
+target_link_libraries(${PROJECT_NAME} PRIVATE
     SDL3::SDL3
     SDL3_image::SDL3_image
     SDL3_ttf::SDL3_ttf
@@ -29,10 +29,12 @@ target_link_libraries(MyPlatformer PRIVATE
 )
 
 if(MSVC)
-    target_compile_options(MyPlatformer PRIVATE /W4 /WX)
+    target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX)
 else()
-    target_compile_options(MyPlatformer PRIVATE -Wall -Wextra -Werror)
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Werror)
 endif()
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE _USE_MATH_DEFINES)
 
 add_custom_target(copy_assets ALL
     COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
@@ -40,4 +42,4 @@ add_custom_target(copy_assets ALL
             "${CMAKE_BINARY_DIR}/bin/assets"
     COMMENT "Copying modified assets to the build directory"
 )
-add_dependencies(MyPlatformer copy_assets)
+add_dependencies(${PROJECT_NAME} copy_assets)

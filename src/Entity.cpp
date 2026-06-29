@@ -1,12 +1,13 @@
 #include "Entity.hpp"
 #include "Colors.hpp"
 #include "DrawPolygon.hpp"
+#include <cmath>
 
-Entity::Entity(b2WorldId world, b2Vec2 size, b2Vec2 position, SDL_Color color, bool isStatic)
-    : Entity(world, size, position, color, isStatic, b2DefaultBodyDef(), b2DefaultShapeDef()) {}
+Entity::Entity(b2WorldId world, b2Polygon polygon, b2Vec2 position, SDL_Color color, bool isStatic)
+    : Entity(world, polygon, position, color, isStatic, b2DefaultBodyDef(), b2DefaultShapeDef()) {}
 
 Entity::Entity(
-    b2WorldId world, b2Vec2 size, b2Vec2 position, SDL_Color color, bool isStatic,
+    b2WorldId world, b2Polygon polygonArg, b2Vec2 position, SDL_Color color, bool isStatic,
     b2BodyDef bodyDef, b2ShapeDef shapeDef
 )
     : isStatic(isStatic) {
@@ -16,7 +17,7 @@ Entity::Entity(
     }
     setColor(color);
     bodyId = b2CreateBody(world, &bodyDef);
-    polygon = b2MakeBox(size.x, size.y);
+    polygon = polygonArg;
     b2CreatePolygonShape(bodyId, &shapeDef, &polygon);
     spawnPoint = position;
 }
@@ -68,8 +69,10 @@ void Entity::jump() {
 void Entity::teleport(b2Vec2 location) {
     b2Body_SetLinearVelocity(
         bodyId, b2Vec2{0.f, -0.01f}
-    ); // y not set to 0.f since that results in floating entity until its ineracted with.
-    b2Body_SetTransform(bodyId, location, b2Body_GetRotation(bodyId));
+    ); // y not set to 0.f since that results in floating entity until its interacted with.
+    b2Body_SetAngularVelocity(bodyId, 0.f);
+    // b2Rot_identity is default rotation
+    b2Body_SetTransform(bodyId, location, b2Rot_identity);
 }
 
 void Entity::respawn() { teleport(spawnPoint); }

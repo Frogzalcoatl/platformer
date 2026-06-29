@@ -16,42 +16,46 @@ Platformer::Platformer()
     updateKeybindsUi(input);
     // Test player
     b2BodyDef playerBodyDef = b2DefaultBodyDef();
-    playerBodyDef.fixedRotation = true;
+    playerBodyDef.fixedRotation = false;
     b2ShapeDef playerShapeDef = b2DefaultShapeDef();
     playerShapeDef.material.friction = 0.3f;
-    auto uniquePlayer = std::make_unique<Entity>(
-        world, b2Vec2{0.5f, 0.5f}, b2Vec2{0.f, 4.f}, Colors.Purple, false, playerBodyDef,
-        playerShapeDef
+    entities.push_back(
+        std::make_unique<Entity>(
+            world, b2MakeBox(0.5f, 0.5f), b2Vec2{0.f, 4.f}, Colors.Purple, false, playerBodyDef,
+            b2DefaultShapeDef()
+        )
     );
-    player = uniquePlayer.get();
-    entities.push_back(std::move(uniquePlayer));
+    player = entities.front().get();
     camera.entityToFollow = player;
     // Tempoaray test entities
     entities.push_back(
         std::make_unique<Entity>(
-            world, b2Vec2{50.f, 0.5f}, b2Vec2{0.f, 0.5f}, Colors.GrassGreen, true
+            world, b2MakeBox(50.f, 0.5f), b2Vec2{0.f, 0.5f}, Colors.GrassGreen, true
         )
     );
     entities.push_back(
-        std::make_unique<Entity>(world, b2Vec2{0.5f, 10.f}, b2Vec2{-18.f, 11.f}, Colors.Gray, true)
+        std::make_unique<Entity>(
+            world, b2MakeBox(0.5f, 10.f), b2Vec2{-18.f, 11.f}, Colors.Gray, true
+        )
     );
     entities.push_back(
-        std::make_unique<Entity>(world, b2Vec2{0.5f, 10.f}, b2Vec2{18.f, 11.f}, Colors.Gray, true)
+        std::make_unique<Entity>(
+            world, b2MakeBox(0.5f, 10.f), b2Vec2{18.f, 11.f}, Colors.Gray, true
+        )
     );
     b2BodyDef dynamicBodyDef = b2DefaultBodyDef();
     dynamicBodyDef.type = b2_dynamicBody;
     dynamicBodyDef.linearDamping = 0.5f;
-    b2ShapeDef shapeDef = b2DefaultShapeDef();
     entities.push_back(
         std::make_unique<Entity>(
-            world, b2Vec2{0.5f, 2.f}, b2Vec2{10.f, 3.f}, Colors.Brown, false, dynamicBodyDef,
-            shapeDef
+            world, b2MakeBox(0.5f, 2.f), b2Vec2{10.f, 3.f}, Colors.Brown, false, dynamicBodyDef,
+            b2DefaultShapeDef()
         )
     );
     entities.push_back(
         std::make_unique<Entity>(
-            world, b2Vec2{0.5f, 1.f}, b2Vec2{-10.f, 2.f}, Colors.Brown, false, dynamicBodyDef,
-            shapeDef
+            world, b2MakeBox(0.5f, 1.f), b2Vec2{-10.f, 2.f}, Colors.Brown, false, dynamicBodyDef,
+            b2DefaultShapeDef()
         )
     );
 }
