@@ -6,30 +6,30 @@
 
 static std::optional<EntityMovement> inputVerbToDirection(InputVerb verb) {
     switch (verb) {
-    case InputVerb::InputVerb_Up:
-        return EntityMovement_Up;
-    case InputVerb::InputVerb_Down:
-        return EntityMovement_Down;
-    case InputVerb::InputVerb_Left:
-        return EntityMovement_Left;
-    case InputVerb::InputVerb_Right:
-        return EntityMovement_Right;
+    case InputVerb::Up:
+        return EntityMovement::Up;
+    case InputVerb::Down:
+        return EntityMovement::Down;
+    case InputVerb::Left:
+        return EntityMovement::Left;
+    case InputVerb::Right:
+        return EntityMovement::Right;
     default:
         return std::nullopt;
     }
 }
 
 void controlEntity(GameEventTypes::Input event, Entity& entity, Camera& camera) {
-    assert(event.state == InputState_Pressed || event.state == InputState_Released);
-    assert(event.verb >= 0 && event.verb < InputVerb_Count);
-    if (event.state == InputState_Pressed) {
-        if (event.verb == InputVerb_Respawn) {
+    assert(event.state == InputState::Pressed || event.state == InputState::Released);
+    assert(event.verb >= static_cast<InputVerb>(0) && event.verb < InputVerb::Count);
+    if (event.state == InputState::Pressed) {
+        if (event.verb == InputVerb::Respawn) {
             entity.respawn();
             if (camera.entityToFollow == &entity) {
                 camera.centerOnEntity();
             }
             return;
-        } else if (event.verb == InputVerb_Jump) {
+        } else if (event.verb == InputVerb::Jump) {
             entity.jump();
         }
     }
@@ -38,6 +38,6 @@ void controlEntity(GameEventTypes::Input event, Entity& entity, Camera& camera) 
         return;
     }
     EntityMovement direction = directionOpt.value();
-    bool shouldBeMoving = event.state == InputState_Pressed;
-    entity.movement[direction] = shouldBeMoving;
+    bool shouldBeMoving = event.state == InputState::Pressed;
+    entity.movement[static_cast<size_t>(direction)] = shouldBeMoving;
 }

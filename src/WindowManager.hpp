@@ -38,4 +38,5 @@ class WindowManager {
     WindowDimensions getOffsetPixels() const;
     b2Vec2 getOffsetWorld() const;
     float getScaleFactor() const;
+    bool getIsFullscreen() const;
 };

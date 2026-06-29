@@ -43,6 +43,8 @@ b2Vec2 WindowManager::getOffsetWorld() const { return offsetWorld; }
 
 float WindowManager::getScaleFactor() const { return scaleFactor; }
 
+bool WindowManager::getIsFullscreen() const { return isFullscreen; }
+
 void WindowManager::updateScaleFactor() {
     int dividend = b2MinInt(size.x, size.y);
     scaleFactor = dividend / 20.f * scaleMultiplier;

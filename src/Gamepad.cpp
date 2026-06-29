@@ -30,12 +30,13 @@ bool addGamepadMappingsFromFiles() {
     return mappingsAdded > 0;
 }
 
-static std::array<std::array<SDL_GamepadButton, MaxBindsPerVerb>, InputVerb_Count> buttonBindings =
-    {};
+static std::array<
+    std::array<SDL_GamepadButton, MaxBindsPerVerb>, static_cast<size_t>(InputVerb::Count)>
+    buttonBindings = {};
 
 // Sets all values to invalid, representing empty.
 void initGamepadButtonBindings() {
-    for (int i = 0; i < InputVerb_Count; i++) {
+    for (int i = 0; i < static_cast<int>(InputVerb::Count); i++) {
         buttonBindings[i].fill(SDL_GAMEPAD_BUTTON_INVALID);
     }
 }
@@ -43,11 +44,11 @@ void initGamepadButtonBindings() {
 void bindGamepadButtonToVerb(
     InputVerb verb, SDL_GamepadButton button, std::optional<int> atIndexOpt
 ) {
-    assert(verb >= 0 && verb < InputVerb_Count);
+    assert(verb >= static_cast<InputVerb>(0) && verb < InputVerb::Count);
     if (button <= SDL_GAMEPAD_BUTTON_INVALID || button >= SDL_GAMEPAD_BUTTON_COUNT) {
         return;
     }
-    auto& bindings = buttonBindings[verb];
+    auto& bindings = buttonBindings[static_cast<size_t>(verb)];
     if (atIndexOpt.has_value()) {
         const int& atIndex = atIndexOpt.value();
         assert(atIndex >= 0 && atIndex < MaxBindsPerVerb);
@@ -67,11 +68,11 @@ void bindGamepadButtonToVerb(
 }
 
 void unbindGamepadButtonFromVerb(InputVerb verb, SDL_GamepadButton button) {
-    assert(verb >= 0 && verb < InputVerb_Count);
+    assert(verb >= static_cast<InputVerb>(0) && verb < InputVerb::Count);
     if (button <= SDL_GAMEPAD_BUTTON_INVALID || button >= SDL_GAMEPAD_BUTTON_COUNT) {
         return;
     }
-    auto& bindings = buttonBindings[verb];
+    auto& bindings = buttonBindings[static_cast<size_t>(verb)];
     for (int i = 0; i < MaxBindsPerVerb; i++) {
         if (bindings[i] == button) {
             bindings[i] = SDL_GAMEPAD_BUTTON_INVALID; // Invalid represents empty
@@ -80,9 +81,9 @@ void unbindGamepadButtonFromVerb(InputVerb verb, SDL_GamepadButton button) {
 }
 
 void clearGamepadButtonBindingAtIndex(InputVerb verb, int index) {
-    assert(verb >= 0 && verb < InputVerb_Count);
+    assert(verb >= static_cast<InputVerb>(0) && verb < InputVerb::Count);
     assert(index >= 0 && index < MaxBindsPerVerb);
-    auto& bindings = buttonBindings[verb];
+    auto& bindings = buttonBindings[static_cast<size_t>(verb)];
     bindings[index] = SDL_GAMEPAD_BUTTON_INVALID; // Invalid represents empty
 }
 
@@ -91,7 +92,7 @@ std::vector<InputVerb> getVerbsFromGamepadButton(SDL_GamepadButton button) {
     if (button <= SDL_GAMEPAD_BUTTON_INVALID || button >= SDL_GAMEPAD_BUTTON_COUNT) {
         return verbs;
     }
-    for (int i = 0; i < InputVerb_Count; i++) {
+    for (int i = 0; i < static_cast<int>(InputVerb::Count); i++) {
         for (SDL_GamepadButton& buttonBinding : buttonBindings[i]) {
             if (buttonBinding == button) {
                 verbs.push_back(static_cast<InputVerb>(i));
@@ -106,17 +107,17 @@ struct DefaultButtonBinding {
     SDL_GamepadButton button;
 };
 static const std::vector<DefaultButtonBinding> defaultButtonBindings = {
-    {InputVerb_Up, SDL_GAMEPAD_BUTTON_DPAD_UP},
-    {InputVerb_Down, SDL_GAMEPAD_BUTTON_DPAD_DOWN},
-    {InputVerb_Left, SDL_GAMEPAD_BUTTON_DPAD_LEFT},
-    {InputVerb_Right, SDL_GAMEPAD_BUTTON_DPAD_RIGHT},
+    {InputVerb::Up, SDL_GAMEPAD_BUTTON_DPAD_UP},
+    {InputVerb::Down, SDL_GAMEPAD_BUTTON_DPAD_DOWN},
+    {InputVerb::Left, SDL_GAMEPAD_BUTTON_DPAD_LEFT},
+    {InputVerb::Right, SDL_GAMEPAD_BUTTON_DPAD_RIGHT},
     // South is A on Xbox, X on PlayStation, B on Switch
-    {InputVerb_Confirm, SDL_GAMEPAD_BUTTON_SOUTH},
+    {InputVerb::Confirm, SDL_GAMEPAD_BUTTON_SOUTH},
     // East is B on Xbox, O on PlayStation, A on Switch
-    {InputVerb_Cancel, SDL_GAMEPAD_BUTTON_EAST},
-    {InputVerb_Cancel, SDL_GAMEPAD_BUTTON_BACK},
-    {InputVerb_Jump, SDL_GAMEPAD_BUTTON_SOUTH},
-    {InputVerb_Jump, SDL_GAMEPAD_BUTTON_EAST},
+    {InputVerb::Cancel, SDL_GAMEPAD_BUTTON_EAST},
+    {InputVerb::Cancel, SDL_GAMEPAD_BUTTON_BACK},
+    {InputVerb::Jump, SDL_GAMEPAD_BUTTON_SOUTH},
+    {InputVerb::Jump, SDL_GAMEPAD_BUTTON_EAST},
 };
 
 void bindDefaultGamepadButtons() {

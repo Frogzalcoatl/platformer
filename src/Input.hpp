@@ -4,23 +4,23 @@
 #include <optional>
 #include <vector>
 
-enum InputVerb : uint8_t {
-    InputVerb_Up,
-    InputVerb_Down,
-    InputVerb_Left,
-    InputVerb_Right,
-    InputVerb_Confirm,
-    InputVerb_Cancel,
-    InputVerb_Respawn,
-    InputVerb_ToggleFullscreen,
-    InputVerb_ZoomIn,
-    InputVerb_ZoomOut,
-    InputVerb_ResetZoom,
-    InputVerb_Jump,
-    InputVerb_Count
+enum class InputVerb : uint8_t {
+    Up,
+    Down,
+    Left,
+    Right,
+    Confirm,
+    Cancel,
+    Respawn,
+    ToggleFullscreen,
+    ZoomIn,
+    ZoomOut,
+    ZoomReset,
+    Jump,
+    Count
 };
 
-enum InputState : uint8_t { InputState_Pressed, InputState_Released };
+enum class InputState : uint8_t { Pressed, Released };
 
 struct InputVerbInfo {
     InputVerb verb;

@@ -10,7 +10,7 @@ Entity::Entity(
 )
     : isStatic(isStatic) {
     bodyDef.position = position;
-    if (!this->isStatic) {
+    if (!isStatic) {
         bodyDef.type = b2_dynamicBody;
     }
     setColor(color);
@@ -60,13 +60,13 @@ void Entity::update() {
         0.f,
         0.f,
     };
-    if (movement[EntityMovement_Down]) {
+    if (movement[static_cast<size_t>(EntityMovement::Down)]) {
         targetVelocity.y -= downwardAcceleration;
     }
-    if (movement[EntityMovement_Left]) {
+    if (movement[static_cast<size_t>(EntityMovement::Left)]) {
         targetVelocity.x -= maxHorizontalSpeed;
     }
-    if (movement[EntityMovement_Right]) {
+    if (movement[static_cast<size_t>(EntityMovement::Right)]) {
         targetVelocity.x += maxHorizontalSpeed;
     }
     velocity.x = velocity.x + (targetVelocity.x - velocity.x) * horizontalAcceleration;
@@ -75,6 +75,8 @@ void Entity::update() {
 }
 
 void Entity::jump() {
+    b2Vec2 velocity = b2Body_GetLinearVelocity(bodyId);
+    b2Body_SetLinearVelocity(bodyId, b2Vec2{velocity.x, 0.f});
     b2Body_ApplyLinearImpulseToCenter(bodyId, b2Vec2{0.f, jumpForceNewtons}, true);
 }
 

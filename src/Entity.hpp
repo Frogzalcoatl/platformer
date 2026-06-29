@@ -6,14 +6,7 @@
 #include <optional>
 #include <vector>
 
-enum EntityMovement : uint8_t {
-    EntityMovement_Up,
-    EntityMovement_Down,
-    EntityMovement_Left,
-    EntityMovement_Right,
-    EntityMovement_IsRunning,
-    EntityMovement_Count
-};
+enum class EntityMovement : uint8_t { Up, Down, Left, Right, IsRunning, Count };
 
 class Entity {
   private:
@@ -32,11 +25,11 @@ class Entity {
     b2Polygon getPolygon();
     const bool isStatic;
     b2Vec2 spawnPoint = {0.f, 0.f};
-    const float jumpForceNewtons = 15.f;
+    const float jumpForceNewtons = 20.f;
     const float maxHorizontalSpeed = 20.f;
-    const float horizontalAcceleration = 0.25f;
+    const float horizontalAcceleration = 0.1f;
     const float downwardAcceleration = 5.f;
-    std::array<bool, EntityMovement_Count> movement = {false};
+    std::array<bool, static_cast<size_t>(EntityMovement::Count)> movement = {false};
     void draw(WindowManager* window) const;
     void jump();
     void update();

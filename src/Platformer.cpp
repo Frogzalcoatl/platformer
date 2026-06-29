@@ -10,7 +10,7 @@
 Platformer::Platformer()
     : camera{Camera{nullptr, window}}, window{"C++ Platformer", Colors.BackGround} {
     b2WorldDef worldDef = b2DefaultWorldDef();
-    worldDef.gravity = {0.0f, -22.0f};
+    worldDef.gravity = {0.0f, -60.f};
     world = b2CreateWorld(&worldDef);
     running = false;
     bindDefaultScancodes();
@@ -20,10 +20,8 @@ Platformer::Platformer()
     camera.minViewableY = 0.f;
     // Test player
     b2BodyDef playerBodyDef = b2DefaultBodyDef();
-    playerBodyDef.linearDamping = 0.5f;
     playerBodyDef.fixedRotation = true;
     b2ShapeDef playerShapeDef = b2DefaultShapeDef();
-    playerShapeDef.density = 1.f;
     playerShapeDef.material.friction = 0.3f;
     auto uniquePlayer = std::make_unique<Entity>(
         world, b2Vec2{0.5f, 0.5f}, b2Vec2{0.f, 4.f}, Colors.Purple, false, playerBodyDef,
@@ -80,7 +78,7 @@ void Platformer::handleSdlEvent() {
                 break;
             }
             InputState state =
-                event.type == SDL_EVENT_KEY_DOWN ? InputState_Pressed : InputState_Released;
+                event.type == SDL_EVENT_KEY_DOWN ? InputState::Pressed : InputState::Released;
             for (int i = 0; i < verbs.size(); i++) {
                 if (verbs[i].activateOnRepeat || !event.key.repeat) {
                     GameEvents::Push(GameEventTypes::Input{verbs[i].verb, state});
@@ -89,9 +87,9 @@ void Platformer::handleSdlEvent() {
         }; break;
         case SDL_EVENT_MOUSE_WHEEL: {
             if (event.wheel.integer_y > 0) {
-                GameEvents::Push(GameEventTypes::Input{InputVerb_ZoomIn, InputState_Pressed});
+                GameEvents::Push(GameEventTypes::Input{InputVerb::ZoomIn, InputState::Pressed});
             } else if (event.wheel.integer_y < 0) {
-                GameEvents::Push(GameEventTypes::Input{InputVerb_ZoomOut, InputState_Pressed});
+                GameEvents::Push(GameEventTypes::Input{InputVerb::ZoomOut, InputState::Pressed});
             }
         }; break;
         case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
@@ -102,8 +100,8 @@ void Platformer::handleSdlEvent() {
                 break;
             }
             const InputState state = event.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN
-                                         ? InputState_Pressed
-                                         : InputState_Released;
+                                         ? InputState::Pressed
+                                         : InputState::Released;
             for (int i = 0; i < verbs.size(); i++) {
                 GameEvents::Push(GameEventTypes::Input{verbs[i], state});
             }
@@ -112,36 +110,41 @@ void Platformer::handleSdlEvent() {
     }
 }
 
+static std::array<bool, static_cast<size_t>(InputVerb::Count)> inputThisFrame = {false};
+
 void Platformer::handleGameEvent() {
     GameEvent event;
     while (GameEvents::Poll(event)) {
         if (std::holds_alternative<GameEventTypes::CloseWindow>(event)) {
             running = false;
-        } else if (std::holds_alternative<GameEventTypes::ToggleFullscreen>(event)) {
-            window.toggleFullscreen();
         } else if (const auto* playSound = std::get_if<GameEventTypes::PlaySound>(&event)) {
             // Not finished
         } else if (const auto* input = std::get_if<GameEventTypes::Input>(&event)) {
-            if (input->state == InputState_Pressed) {
+            if (
+                input->state == InputState::Pressed &&
+                !inputThisFrame[static_cast<size_t>(input->verb)] // Prevent duplicate input
+            ) {
                 switch (input->verb) {
-                case InputVerb_ToggleFullscreen:
-                    GameEvents::Push(GameEventTypes::ToggleFullscreen{});
+                case InputVerb::ToggleFullscreen:
+                    window.toggleFullscreen();
                     break;
-                case InputVerb_ZoomIn:
+                case InputVerb::ZoomIn:
                     window.incrementScaleMultiplierBy(0.05f);
                     break;
-                case InputVerb_ZoomOut:
+                case InputVerb::ZoomOut:
                     window.incrementScaleMultiplierBy(-0.05f);
                     break;
-                case InputVerb_ResetZoom:
+                case InputVerb::ZoomReset:
                     window.resetScaleMultiplier();
                 }
+                inputThisFrame[static_cast<size_t>(input->verb)] = true;
             }
             if (player) {
                 controlEntity(*input, *player, camera);
             }
         }
     }
+    inputThisFrame.fill(false);
 }
 
 void Platformer::drawDebugUi() const {
@@ -165,9 +168,11 @@ void Platformer::drawDebugUi() const {
         b2Vec2 velocity = b2Body_GetLinearVelocity(player->getBodyId());
         ImGui::Text(
             "\nPlayer:\nInput: %d %d %d %d\nPosition: %.2f, %.2f\nVelocity: %.2f, %.2f",
-            player->movement[EntityMovement_Up], player->movement[EntityMovement_Down],
-            player->movement[EntityMovement_Left], player->movement[EntityMovement_Right],
-            position.x, position.y, velocity.x, velocity.y
+            player->movement[static_cast<size_t>(EntityMovement::Up)],
+            player->movement[static_cast<size_t>(EntityMovement::Down)],
+            player->movement[static_cast<size_t>(EntityMovement::Left)],
+            player->movement[static_cast<size_t>(EntityMovement::Right)], position.x, position.y,
+            velocity.x, velocity.y
         );
     }
     if (camera.entityToFollow) {
