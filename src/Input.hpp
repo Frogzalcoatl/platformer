@@ -16,6 +16,7 @@ enum InputVerb : uint8_t {
     InputVerb_ZoomIn,
     InputVerb_ZoomOut,
     InputVerb_ResetZoom,
+    InputVerb_Jump,
     InputVerb_Count
 };
 
@@ -35,6 +36,6 @@ constexpr int MaxBindsPerVerb = 4;
 
 void bindScancodeToVerb(InputVerb verb, ScancodeInfo binding, std::optional<int> atIndexOpt);
 void unbindScancodeFromVerb(InputVerb verb, SDL_Scancode scancode);
-void clearVerbMappingAtIndex(InputVerb verb, int index);
-std::optional<InputVerbInfo> getVerbFromScancode(SDL_Scancode scancode);
-void connectDefaultVerbMappings();
+void clearScancodeBindingAtIndex(InputVerb verb, int index);
+std::vector<InputVerbInfo> getVerbsFromScancode(SDL_Scancode scancode);
+void bindDefaultScancodes();

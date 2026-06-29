@@ -13,7 +13,7 @@ int main(int argc, char* argv[]) {
     }
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    addGamepadMappings();
+    addGamepadMappingsFromFiles();
     Platformer game;
     game.run();
     game.close();

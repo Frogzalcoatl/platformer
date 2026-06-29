@@ -13,7 +13,9 @@ Platformer::Platformer()
     worldDef.gravity = {0.0f, -22.0f};
     world = b2CreateWorld(&worldDef);
     running = false;
-    connectDefaultVerbMappings();
+    bindDefaultScancodes();
+    initGamepadButtonBindings();
+    bindDefaultGamepadButtons();
     camera.safeArea = b2Vec2{0.15f, 0.15f};
     camera.minViewableY = 0.f;
     // Test player
@@ -73,13 +75,15 @@ void Platformer::handleSdlEvent() {
         }; break;
         case SDL_EVENT_KEY_DOWN:
         case SDL_EVENT_KEY_UP: {
-            auto verbResult = getVerbFromScancode(event.key.scancode);
-            if (verbResult.has_value()) {
-                InputVerbInfo& binding = verbResult.value();
-                if (binding.activateOnRepeat || !event.key.repeat) {
-                    InputState state =
-                        event.type == SDL_EVENT_KEY_DOWN ? InputState_Pressed : InputState_Released;
-                    GameEvents::Push(GameEventTypes::Input{binding.verb, state});
+            std::vector<InputVerbInfo> verbs = getVerbsFromScancode(event.key.scancode);
+            if (verbs.size() == 0) {
+                break;
+            }
+            InputState state =
+                event.type == SDL_EVENT_KEY_DOWN ? InputState_Pressed : InputState_Released;
+            for (int i = 0; i < verbs.size(); i++) {
+                if (verbs[i].activateOnRepeat || !event.key.repeat) {
+                    GameEvents::Push(GameEventTypes::Input{verbs[i].verb, state});
                 }
             }
         }; break;
@@ -92,12 +96,17 @@ void Platformer::handleSdlEvent() {
         }; break;
         case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
         case SDL_EVENT_GAMEPAD_BUTTON_UP: {
-            auto resultOpt = handleGamepadButtonEvent(event.gbutton);
-            if (!resultOpt.has_value()) {
+            std::vector<InputVerb> verbs =
+                getVerbsFromGamepadButton(static_cast<SDL_GamepadButton>(event.gbutton.button));
+            if (verbs.size() == 0) {
                 break;
             }
-            GameEventTypes::Input& result = resultOpt.value();
-            GameEvents::Push(result);
+            const InputState state = event.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN
+                                         ? InputState_Pressed
+                                         : InputState_Released;
+            for (int i = 0; i < verbs.size(); i++) {
+                GameEvents::Push(GameEventTypes::Input{verbs[i], state});
+            }
         }; break;
         }
     }
@@ -152,8 +161,8 @@ void Platformer::drawDebugUi() const {
         offset.y, window.scaleMultiplier, scaleFactor
     );
     if (player) {
-        b2Vec2 position = b2Body_GetPosition(player->bodyId);
-        b2Vec2 velocity = b2Body_GetLinearVelocity(player->bodyId);
+        b2Vec2 position = b2Body_GetPosition(player->getBodyId());
+        b2Vec2 velocity = b2Body_GetLinearVelocity(player->getBodyId());
         ImGui::Text(
             "\nPlayer:\nInput: %d %d %d %d\nPosition: %.2f, %.2f\nVelocity: %.2f, %.2f",
             player->movement[EntityMovement_Up], player->movement[EntityMovement_Down],

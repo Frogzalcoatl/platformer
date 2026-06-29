@@ -1,7 +1,7 @@
 #include "Input.hpp"
 #include <cassert>
 
-static std::array<std::array<ScancodeInfo, MaxBindsPerVerb>, InputVerb_Count> bindings = {};
+static std::array<std::array<ScancodeInfo, MaxBindsPerVerb>, InputVerb_Count> scancodeBindings = {};
 
 void bindScancodeToVerb(InputVerb verb, ScancodeInfo scancodeInfo, std::optional<int> atIndexOpt) {
     assert(verb >= 0 && verb < InputVerb_Count);
@@ -18,22 +18,22 @@ void bindScancodeToVerb(InputVerb verb, ScancodeInfo scancodeInfo, std::optional
     above.
     - Cleaner syntax
     */
-    auto& scancodeInfoArr = bindings[verb];
-    for (int i = 0; i < MaxBindsPerVerb; i++) {
-        if (scancodeInfoArr[i].scancode == scancodeInfo.scancode) {
-            scancodeInfoArr[i].activateOnRepeat = scancodeInfo.activateOnRepeat;
-            return;
-        }
-    }
+    auto& bindings = scancodeBindings[verb];
     if (atIndexOpt.has_value()) {
         const int& atIndex = atIndexOpt.value();
         assert(atIndex >= 0 && atIndex < MaxBindsPerVerb);
-        scancodeInfoArr[atIndex] = scancodeInfo;
+        bindings[atIndex] = scancodeInfo;
         return;
     }
     for (int i = 0; i < MaxBindsPerVerb; i++) {
-        if (scancodeInfoArr[i].scancode == SDL_SCANCODE_UNKNOWN) {
-            scancodeInfoArr[i] = scancodeInfo;
+        if (bindings[i].scancode == scancodeInfo.scancode) {
+            bindings[i].activateOnRepeat = scancodeInfo.activateOnRepeat;
+            return;
+        }
+    }
+    for (int i = 0; i < MaxBindsPerVerb; i++) {
+        if (bindings[i].scancode == SDL_SCANCODE_UNKNOWN) {
+            bindings[i] = scancodeInfo;
             return;
         }
     }
@@ -41,42 +41,50 @@ void bindScancodeToVerb(InputVerb verb, ScancodeInfo scancodeInfo, std::optional
 
 void unbindScancodeFromVerb(InputVerb verb, SDL_Scancode scancode) {
     assert(verb >= 0 && verb < InputVerb_Count);
-    assert(scancode > SDL_SCANCODE_UNKNOWN && scancode < SDL_SCANCODE_COUNT);
-    auto& scancodeInfoArr = bindings[verb];
+    if (scancode <= SDL_SCANCODE_UNKNOWN || scancode >= SDL_SCANCODE_COUNT) {
+        return;
+    }
+    auto& bindings = scancodeBindings[verb];
     for (int i = 0; i < MaxBindsPerVerb; i++) {
-        if (scancodeInfoArr[i].scancode == scancode) {
-            scancodeInfoArr[i].scancode = SDL_SCANCODE_UNKNOWN;
-            scancodeInfoArr[i].activateOnRepeat = false;
+        if (bindings[i].scancode == scancode) {
+            bindings[i].scancode = SDL_SCANCODE_UNKNOWN;
+            bindings[i].activateOnRepeat = false;
         }
     }
 }
 
-// Clears specific index of a verb mapping array
-void clearVerbMappingAtIndex(InputVerb verb, int index) {
+// Clears specific index of a verb bind array
+void clearScancodeBindingAtIndex(InputVerb verb, int index) {
     assert(verb >= 0 && verb < InputVerb_Count);
     assert(index >= 0 && index < MaxBindsPerVerb);
-    auto& scancodeIfnoArr = bindings[verb];
-    scancodeIfnoArr[index].scancode = SDL_SCANCODE_UNKNOWN;
-    scancodeIfnoArr[index].activateOnRepeat = false;
+    auto& bindings = scancodeBindings[verb];
+    bindings[index].scancode = SDL_SCANCODE_UNKNOWN;
+    bindings[index].activateOnRepeat = false;
 }
 
-std::optional<InputVerbInfo> getVerbFromScancode(SDL_Scancode scancode) {
+std::vector<InputVerbInfo> getVerbsFromScancode(SDL_Scancode scancode) {
+    std::vector<InputVerbInfo> inputVerbs = {};
+    if (scancode <= SDL_SCANCODE_UNKNOWN || scancode >= SDL_SCANCODE_COUNT) {
+        return inputVerbs;
+    }
     for (int i = 0; i < InputVerb_Count; i++) {
-        for (ScancodeInfo& binding : bindings[i]) {
+        for (ScancodeInfo& binding : scancodeBindings[i]) {
             if (binding.scancode == scancode) {
-                return InputVerbInfo{static_cast<InputVerb>(i), binding.activateOnRepeat};
+                inputVerbs.push_back(
+                    InputVerbInfo{static_cast<InputVerb>(i), binding.activateOnRepeat}
+                );
             }
         }
     }
-    return std::nullopt;
+    return inputVerbs;
 }
 
-struct DefaultBinding {
+struct DefaultScancodeBinding {
     InputVerb verb;
     SDL_Scancode scancode;
     bool activateOnRepeat = false;
 };
-static const std::vector<DefaultBinding> defaultVerbBindings = {
+static const std::vector<DefaultScancodeBinding> defaultVerbBindings = {
     {InputVerb_Up, SDL_SCANCODE_W},
     {InputVerb_Up, SDL_SCANCODE_UP},
     {InputVerb_Down, SDL_SCANCODE_S},
@@ -94,11 +102,14 @@ static const std::vector<DefaultBinding> defaultVerbBindings = {
     {InputVerb_ZoomIn, SDL_SCANCODE_EQUALS, true},
     {InputVerb_ZoomOut, SDL_SCANCODE_MINUS, true},
     {InputVerb_ResetZoom, SDL_SCANCODE_0},
-    {InputVerb_ResetZoom, SDL_SCANCODE_KP_0}
+    {InputVerb_ResetZoom, SDL_SCANCODE_KP_0},
+    {InputVerb_Jump, SDL_SCANCODE_W},
+    {InputVerb_Jump, SDL_SCANCODE_UP},
+    {InputVerb_Jump, SDL_SCANCODE_SPACE}
 };
 
-void connectDefaultVerbMappings() {
-    for (const DefaultBinding& binding : defaultVerbBindings) {
+void bindDefaultScancodes() {
+    for (const DefaultScancodeBinding& binding : defaultVerbBindings) {
         bindScancodeToVerb(
             binding.verb, ScancodeInfo{binding.scancode, binding.activateOnRepeat}, std::nullopt
         );

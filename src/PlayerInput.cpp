@@ -29,7 +29,7 @@ void controlEntity(GameEventTypes::Input event, Entity& entity, Camera& camera) 
                 camera.centerOnEntity();
             }
             return;
-        } else if (event.verb == InputVerb_Up) {
+        } else if (event.verb == InputVerb_Jump) {
             entity.jump();
         }
     }
