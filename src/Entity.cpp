@@ -1,6 +1,6 @@
 #include "Entity.hpp"
 #include "Colors.hpp"
-#include "DrawPolygon.hpp"
+#include "Drawing.hpp"
 #include <cmath>
 
 Entity::Entity(b2WorldId world, b2Polygon polygon, b2Vec2 position, SDL_Color color, bool isStatic)
@@ -24,17 +24,19 @@ Entity::Entity(
 
 Entity::~Entity() { b2DestroyBody(bodyId); }
 
-b2BodyId Entity::getBodyId() { return bodyId; }
+b2BodyId Entity::getBodyId() const { return bodyId; }
 
-b2Polygon Entity::getPolygon() { return polygon; }
+b2Polygon Entity::getPolygon() const { return polygon; }
 
 void Entity::setColor(SDL_Color c) { color = colorToFColor(c); }
 
-SDL_Color Entity::getColor() { return fColorToColor(color); }
+SDL_Color Entity::getColor() const { return fColorToColor(color); }
+
+b2Vec2 Entity::getPosition() const { return b2Body_GetPosition(bodyId); }
 
 void Entity::draw(WindowManager& window) const {
     b2Transform transform = b2Body_GetTransform(bodyId);
-    drawPolygon(polygon, transform, window, color);
+    Drawing::polygon(polygon, transform, window, color);
 }
 
 void Entity::update() {

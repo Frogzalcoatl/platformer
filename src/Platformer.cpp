@@ -1,5 +1,6 @@
 #include "Platformer.hpp"
 #include "Colors.hpp"
+#include "Drawing.hpp"
 #include "Events.hpp"
 #include "KeybindUi.hpp"
 #include "PlayerInput.hpp"
@@ -8,7 +9,13 @@
 #include <imgui_impl_sdlrenderer3.h>
 
 Platformer::Platformer()
-    : camera{Camera{nullptr, window}}, window{"C++ Platformer", Colors.BackGround} {
+    : window{"C++ Platformer", Colors.BackGround}, camera{Camera{nullptr, window}} {
+    textEngine = TTF_CreateRendererTextEngine(window.sdlRenderer);
+    if (!textEngine) {
+        SDL_LogError(
+            SDL_LOG_CATEGORY_APPLICATION, "Unable to create SDL text engine: %s", SDL_GetError()
+        );
+    }
     b2WorldDef worldDef = b2DefaultWorldDef();
     worldDef.gravity = {0.0f, -60.f};
     world = b2CreateWorld(&worldDef);
@@ -18,7 +25,7 @@ Platformer::Platformer()
     b2BodyDef playerBodyDef = b2DefaultBodyDef();
     playerBodyDef.fixedRotation = false;
     b2ShapeDef playerShapeDef = b2DefaultShapeDef();
-    playerShapeDef.material.friction = 0.3f;
+    playerShapeDef.density = 1.f;
     entities.push_back(
         std::make_unique<Entity>(
             world, b2MakeBox(0.5f, 0.5f), b2Vec2{0.f, 4.f}, Colors.Purple, false, playerBodyDef,
@@ -45,7 +52,6 @@ Platformer::Platformer()
     );
     b2BodyDef dynamicBodyDef = b2DefaultBodyDef();
     dynamicBodyDef.type = b2_dynamicBody;
-    dynamicBodyDef.linearDamping = 0.5f;
     entities.push_back(
         std::make_unique<Entity>(
             world, b2MakeBox(0.5f, 2.f), b2Vec2{10.f, 3.f}, Colors.Brown, false, dynamicBodyDef,
@@ -207,6 +213,8 @@ void Platformer::physicsStepHandler() {
 }
 
 void Platformer::run() {
+    TTF_Text* text =
+        assets.getText(textEngine, "Player", GameAssets::Font::Monocraft, 75.f); // Just to test
     lastTime = SDL_GetTicks();
     running = true;
     while (running) {
@@ -220,6 +228,9 @@ void Platformer::run() {
                 entity->draw(window);
             }
         }
+        b2Vec2 textPos = player->getPosition();
+        textPos.y += 2.f;
+        Drawing::text(text, textPos, window);
         showDebugUi();
         showKeybindUi();
         ImGui::Render();

@@ -1,4 +1,5 @@
 #pragma once
+#include "AssetManager.hpp"
 #include "Camera.hpp"
 #include "Entity.hpp"
 #include "InputManager.hpp"
@@ -11,6 +12,8 @@ class Platformer {
   private:
     WindowManager window;
     InputManager input;
+    AssetManager assets;
+    TTF_TextEngine* textEngine;
     b2WorldId world;
     bool running = false;
     std::vector<std::unique_ptr<Entity>> entities;

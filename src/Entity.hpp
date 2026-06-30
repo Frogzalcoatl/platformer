@@ -21,8 +21,7 @@ class Entity {
         b2BodyDef bodyDef, b2ShapeDef shapeDef
     );
     ~Entity();
-    b2BodyId getBodyId();
-    b2Polygon getPolygon();
+
     const bool isStatic;
     b2Vec2 spawnPoint = {0.f, 0.f};
     const float jumpForceNewtons = 20.f;
@@ -32,11 +31,16 @@ class Entity {
     std::array<bool, static_cast<size_t>(EntityMovement::Count)> movement = {false};
     bool isSprinting = false;
     float sprintMultiplier = 2.f;
+
+    b2BodyId getBodyId() const;
+    b2Polygon getPolygon() const;
+    SDL_Color getColor() const;
+    b2Vec2 getPosition() const;
+    void setColor(SDL_Color color);
+
     void draw(WindowManager& window) const;
     void jump();
     void update();
     void teleport(b2Vec2 location);
     void respawn();
-    void setColor(SDL_Color color);
-    SDL_Color getColor();
 };

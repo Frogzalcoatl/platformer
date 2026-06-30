@@ -19,4 +19,5 @@ inline struct Colors {
     SDL_Color Brown = {100, 65, 23, 255};
     SDL_Color Purple = {186, 85, 211, 255};
     SDL_Color BackGround = {20, 20, 30, 255};
+    SDL_Color White = {255, 255, 255, 255};
 } Colors;
