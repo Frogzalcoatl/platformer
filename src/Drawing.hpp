@@ -12,6 +12,7 @@ void polygon(
 );
 void text(
     TTF_Text* text,
+    float textResolutionScaleFactor,
     b2Vec2 worldPosition,
     WindowManager& window,
     SDL_FColor textColor = colorToFColor(Colors.White),

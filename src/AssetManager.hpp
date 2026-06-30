@@ -32,6 +32,8 @@ class AssetManager {
     AssetManager(const AssetManager&) = delete;
     AssetManager& operator=(const AssetManager&) = delete;
 
+    float textResolutionScaleFactor = 50.f;
+
     TTF_Text* getText(
         TTF_TextEngine* textEngine,
         std::string text,

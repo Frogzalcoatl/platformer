@@ -54,11 +54,11 @@ static void drawArcSlice(
 ) {}
 */
 
-// Load big font scale down for passable text resolution even when zoomed in
-static const float WorldTextScaling = 0.005f;
+static const float TextShrinkageMultiplier = 25.f;
 
 void Drawing::text(
     TTF_Text* text,
+    float textResolutionScaleFactor,
     b2Vec2 worldPosition,
     WindowManager& window,
     SDL_FColor textColor,
@@ -70,12 +70,14 @@ void Drawing::text(
     float oldRenderScaleX, oldRenderScaleY;
     SDL_GetRenderScale(window.sdlRenderer, &oldRenderScaleX, &oldRenderScaleY);
     float scaleFactor = window.getScaleFactor();
-    scaleFactor *= WorldTextScaling;
+    textResolutionScaleFactor *= TextShrinkageMultiplier;
+    scaleFactor /= textResolutionScaleFactor;
     SDL_SetRenderScale(window.sdlRenderer, scaleFactor, scaleFactor);
     WindowDimensions offsetPixels = window.getOffsetPixels();
     b2Vec2 windowPosition;
-    windowPosition.x = worldPosition.x / WorldTextScaling + offsetPixels.x / scaleFactor;
-    windowPosition.y = worldPosition.y * -1.f / WorldTextScaling + offsetPixels.y / scaleFactor;
+    windowPosition.x = worldPosition.x * textResolutionScaleFactor + offsetPixels.x / scaleFactor;
+    windowPosition.y =
+        worldPosition.y * -1.f * textResolutionScaleFactor + offsetPixels.y / scaleFactor;
     int textWidth, textHeight;
     if (TTF_GetTextSize(text, &textWidth, &textHeight)) {
         windowPosition.x -= textWidth / 2.f;

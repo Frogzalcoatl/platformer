@@ -218,7 +218,7 @@ void Platformer::physicsStepHandler() {
 
 void Platformer::run() {
     TTF_Text* text =
-        assets.getText(textEngine, "Player", GameAssets::Font::Monocraft, 150.f); // Just to test
+        assets.getText(textEngine, "Player", GameAssets::Font::Monocraft, 20.f); // Just to test
     running = true;
     while (running) {
         const Uint64 frameStartNs = SDL_GetTicksNS();
@@ -234,7 +234,7 @@ void Platformer::run() {
         }
         b2Vec2 textPos = player->getPosition();
         textPos.y += 2.f;
-        Drawing::text(text, textPos, window);
+        Drawing::text(text, assets.textResolutionScaleFactor, textPos, window);
         showDebugUi();
         showKeybindUi();
         window.render(frameStartNs);

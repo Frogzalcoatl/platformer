@@ -32,6 +32,7 @@ TTF_Font* AssetManager::getFont(GameAssets::Font fontId, float ptSize, TTF_FontS
     if (ptSize <= 0) {
         return nullptr;
     }
+    ptSize *= textResolutionScaleFactor;
     for (size_t i = 0; i < fontCache.size(); i++) {
         if (fontCache[i].fontId == fontId && fontCache[i].ptSize == ptSize &&
             fontCache[i].style == style) {
