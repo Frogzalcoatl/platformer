@@ -27,9 +27,18 @@ enum class InputVerb : uint8_t {
 
 std::string inputVerbToString(InputVerb verb);
 
-enum class InputState : uint8_t { Pressed, Released, InputStateCount };
+enum class InputState : uint8_t {
+    Pressed,
+    Released,
+    InputStateCount
+};
 
-enum class InputSource : uint8_t { KeyboardMouse, Controller, Touch, InputSourceCount };
+enum class InputSource : uint8_t {
+    KeyboardMouse,
+    Controller,
+    Touch,
+    InputSourceCount
+};
 
 struct InputVerbInfo {
     InputVerb verb;

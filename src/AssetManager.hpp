@@ -6,8 +6,14 @@
 #include <vector>
 
 namespace GameAssets {
-enum class Font : uint8_t { Monocraft, FontCount };
-enum class Sound : uint8_t { Test, SoundCount };
+enum class Font : uint8_t {
+    Monocraft,
+    FontCount
+};
+enum class Sound : uint8_t {
+    Test,
+    SoundCount
+};
 } // namespace GameAssets
 
 struct CachedFont {

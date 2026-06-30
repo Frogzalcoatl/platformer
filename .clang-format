@@ -11,3 +11,4 @@ BreakStringLiterals: false
 BinPackArguments: false
 BinPackParameters: OnePerLine
 AllowShortFunctionsOnASingleLine: None
+AllowShortEnumsOnASingleLine: false

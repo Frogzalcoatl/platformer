@@ -6,7 +6,14 @@
 #include <optional>
 #include <vector>
 
-enum class EntityMovement : uint8_t { Up, Down, Left, Right, IsRunning, EntityMovementCount };
+enum class EntityMovement : uint8_t {
+    Up,
+    Down,
+    Left,
+    Right,
+    IsRunning,
+    EntityMovementCount
+};
 
 class Entity {
   private:
