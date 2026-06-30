@@ -28,8 +28,13 @@ Platformer::Platformer()
     playerShapeDef.density = 1.f;
     entities.push_back(
         std::make_unique<Entity>(
-            world, b2MakeBox(0.5f, 0.5f), b2Vec2{0.f, 4.f}, hexToColor(0xBA988AFF), false,
-            playerBodyDef, b2DefaultShapeDef()
+            world,
+            b2MakeBox(0.5f, 0.5f),
+            b2Vec2{0.f, 4.f},
+            hexToColor(0xBA988AFF),
+            false,
+            playerBodyDef,
+            b2DefaultShapeDef()
         )
     );
     player = entities.front().get();
@@ -54,13 +59,23 @@ Platformer::Platformer()
     dynamicBodyDef.type = b2_dynamicBody;
     entities.push_back(
         std::make_unique<Entity>(
-            world, b2MakeBox(0.5f, 2.f), b2Vec2{10.f, 3.f}, Colors.Brown, false, dynamicBodyDef,
+            world,
+            b2MakeBox(0.5f, 2.f),
+            b2Vec2{10.f, 3.f},
+            Colors.Brown,
+            false,
+            dynamicBodyDef,
             b2DefaultShapeDef()
         )
     );
     entities.push_back(
         std::make_unique<Entity>(
-            world, b2MakeBox(0.5f, 1.f), b2Vec2{-10.f, 2.f}, Colors.Brown, false, dynamicBodyDef,
+            world,
+            b2MakeBox(0.5f, 1.f),
+            b2Vec2{-10.f, 2.f},
+            Colors.Brown,
+            false,
+            dynamicBodyDef,
             b2DefaultShapeDef()
         )
     );
@@ -78,46 +93,22 @@ void Platformer::handleSdlEvent() {
             window.handleResize(event.window.data1, event.window.data2);
         }; break;
         case SDL_EVENT_KEY_DOWN:
-        case SDL_EVENT_KEY_UP: {
-            std::vector<InputVerbInfo> verbs = input.getVerbsFromScancode(event.key.scancode);
-            if (verbs.size() == 0) {
-                break;
-            }
-            InputState state =
-                event.type == SDL_EVENT_KEY_DOWN ? InputState::Pressed : InputState::Released;
-            for (int i = 0; i < verbs.size(); i++) {
-                if (verbs[i].activateOnRepeat || !event.key.repeat) {
-                    GameEvents::Push(GameEventTypes::Input{verbs[i].verb, state});
-                }
-            }
-        }; break;
-        case SDL_EVENT_MOUSE_WHEEL: {
-            if (event.wheel.integer_y > 0) {
-                GameEvents::Push(GameEventTypes::Input{InputVerb::ZoomIn, InputState::Pressed});
-            } else if (event.wheel.integer_y < 0) {
-                GameEvents::Push(GameEventTypes::Input{InputVerb::ZoomOut, InputState::Pressed});
-            }
-        }; break;
+        case SDL_EVENT_KEY_UP:
+        case SDL_EVENT_MOUSE_WHEEL:
         case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
         case SDL_EVENT_GAMEPAD_BUTTON_UP: {
-            std::vector<InputVerb> verbs = input.getVerbsFromGamepadButton(
-                static_cast<SDL_GamepadButton>(event.gbutton.button)
-            );
-            if (verbs.size() == 0) {
-                break;
-            }
-            const InputState state = event.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN
-                                         ? InputState::Pressed
-                                         : InputState::Released;
-            for (int i = 0; i < verbs.size(); i++) {
-                GameEvents::Push(GameEventTypes::Input{verbs[i], state});
+            auto inputEvents = input.getInputEventsFromSDLEvent(event);
+            for (const auto& inputEvent : inputEvents) {
+                GameEvents::Push(inputEvent);
             }
         }; break;
-        }
+        case SDL_EVENT_GAMEPAD_ADDED:
+        case SDL_EVENT_GAMEPAD_REMOVED:
+            input.handleGamepadDeviceEvent(event.gdevice);
+        };
+        break;
     }
 }
-
-static std::array<bool, static_cast<size_t>(InputVerb::Count)> inputThisFrame = {false};
 
 void Platformer::handleGameEvent() {
     GameEvent event;
@@ -127,10 +118,7 @@ void Platformer::handleGameEvent() {
         } else if (const auto* playSoundEvent = std::get_if<GameEventTypes::PlaySound>(&event)) {
             // Not finished
         } else if (const auto* inputEvent = std::get_if<GameEventTypes::Input>(&event)) {
-            if (
-                inputEvent->state == InputState::Pressed &&
-                !inputThisFrame[static_cast<size_t>(inputEvent->verb)] // Prevent duplicate input
-            ) {
+            if (inputEvent->state == InputState::Pressed) {
                 switch (inputEvent->verb) {
                 case InputVerb::ToggleFullscreen:
                     window.toggleFullscreen();
@@ -144,21 +132,21 @@ void Platformer::handleGameEvent() {
                 case InputVerb::ZoomReset:
                     window.resetScaleMultiplier();
                 }
-                inputThisFrame[static_cast<size_t>(inputEvent->verb)] = true;
             }
             if (player) {
                 controlEntity(*inputEvent, *player, camera);
             }
         }
     }
-    inputThisFrame.fill(false);
 }
 
 void Platformer::showDebugUi() const {
     ImGui::Begin("Debug Menu");
     ImGui::Text(
-        "Renderer:\n%.1f/%s FPS (%.3f ms/frame)\nVsync Enabled: %s", ImGui::GetIO().Framerate,
-        window.targetFpsStr().c_str(), 1000.0f / ImGui::GetIO().Framerate,
+        "Renderer:\n%.1f/%s FPS (%.3f ms/frame)\nVsync Enabled: %s",
+        ImGui::GetIO().Framerate,
+        window.targetFpsStr().c_str(),
+        1000.0f / ImGui::GetIO().Framerate,
         window.isVsyncEnabled() ? "true" : "false"
     );
     WindowDimensions offset = window.getOffsetPixels();
@@ -168,29 +156,44 @@ void Platformer::showDebugUi() const {
     ImGui::Text(
         "\nWindow:\nSize Pixels: %d, %d\nSize World: %.1f, %.1f\nRender Offset: %d, "
         "%d\nScale: %.2f (Factor %.2f)",
-        windowSizePixels.x, windowSizePixels.y, windowSizeWorld.x, windowSizeWorld.y, offset.x,
-        offset.y, window.scaleMultiplier, scaleFactor
+        windowSizePixels.x,
+        windowSizePixels.y,
+        windowSizeWorld.x,
+        windowSizeWorld.y,
+        offset.x,
+        offset.y,
+        window.scaleMultiplier,
+        scaleFactor
     );
     if (player) {
         b2Vec2 position = b2Body_GetPosition(player->getBodyId());
         b2Vec2 velocity = b2Body_GetLinearVelocity(player->getBodyId());
         ImGui::Text(
             "\nPlayer:\nPosition: %.2f, %.2f\nVelocity: %.2f, %.2f\nInput: Up %d, Down %d, Left %d, Right %d, Sprint %d",
-            position.x, position.y, velocity.x, velocity.y,
+            position.x,
+            position.y,
+            velocity.x,
+            velocity.y,
             player->movement[static_cast<size_t>(EntityMovement::Up)],
             player->movement[static_cast<size_t>(EntityMovement::Down)],
             player->movement[static_cast<size_t>(EntityMovement::Left)],
-            player->movement[static_cast<size_t>(EntityMovement::Right)], player->isSprinting
+            player->movement[static_cast<size_t>(EntityMovement::Right)],
+            player->isSprinting
         );
     }
     if (camera.entityToFollow) {
         b2Vec2 safeAreaSize = camera.getSafeAreaSize();
         b2Vec2 safeAreaValue = camera.getEntitySafeAreaValue();
         ImGui::Text(
-            "\nSafe Area:\nSize: %.2f, %.2f\nRatio from Center: %.2f, %.2f", safeAreaSize.x,
-            safeAreaSize.y, safeAreaValue.x, safeAreaValue.y
+            "\nSafe Area:\nSize: %.2f, %.2f\nRatio from Center: %.2f, %.2f",
+            safeAreaSize.x,
+            safeAreaSize.y,
+            safeAreaValue.x,
+            safeAreaValue.y
         );
     }
+    size_t controllersConnected = input.getGamepadCount();
+    ImGui::Text("\nControllers Connected: %zu", controllersConnected);
     ImGui::End();
 }
 

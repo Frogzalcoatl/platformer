@@ -21,7 +21,7 @@ static std::optional<EntityMovement> inputVerbToDirection(InputVerb verb) {
 
 void controlEntity(GameEventTypes::Input event, Entity& entity, Camera& camera) {
     assert(event.state == InputState::Pressed || event.state == InputState::Released);
-    assert(event.verb >= static_cast<InputVerb>(0) && event.verb < InputVerb::Count);
+    assert(event.verb >= static_cast<InputVerb>(0) && event.verb < InputVerb::VerbCount);
     if (event.state == InputState::Pressed) {
         if (event.verb == InputVerb::Respawn) {
             entity.respawn();

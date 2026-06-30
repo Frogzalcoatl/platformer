@@ -3,6 +3,7 @@
 #include <array>
 #include <filesystem>
 #include <optional>
+#include <unordered_map>
 #include <vector>
 
 constexpr int MaxBindsPerVerb = 4;
@@ -21,12 +22,14 @@ enum class InputVerb : uint8_t {
     ZoomIn,
     ZoomOut,
     ZoomReset,
-    Count
+    VerbCount
 };
 
 std::string inputVerbToString(InputVerb verb);
 
-enum class InputState : uint8_t { Pressed, Released };
+enum class InputState : uint8_t { Pressed, Released, InputStateCount };
+
+enum class InputSource : uint8_t { KeyboardMouse, Controller, Touch, InputSourceCount };
 
 struct InputVerbInfo {
     InputVerb verb;
@@ -49,13 +52,29 @@ struct DefaultButtonBinding {
     SDL_GamepadButton button;
 };
 
+namespace GameEventTypes {
+struct Input {
+    InputVerb verb;
+    InputState state;
+    InputSource source;
+    std::optional<SDL_JoystickID> joystickID = std::nullopt;
+};
+}; // namespace GameEventTypes
+
 class InputManager {
   private:
-    std::array<std::array<ScancodeInfo, MaxBindsPerVerb>, static_cast<size_t>(InputVerb::Count)>
+    std::array<std::array<ScancodeInfo, MaxBindsPerVerb>, static_cast<size_t>(InputVerb::VerbCount)>
         scancodeBindings = {};
-    std::
-        array<std::array<SDL_GamepadButton, MaxBindsPerVerb>, static_cast<size_t>(InputVerb::Count)>
-            gButtonBindings = {};
+    std::array<
+        std::array<SDL_GamepadButton, MaxBindsPerVerb>,
+        static_cast<size_t>(InputVerb::VerbCount)>
+        gButtonBindings = {};
+    // Arrays of the amount a verb is pressed
+    // e.g. two buttons bound to the same verb:
+    // Prevents release event when one of the buttons is released and the other isnt.
+    std::unordered_map<SDL_JoystickID, std::array<int, static_cast<size_t>(InputVerb::VerbCount)>>
+        gamepadsVerbsPressed = {};
+    std::array<int, static_cast<size_t>(InputVerb::VerbCount)> keyboardVerbsPressed = {};
 
     int openMappingsFromPath(std::filesystem::path& path);
     bool addGamepadMappingsFromFiles();
@@ -73,7 +92,10 @@ class InputManager {
     void unbindGamepadButtonFromVerb(InputVerb verb, SDL_GamepadButton button);
     void clearGamepadButtonBindingAtIndex(InputVerb verb, int index);
     std::vector<InputVerb> getVerbsFromGamepadButton(SDL_GamepadButton button);
-    std::array<SDL_GamepadButton, MaxBindsPerVerb> getGamepadButtonsFromverb(InputVerb verb);
+    std::array<SDL_GamepadButton, MaxBindsPerVerb> getGamepadButtonsFromVerb(InputVerb verb);
+    void handleGamepadDeviceEvent(SDL_GamepadDeviceEvent& event);
+    std::vector<GameEventTypes::Input> getInputEventsFromSDLEvent(SDL_Event& event);
+    size_t getGamepadCount() const;
 
     // Will probably remove default bindings vectors later, currently here for convenience
     const std::vector<DefaultScancodeBinding> defaultVerbBindings = {

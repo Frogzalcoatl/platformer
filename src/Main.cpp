@@ -18,8 +18,6 @@ int main(int argc, char* argv[]) {
     }
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    // disable ini file for now
-    ImGui::GetIO().IniFilename = nullptr;
     Platformer game;
     game.run();
     game.close();

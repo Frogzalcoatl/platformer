@@ -7,10 +7,6 @@ struct CloseWindow {};
 struct PlaySound {
     int soundId;
 };
-struct Input {
-    InputVerb verb;
-    InputState state;
-};
 } // namespace GameEventTypes
 
 using GameEvent =

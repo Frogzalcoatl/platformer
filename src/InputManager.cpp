@@ -36,7 +36,7 @@ std::string inputVerbToString(InputVerb verb) {
 
 InputManager::InputManager() {
     addGamepadMappingsFromFiles();
-    for (int i = 0; i < static_cast<int>(InputVerb::Count); i++) {
+    for (int i = 0; i < static_cast<int>(InputVerb::VerbCount); i++) {
         gButtonBindings[i].fill(SDL_GAMEPAD_BUTTON_INVALID); // Invalid represents empty.
     }
     for (const auto& binding : defaultVerbBindings) {
@@ -79,7 +79,7 @@ bool InputManager::addGamepadMappingsFromFiles() {
 void InputManager::bindScancodeToVerb(
     InputVerb verb, ScancodeInfo scancodeInfo, std::optional<int> atIndexOpt
 ) {
-    assert(verb >= static_cast<InputVerb>(0) && verb < InputVerb::Count);
+    assert(verb >= static_cast<InputVerb>(0) && verb < InputVerb::VerbCount);
     if (scancodeInfo.scancode <= SDL_SCANCODE_UNKNOWN ||
         scancodeInfo.scancode >= SDL_SCANCODE_COUNT) {
         return;
@@ -115,7 +115,7 @@ void InputManager::bindScancodeToVerb(
 }
 
 void InputManager::unbindScancodeFromVerb(InputVerb verb, SDL_Scancode scancode) {
-    assert(verb >= static_cast<InputVerb>(0) && verb < InputVerb::Count);
+    assert(verb >= static_cast<InputVerb>(0) && verb < InputVerb::VerbCount);
     if (scancode <= SDL_SCANCODE_UNKNOWN || scancode >= SDL_SCANCODE_COUNT) {
         return;
     }
@@ -129,7 +129,7 @@ void InputManager::unbindScancodeFromVerb(InputVerb verb, SDL_Scancode scancode)
 }
 
 void InputManager::clearScancodeBindingAtIndex(InputVerb verb, int index) {
-    assert(verb >= static_cast<InputVerb>(0) && verb < InputVerb::Count);
+    assert(verb >= static_cast<InputVerb>(0) && verb < InputVerb::VerbCount);
     assert(index >= 0 && index < MaxBindsPerVerb);
     auto& bindings = scancodeBindings[static_cast<size_t>(verb)];
     bindings[index].scancode = SDL_SCANCODE_UNKNOWN;
@@ -141,7 +141,7 @@ std::vector<InputVerbInfo> InputManager::getVerbsFromScancode(SDL_Scancode scanc
     if (scancode <= SDL_SCANCODE_UNKNOWN || scancode >= SDL_SCANCODE_COUNT) {
         return inputVerbs;
     }
-    for (int i = 0; i < static_cast<int>(InputVerb::Count); i++) {
+    for (int i = 0; i < static_cast<int>(InputVerb::VerbCount); i++) {
         for (ScancodeInfo& binding : scancodeBindings[i]) {
             if (binding.scancode == scancode) {
                 inputVerbs.push_back(
@@ -154,14 +154,14 @@ std::vector<InputVerbInfo> InputManager::getVerbsFromScancode(SDL_Scancode scanc
 }
 
 std::array<ScancodeInfo, MaxBindsPerVerb> InputManager::getScancodesFromVerb(InputVerb verb) {
-    assert(verb >= static_cast<InputVerb>(0) && verb < InputVerb::Count);
+    assert(verb >= static_cast<InputVerb>(0) && verb < InputVerb::VerbCount);
     return scancodeBindings[static_cast<size_t>(verb)];
 }
 
 void InputManager::bindGamepadButtonToVerb(
     InputVerb verb, SDL_GamepadButton button, std::optional<int> atIndexOpt
 ) {
-    assert(verb >= static_cast<InputVerb>(0) && verb < InputVerb::Count);
+    assert(verb >= static_cast<InputVerb>(0) && verb < InputVerb::VerbCount);
     if (button <= SDL_GAMEPAD_BUTTON_INVALID || button >= SDL_GAMEPAD_BUTTON_COUNT) {
         return;
     }
@@ -185,7 +185,7 @@ void InputManager::bindGamepadButtonToVerb(
 }
 
 void InputManager::unbindGamepadButtonFromVerb(InputVerb verb, SDL_GamepadButton button) {
-    assert(verb >= static_cast<InputVerb>(0) && verb < InputVerb::Count);
+    assert(verb >= static_cast<InputVerb>(0) && verb < InputVerb::VerbCount);
     if (button <= SDL_GAMEPAD_BUTTON_INVALID || button >= SDL_GAMEPAD_BUTTON_COUNT) {
         return;
     }
@@ -198,7 +198,7 @@ void InputManager::unbindGamepadButtonFromVerb(InputVerb verb, SDL_GamepadButton
 }
 
 void InputManager::clearGamepadButtonBindingAtIndex(InputVerb verb, int index) {
-    assert(verb >= static_cast<InputVerb>(0) && verb < InputVerb::Count);
+    assert(verb >= static_cast<InputVerb>(0) && verb < InputVerb::VerbCount);
     assert(index >= 0 && index < MaxBindsPerVerb);
     auto& bindings = gButtonBindings[static_cast<size_t>(verb)];
     bindings[index] = SDL_GAMEPAD_BUTTON_INVALID; // Invalid represents empty
@@ -209,7 +209,7 @@ std::vector<InputVerb> InputManager::getVerbsFromGamepadButton(SDL_GamepadButton
     if (button <= SDL_GAMEPAD_BUTTON_INVALID || button >= SDL_GAMEPAD_BUTTON_COUNT) {
         return verbs;
     }
-    for (int i = 0; i < static_cast<int>(InputVerb::Count); i++) {
+    for (int i = 0; i < static_cast<int>(InputVerb::VerbCount); i++) {
         for (SDL_GamepadButton& buttonBinding : gButtonBindings[i]) {
             if (buttonBinding == button) {
                 verbs.push_back(static_cast<InputVerb>(i));
@@ -220,7 +220,98 @@ std::vector<InputVerb> InputManager::getVerbsFromGamepadButton(SDL_GamepadButton
 }
 
 std::array<SDL_GamepadButton, MaxBindsPerVerb>
-InputManager::getGamepadButtonsFromverb(InputVerb verb) {
-    assert(verb >= static_cast<InputVerb>(0) && verb < InputVerb::Count);
+InputManager::getGamepadButtonsFromVerb(InputVerb verb) {
+    assert(verb >= static_cast<InputVerb>(0) && verb < InputVerb::VerbCount);
     return gButtonBindings[static_cast<size_t>(verb)];
+}
+
+void InputManager::handleGamepadDeviceEvent(SDL_GamepadDeviceEvent& event) {
+    if (event.type == SDL_EVENT_GAMEPAD_REMOVED) {
+        gamepadsVerbsPressed.erase(event.which);
+    } else if (event.type == SDL_EVENT_GAMEPAD_ADDED) {
+        gamepadsVerbsPressed[event.which] = {};
+    }
+}
+
+size_t InputManager::getGamepadCount() const { return gamepadsVerbsPressed.size(); }
+
+std::vector<GameEventTypes::Input> InputManager::getInputEventsFromSDLEvent(SDL_Event& event) {
+    std::vector<GameEventTypes::Input> inputEvents;
+    switch (event.type) {
+    case SDL_EVENT_KEY_DOWN:
+    case SDL_EVENT_KEY_UP: {
+        std::vector<InputVerbInfo> verbs = getVerbsFromScancode(event.key.scancode);
+        if (verbs.size() == 0) {
+            break;
+        }
+        for (int i = 0; i < verbs.size(); i++) {
+            auto& amountPressed = keyboardVerbsPressed[static_cast<size_t>(verbs[i].verb)];
+            if (event.type == SDL_EVENT_KEY_DOWN && !event.key.repeat) {
+                amountPressed++;
+            } else if (event.type == SDL_EVENT_KEY_UP) {
+                amountPressed--;
+            }
+            if (amountPressed == 0) {
+                inputEvents.push_back(
+                    GameEventTypes::Input{
+                        verbs[i].verb, InputState::Released, InputSource::KeyboardMouse
+                    }
+                );
+            }
+            if (amountPressed >= 1 && (verbs[i].activateOnRepeat || !event.key.repeat)) {
+                inputEvents.push_back(
+                    GameEventTypes::Input{
+                        verbs[i].verb, InputState::Pressed, InputSource::KeyboardMouse
+                    }
+                );
+            }
+        }
+    }; break;
+    case SDL_EVENT_MOUSE_WHEEL: {
+        if (event.wheel.integer_y > 0) {
+            inputEvents.push_back(
+                GameEventTypes::Input{
+                    InputVerb::ZoomIn, InputState::Pressed, InputSource::KeyboardMouse
+                }
+            );
+        } else if (event.wheel.integer_y < 0) {
+            inputEvents.push_back(
+                GameEventTypes::Input{
+                    InputVerb::ZoomOut, InputState::Pressed, InputSource::KeyboardMouse
+                }
+            );
+        }
+    }; break;
+    case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+    case SDL_EVENT_GAMEPAD_BUTTON_UP: {
+        std::vector<InputVerb> verbs =
+            getVerbsFromGamepadButton(static_cast<SDL_GamepadButton>(event.gbutton.button));
+        if (verbs.size() == 0) {
+            break;
+        }
+        auto& amountPressedArr = gamepadsVerbsPressed[event.gbutton.which];
+        for (int i = 0; i < verbs.size(); i++) {
+            auto& amountPressed = amountPressedArr[static_cast<size_t>(verbs[i])];
+            if (event.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN) {
+                amountPressed++;
+            } else if (event.type == SDL_EVENT_GAMEPAD_BUTTON_UP) {
+                amountPressed--;
+            }
+            if (amountPressed == 0) {
+                inputEvents.push_back(
+                    GameEventTypes::Input{
+                        verbs[i], InputState::Released, InputSource::Controller, event.gbutton.which
+                    }
+                );
+            } else if (amountPressed >= 1) {
+                inputEvents.push_back(
+                    GameEventTypes::Input{
+                        verbs[i], InputState::Pressed, InputSource::Controller, event.gbutton.which
+                    }
+                );
+            }
+        }
+    }; break;
+    }
+    return inputEvents;
 }

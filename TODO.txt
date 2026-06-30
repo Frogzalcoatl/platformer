@@ -1,7 +1,5 @@
 Physics interpolation
 
-Fix holding two bound buttons/keys to an inputVerb then releasing one resulting in it no longer being held.
-
 Asset manager. not using packer since it would be overkill for right now
 
 Account for polygon radius

@@ -6,7 +6,7 @@
 #include <optional>
 #include <vector>
 
-enum class EntityMovement : uint8_t { Up, Down, Left, Right, IsRunning, Count };
+enum class EntityMovement : uint8_t { Up, Down, Left, Right, IsRunning, EntityMovementCount };
 
 class Entity {
   private:
@@ -33,7 +33,7 @@ class Entity {
     const float horizontalSpeed = 10.f;
     const float horizontalAcceleration = 0.1f;
     const float downwardAcceleration = 2.5f;
-    std::array<bool, static_cast<size_t>(EntityMovement::Count)> movement = {false};
+    std::array<bool, static_cast<size_t>(EntityMovement::EntityMovementCount)> movement = {false};
     bool isSprinting = false;
     float sprintMultiplier = 2.f;
 
