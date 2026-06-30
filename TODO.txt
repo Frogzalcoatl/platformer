@@ -1,8 +1,12 @@
+Hex to color and fColor
+
+Fix holding two bound buttons/keys to an inputVerb then releasing one resulting in it no longer being held.
+
+Asset manager. not using packer since it would be overkill for right now
+
 Account for polygon radius
 Draw shape borders
 Draw fan triangulation borders
-
-Asset manager. not using packer since it would be overkill for right now
 
 Tiling manager
     I'm assuming I'd need to figure out some way to automatically load static entities on exposed solid tiles.

@@ -157,8 +157,9 @@ void Platformer::handleGameEvent() {
 void Platformer::showDebugUi() const {
     ImGui::Begin("Debug Menu");
     ImGui::Text(
-        "\nApplication average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate,
-        ImGui::GetIO().Framerate
+        "Renderer:\n%.1f/%s FPS (%.3f ms/frame)\nVsync Enabled: %s", ImGui::GetIO().Framerate,
+        window.targetFpsStr().c_str(), 1000.0f / ImGui::GetIO().Framerate,
+        window.isVsyncEnabled() ? "true" : "false"
     );
     WindowDimensions offset = window.getOffsetPixels();
     WindowDimensions windowSizePixels = window.getSizePixels();
@@ -214,10 +215,10 @@ void Platformer::physicsStepHandler() {
 
 void Platformer::run() {
     TTF_Text* text =
-        assets.getText(textEngine, "Player", GameAssets::Font::Monocraft, 75.f); // Just to test
-    lastTime = SDL_GetTicks();
+        assets.getText(textEngine, "Player", GameAssets::Font::Monocraft, 150.f); // Just to test
     running = true;
     while (running) {
+        const Uint64 frameStartNs = SDL_GetTicksNS();
         handleSdlEvent();
         handleGameEvent();
         physicsStepHandler();
@@ -233,9 +234,7 @@ void Platformer::run() {
         Drawing::text(text, textPos, window);
         showDebugUi();
         showKeybindUi();
-        ImGui::Render();
-        ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), window.sdlRenderer);
-        SDL_RenderPresent(window.sdlRenderer);
+        window.render(frameStartNs);
     }
 }
 

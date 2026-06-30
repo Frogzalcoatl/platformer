@@ -97,8 +97,7 @@ class InputManager {
         {InputVerb::ZoomReset, SDL_SCANCODE_KP_0},
         {InputVerb::Jump, SDL_SCANCODE_W},
         {InputVerb::Jump, SDL_SCANCODE_UP},
-        {InputVerb::Jump, SDL_SCANCODE_SPACE},
-        {InputVerb::Sprint, SDL_SCANCODE_LSHIFT}
+        {InputVerb::Sprint, SDL_SCANCODE_SPACE}
     };
     const std::vector<DefaultButtonBinding> defaultButtonBindings = {
         {InputVerb::Up, SDL_GAMEPAD_BUTTON_DPAD_UP},

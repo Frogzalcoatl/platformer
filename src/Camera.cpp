@@ -80,5 +80,5 @@ void Camera::centerOnEntity() {
     if (!entityToFollow) {
         return;
     }
-    window.updateOffset(b2Body_GetPosition(entityToFollow->getBodyId()));
+    window.updateOffset(entityToFollow->getPosition());
 }

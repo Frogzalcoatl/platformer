@@ -11,9 +11,23 @@ WindowManager::WindowManager(const char* windowName, SDL_Color backgroundColor)
     sdlWindow =
         SDL_CreateWindow(windowName, size.x, size.y, SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED);
     sdlRenderer = SDL_CreateRenderer(sdlWindow, nullptr);
-    SDL_SetRenderVSync(sdlRenderer, 1);
+    setVsync(vsync);
     ImGui_ImplSDL3_InitForSDLRenderer(sdlWindow, sdlRenderer);
     ImGui_ImplSDLRenderer3_Init(sdlRenderer);
+}
+
+void WindowManager::render(Uint64 frameStartNs) {
+    ImGui::Render();
+    ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), sdlRenderer);
+    SDL_RenderPresent(sdlRenderer);
+    if (unlimitedFps || vsync) {
+        return;
+    }
+    const Uint64 frameTimeNs = SDL_GetTicksNS() - frameStartNs;
+    if (frameTimeNs < targetFrameTimeNs) {
+        const Uint64 delayNs = targetFrameTimeNs - frameTimeNs;
+        SDL_DelayPrecise(delayNs);
+    }
 }
 
 void WindowManager::clearFrame() {
@@ -24,11 +38,6 @@ void WindowManager::clearFrame() {
         sdlRenderer, backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.a
     );
     SDL_RenderClear(sdlRenderer);
-}
-
-void WindowManager::toggleFullscreen() {
-    isFullscreen = !isFullscreen;
-    SDL_SetWindowFullscreen(sdlWindow, isFullscreen);
 }
 
 WindowDimensions WindowManager::getSizePixels() const { return size; }
@@ -44,6 +53,37 @@ b2Vec2 WindowManager::getOffsetWorld() const { return offsetWorld; }
 float WindowManager::getScaleFactor() const { return scaleFactor; }
 
 bool WindowManager::getIsFullscreen() const { return isFullscreen; }
+
+Uint64 WindowManager::getTargetFps() const { return targetFps; }
+
+std::string WindowManager::targetFpsStr() const {
+    if (unlimitedFps) {
+        return "unlimited";
+    } else {
+        return std::to_string(targetFps) + ".0";
+    }
+}
+
+void WindowManager::setTargetFps(Uint64 value) {
+    targetFps = value;
+    targetFrameTimeNs = 1000000000ULL / targetFps;
+}
+
+void WindowManager::setVsync(bool value) {
+    int arg = value == true ? 1 : 0;
+    if (!SDL_SetRenderVSync(sdlRenderer, arg)) {
+        SDL_Log("Failed to enable VSync: %s", SDL_GetError());
+        return;
+    }
+    vsync = value;
+}
+
+bool WindowManager::isVsyncEnabled() const { return vsync; }
+
+void WindowManager::toggleFullscreen() {
+    isFullscreen = !isFullscreen;
+    SDL_SetWindowFullscreen(sdlWindow, isFullscreen);
+}
 
 void WindowManager::updateScaleFactor() {
     int dividend = b2MinInt(size.x, size.y);

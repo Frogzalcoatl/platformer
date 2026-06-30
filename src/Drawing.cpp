@@ -50,7 +50,8 @@ static void drawArcSlice(
 ) {}
 */
 
-static const float WorldTextScaling = 0.01f;
+// Load big font scale down for passable text resolution even when zoomed in
+static const float WorldTextScaling = 0.005f;
 
 void Drawing::text(
     TTF_Text* text, b2Vec2 worldPosition, WindowManager& window, SDL_FColor textColor,

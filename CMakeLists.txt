@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.26)
 project(MyPlatformer CXX C)
 
+# Static lib setup
+cmake_policy(SET CMP0091 NEW)
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -35,6 +39,12 @@ else()
 endif()
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE _USE_MATH_DEFINES)
+
+if(WIN32)
+    set_target_properties(${PROJECT_NAME} PROPERTIES 
+        WIN32_EXECUTABLE $<CONFIG:Release>
+    )
+endif()
 
 add_custom_target(copy_assets ALL
     COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
