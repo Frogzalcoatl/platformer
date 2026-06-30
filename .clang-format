@@ -10,3 +10,4 @@ Cpp11BracedListStyle: true
 BreakStringLiterals: false
 BinPackArguments: false
 BinPackParameters: OnePerLine
+AllowShortFunctionsOnASingleLine: None

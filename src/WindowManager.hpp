@@ -19,18 +19,21 @@ class WindowManager {
     Uint64 targetFps = 240;
     Uint64 targetFrameTimeNs = 1000000000ULL / targetFps;
     bool vsync = false;
+    SDL_Renderer* sdlRenderer;
+    SDL_Window* sdlWindow;
 
     void updateScaleFactor();
 
   public:
-    SDL_Renderer* sdlRenderer;
-    SDL_Window* sdlWindow;
     float scaleMultiplier = 1.f;
     SDL_Color backgroundColor;
     bool unlimitedFps = false;
 
     WindowManager(const char* windowName, SDL_Color backgroundColor);
+    ~WindowManager();
 
+    SDL_Window* getSdlWindow() const;
+    SDL_Renderer* getSdlRenderer() const;
     WindowDimensions getSizePixels() const;
     b2Vec2 getSizeWorld() const;
     WindowDimensions getOffsetPixels() const;

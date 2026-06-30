@@ -10,10 +10,30 @@ WindowManager::WindowManager(const char* windowName, SDL_Color backgroundColor)
     size = WindowDimensions{1280, 720};
     sdlWindow =
         SDL_CreateWindow(windowName, size.x, size.y, SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED);
+    if (!sdlWindow) {
+        SDL_LogError(
+            SDL_LOG_CATEGORY_APPLICATION, "Unable to create SDL Window: %s", SDL_GetError()
+        );
+        return;
+    }
+    SDL_Log("Created SDL Window with name \"%s\"", windowName);
     sdlRenderer = SDL_CreateRenderer(sdlWindow, nullptr);
+    if (!sdlRenderer) {
+        SDL_LogError(SDL_LOG_CATEGORY_RENDER, "Unable to create SDL renderer: %s", SDL_GetError());
+        return;
+    }
+    SDL_Log("Created SDL renderer");
     setVsync(vsync);
+    setTargetFps(240);
     ImGui_ImplSDL3_InitForSDLRenderer(sdlWindow, sdlRenderer);
     ImGui_ImplSDLRenderer3_Init(sdlRenderer);
+}
+
+WindowManager::~WindowManager() {
+    SDL_DestroyRenderer(sdlRenderer);
+    SDL_Log("Destroyed SDL renderer");
+    SDL_DestroyWindow(sdlWindow);
+    SDL_Log("Destroyed SDL window");
 }
 
 void WindowManager::render(Uint64 frameStartNs) {
@@ -40,21 +60,41 @@ void WindowManager::clearFrame() {
     SDL_RenderClear(sdlRenderer);
 }
 
-WindowDimensions WindowManager::getSizePixels() const { return size; }
+SDL_Window* WindowManager::getSdlWindow() const {
+    return sdlWindow;
+}
+
+SDL_Renderer* WindowManager::getSdlRenderer() const {
+    return sdlRenderer;
+};
+
+WindowDimensions WindowManager::getSizePixels() const {
+    return size;
+}
 
 b2Vec2 WindowManager::getSizeWorld() const {
     return b2Vec2{size.x / scaleFactor, size.y / scaleFactor};
 }
 
-WindowDimensions WindowManager::getOffsetPixels() const { return offsetPixels; }
+WindowDimensions WindowManager::getOffsetPixels() const {
+    return offsetPixels;
+}
 
-b2Vec2 WindowManager::getOffsetWorld() const { return offsetWorld; }
+b2Vec2 WindowManager::getOffsetWorld() const {
+    return offsetWorld;
+}
 
-float WindowManager::getScaleFactor() const { return scaleFactor; }
+float WindowManager::getScaleFactor() const {
+    return scaleFactor;
+}
 
-bool WindowManager::getIsFullscreen() const { return isFullscreen; }
+bool WindowManager::getIsFullscreen() const {
+    return isFullscreen;
+}
 
-Uint64 WindowManager::getTargetFps() const { return targetFps; }
+Uint64 WindowManager::getTargetFps() const {
+    return targetFps;
+}
 
 std::string WindowManager::targetFpsStr() const {
     if (unlimitedFps) {
@@ -67,18 +107,22 @@ std::string WindowManager::targetFpsStr() const {
 void WindowManager::setTargetFps(Uint64 value) {
     targetFps = value;
     targetFrameTimeNs = 1000000000ULL / targetFps;
+    SDL_Log("Set target fps to %zu", value);
 }
 
 void WindowManager::setVsync(bool value) {
     int arg = value == true ? 1 : 0;
     if (!SDL_SetRenderVSync(sdlRenderer, arg)) {
-        SDL_Log("Failed to enable VSync: %s", SDL_GetError());
+        SDL_LogError(SDL_LOG_CATEGORY_RENDER, "Failed to toggle VSync: %s", SDL_GetError());
         return;
     }
+    SDL_Log("Vsync set to %s", value ? "true" : "false");
     vsync = value;
 }
 
-bool WindowManager::isVsyncEnabled() const { return vsync; }
+bool WindowManager::isVsyncEnabled() const {
+    return vsync;
+}
 
 void WindowManager::toggleFullscreen() {
     isFullscreen = !isFullscreen;

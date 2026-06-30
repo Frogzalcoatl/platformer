@@ -13,7 +13,6 @@ class Platformer {
     WindowManager window;
     InputManager input;
     AssetManager assets;
-    TTF_TextEngine* textEngine;
     b2WorldId world;
     bool running = false;
     std::vector<std::unique_ptr<Entity>> entities;

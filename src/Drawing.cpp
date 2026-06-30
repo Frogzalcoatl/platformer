@@ -37,7 +37,7 @@ void Drawing::polygon(
     }
     std::vector<int> indices = fanTriangulation(polygon.count);
     SDL_RenderGeometry(
-        window.sdlRenderer,
+        window.getSdlRenderer(),
         NULL,
         sdlVertices.data(),
         polygon.count,
@@ -67,12 +67,13 @@ void Drawing::text(
     if (text == nullptr) {
         return;
     }
+    SDL_Renderer* renderer = window.getSdlRenderer();
     float oldRenderScaleX, oldRenderScaleY;
-    SDL_GetRenderScale(window.sdlRenderer, &oldRenderScaleX, &oldRenderScaleY);
+    SDL_GetRenderScale(renderer, &oldRenderScaleX, &oldRenderScaleY);
     float scaleFactor = window.getScaleFactor();
     textResolutionScaleFactor *= TextShrinkageMultiplier;
     scaleFactor /= textResolutionScaleFactor;
-    SDL_SetRenderScale(window.sdlRenderer, scaleFactor, scaleFactor);
+    SDL_SetRenderScale(renderer, scaleFactor, scaleFactor);
     WindowDimensions offsetPixels = window.getOffsetPixels();
     b2Vec2 windowPosition;
     windowPosition.x = worldPosition.x * textResolutionScaleFactor + offsetPixels.x / scaleFactor;
@@ -90,20 +91,20 @@ void Drawing::text(
                 static_cast<float>(textHeight)
             };
             SDL_BlendMode oldBlendMode;
-            SDL_GetRenderDrawBlendMode(window.sdlRenderer, &oldBlendMode);
-            SDL_SetRenderDrawBlendMode(window.sdlRenderer, SDL_BLENDMODE_BLEND);
+            SDL_GetRenderDrawBlendMode(renderer, &oldBlendMode);
+            SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
             SDL_SetRenderDrawColorFloat(
-                window.sdlRenderer,
+                renderer,
                 backgroundColor.value().r,
                 backgroundColor.value().g,
                 backgroundColor.value().b,
                 backgroundColor.value().a
             );
-            SDL_RenderFillRect(window.sdlRenderer, &backgroundRect);
-            SDL_SetRenderDrawBlendMode(window.sdlRenderer, oldBlendMode);
+            SDL_RenderFillRect(renderer, &backgroundRect);
+            SDL_SetRenderDrawBlendMode(renderer, oldBlendMode);
         }
     }
     TTF_SetTextColorFloat(text, textColor.r, textColor.g, textColor.b, textColor.a);
     TTF_DrawRendererText(text, windowPosition.x, windowPosition.y);
-    SDL_SetRenderScale(window.sdlRenderer, oldRenderScaleX, oldRenderScaleY);
+    SDL_SetRenderScale(renderer, oldRenderScaleX, oldRenderScaleY);
 }

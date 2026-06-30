@@ -1,11 +1,16 @@
 #include "Camera.hpp"
 
 Camera::Camera(Entity* followEntity, WindowManager& window)
-    : entityToFollow(followEntity), window(window) {}
+    : entityToFollow(followEntity), window(window) {
+}
 
-b2Vec2 Camera::getEntitySafeAreaValue() const { return entitySafeAreaVal; }
+b2Vec2 Camera::getEntitySafeAreaValue() const {
+    return entitySafeAreaVal;
+}
 
-b2Vec2 Camera::getSafeAreaSize() const { return safeAreaSize; }
+b2Vec2 Camera::getSafeAreaSize() const {
+    return safeAreaSize;
+}
 
 void Camera::run() {
     if (!entityToFollow) {

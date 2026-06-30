@@ -75,4 +75,6 @@ static void sdlOutput(void* userdata, int category, SDL_LogPriority priority, co
               << priorityToString(priority) << "]: " << message << std::endl;
 }
 
-void initLogFormatting() { SDL_SetLogOutputFunction(sdlOutput, nullptr); }
+void initLogFormatting() {
+    SDL_SetLogOutputFunction(sdlOutput, nullptr);
+}

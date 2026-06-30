@@ -11,7 +11,11 @@ static int tail = 0;
 void GameEvents::Push(GameEvent event) {
     int nextHead = (head + 1) % EventQueueSize;
     if (nextHead == tail) {
-        SDL_Log("Event Queue Overflow. Dropping event type %zu", event.index());
+        SDL_LogWarn(
+            SDL_LOG_CATEGORY_APPLICATION,
+            "Event Queue Overflow. Dropping event type %zu",
+            event.index()
+        );
         return;
     }
     eventQueue[head] = event;

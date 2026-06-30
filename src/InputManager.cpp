@@ -56,7 +56,7 @@ int InputManager::openMappingsFromPath(std::filesystem::path& path) {
     if (mappingsAdded == -1) {
         mappingsAdded = 0;
     }
-    SDL_Log("Added %d mapping(s) from %s", mappingsAdded, fullPath);
+    SDL_Log("Added %d gamepad mapping(s) from %s", mappingsAdded, fullPath);
     return mappingsAdded;
 }
 
@@ -233,7 +233,9 @@ void InputManager::handleGamepadDeviceEvent(SDL_GamepadDeviceEvent& event) {
     }
 }
 
-size_t InputManager::getGamepadCount() const { return gamepadsVerbsPressed.size(); }
+size_t InputManager::getGamepadCount() const {
+    return gamepadsVerbsPressed.size();
+}
 
 std::vector<GameEventTypes::Input> InputManager::getInputEventsFromSDLEvent(SDL_Event& event) {
     std::vector<GameEventTypes::Input> inputEvents;

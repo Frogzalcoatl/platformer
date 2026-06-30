@@ -9,16 +9,12 @@
 #include <imgui_impl_sdlrenderer3.h>
 
 Platformer::Platformer()
-    : window{"C++ Platformer", Colors.BackGround}, camera{Camera{nullptr, window}} {
-    textEngine = TTF_CreateRendererTextEngine(window.sdlRenderer);
-    if (!textEngine) {
-        SDL_LogError(
-            SDL_LOG_CATEGORY_APPLICATION, "Unable to create SDL text engine: %s", SDL_GetError()
-        );
-    }
+    : window{"C++ Platformer", Colors.BackGround}, camera{Camera{nullptr, window}},
+      assets{window.getSdlRenderer()} {
     b2WorldDef worldDef = b2DefaultWorldDef();
     worldDef.gravity = {0.0f, -60.f};
     world = b2CreateWorld(&worldDef);
+    SDL_Log("Created box2d world");
     camera.minViewableY = 0.f;
     updateKeybindsUi(input);
     // Test player
@@ -217,8 +213,7 @@ void Platformer::physicsStepHandler() {
 }
 
 void Platformer::run() {
-    TTF_Text* text =
-        assets.getText(textEngine, "Player", GameAssets::Font::Monocraft, 20.f); // Just to test
+    TTF_Text* text = assets.getText("Player", GameAssets::Font::Monocraft, 20.f); // Just to test
     running = true;
     while (running) {
         const Uint64 frameStartNs = SDL_GetTicksNS();
@@ -243,11 +238,19 @@ void Platformer::run() {
 
 void Platformer::close() {
     entities.clear();
+    SDL_Log("Cleared entities");
     b2DestroyWorld(world);
+    SDL_Log("Destroyed box2d world");
+    assets.~AssetManager();
+    window.~WindowManager();
     ImGui_ImplSDLRenderer3_Shutdown();
+    SDL_Log("Shutdown ImGui SDL3 renderer implementation");
     ImGui_ImplSDL3_Shutdown();
+    SDL_Log("Shutdown ImGui SDL3 implementation");
     ImGui::DestroyContext();
-    SDL_DestroyRenderer(window.sdlRenderer);
-    SDL_DestroyWindow(window.sdlWindow);
+    SDL_Log("Destroyed ImGui context");
+    TTF_Quit();
+    SDL_Log("Quit SDL_ttf");
     SDL_Quit();
+    SDL_Log("Quit SDL");
 }

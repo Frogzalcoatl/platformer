@@ -4,7 +4,8 @@
 #include <cmath>
 
 Entity::Entity(b2WorldId world, b2Polygon polygon, b2Vec2 position, SDL_Color color, bool isStatic)
-    : Entity(world, polygon, position, color, isStatic, b2DefaultBodyDef(), b2DefaultShapeDef()) {}
+    : Entity(world, polygon, position, color, isStatic, b2DefaultBodyDef(), b2DefaultShapeDef()) {
+}
 
 Entity::Entity(
     b2WorldId world,
@@ -27,17 +28,29 @@ Entity::Entity(
     spawnPoint = position;
 }
 
-Entity::~Entity() { b2DestroyBody(bodyId); }
+Entity::~Entity() {
+    b2DestroyBody(bodyId);
+}
 
-b2BodyId Entity::getBodyId() const { return bodyId; }
+b2BodyId Entity::getBodyId() const {
+    return bodyId;
+}
 
-b2Polygon Entity::getPolygon() const { return polygon; }
+b2Polygon Entity::getPolygon() const {
+    return polygon;
+}
 
-void Entity::setColor(SDL_Color c) { color = colorToFColor(c); }
+void Entity::setColor(SDL_Color c) {
+    color = colorToFColor(c);
+}
 
-SDL_Color Entity::getColor() const { return fColorToColor(color); }
+SDL_Color Entity::getColor() const {
+    return fColorToColor(color);
+}
 
-b2Vec2 Entity::getPosition() const { return b2Body_GetPosition(bodyId); }
+b2Vec2 Entity::getPosition() const {
+    return b2Body_GetPosition(bodyId);
+}
 
 void Entity::draw(WindowManager& window) const {
     b2Transform transform = b2Body_GetTransform(bodyId);
@@ -86,4 +99,6 @@ void Entity::teleport(b2Vec2 location) {
     b2Body_SetTransform(bodyId, location, b2Rot_identity);
 }
 
-void Entity::respawn() { teleport(spawnPoint); }
+void Entity::respawn() {
+    teleport(spawnPoint);
+}

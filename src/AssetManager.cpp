@@ -14,17 +14,33 @@ static std::vector<std::byte> loadFileToBuffer(const std::filesystem::path& file
     // reinterpret_cast is simply to avoid compiler warnings, unlike with static_cast, the data is
     // not manipulated in any way
     if (!file.read(reinterpret_cast<char*>(buffer.data()), fileSize)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Unable to read file %s", filePath.c_str());
         return {};
     }
     return buffer;
 }
 
-AssetManager::AssetManager() {
+AssetManager::AssetManager(SDL_Renderer* renderer) {
     const char* rawPath = SDL_GetBasePath();
     std::filesystem::path basePath{rawPath};
     std::filesystem::path fontsPath = basePath / "assets" / "fonts";
     std::filesystem::path monocraftPath = fontsPath / "Monocraft.ttf";
     fontData[static_cast<size_t>(GameAssets::Font::Monocraft)] = loadFileToBuffer(monocraftPath);
+    textEngine = TTF_CreateRendererTextEngine(renderer);
+    if (!textEngine) {
+        SDL_LogError(
+            SDL_LOG_CATEGORY_APPLICATION, "Unable to create SDL text engine: %s", SDL_GetError()
+        );
+    }
+}
+
+AssetManager::~AssetManager() {
+    for (const CachedFont& chachedFont : fontCache) {
+        TTF_CloseFont(chachedFont.font);
+    }
+    SDL_Log("Closed cached fonts");
+    TTF_DestroyRendererTextEngine(textEngine);
+    SDL_Log("Destroyed SDL_ttf text engine");
 }
 
 TTF_Font* AssetManager::getFont(GameAssets::Font fontId, float ptSize, TTF_FontStyleFlags style) {
@@ -61,11 +77,7 @@ TTF_Font* AssetManager::getFont(GameAssets::Font fontId, float ptSize, TTF_FontS
 }
 
 TTF_Text* AssetManager::getText(
-    TTF_TextEngine* textEngine,
-    std::string text,
-    GameAssets::Font fontId,
-    float ptSize,
-    TTF_FontStyleFlags style
+    std::string text, GameAssets::Font fontId, float ptSize, TTF_FontStyleFlags style
 ) {
     if (!textEngine) {
         return nullptr;
@@ -75,4 +87,8 @@ TTF_Text* AssetManager::getText(
         return nullptr;
     }
     return TTF_CreateText(textEngine, font, text.c_str(), text.length());
+}
+
+TTF_TextEngine* AssetManager::getTextEngine() const {
+    return textEngine;
 }
