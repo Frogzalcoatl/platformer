@@ -30,6 +30,7 @@ class WindowManager {
     bool unlimitedFps = false;
 
     WindowManager(const char* windowName, SDL_Color backgroundColor);
+    ~WindowManager();
 
     void cleanup();
 

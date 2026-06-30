@@ -1,4 +1,5 @@
 #include "Platformer.hpp"
+#include "AudioUi.hpp"
 #include "Colors.hpp"
 #include "Drawing.hpp"
 #include "Events.hpp"
@@ -9,7 +10,7 @@
 #include <imgui_impl_sdlrenderer3.h>
 
 Platformer::Platformer()
-    : window{"C++ Platformer", Colors.BackGround}, assets{window.getSdlRenderer()},
+    : window{"C++ Platformer", Colors.BackGround}, assets{window.getSdlRenderer()}, audio{assets},
       camera{Camera{nullptr, window}} {
     b2WorldDef worldDef = b2DefaultWorldDef();
     worldDef.gravity = {0.0f, -60.f};
@@ -112,7 +113,14 @@ void Platformer::handleGameEvent() {
         if (std::holds_alternative<GameEventTypes::CloseWindow>(event)) {
             running = false;
         } else if (const auto* playSoundEvent = std::get_if<GameEventTypes::PlaySound>(&event)) {
-            // Not finished
+            audio.playSound(playSoundEvent->soundId, playSoundEvent->volume, playSoundEvent->pitch);
+        } else if (const auto* playMusicEvent = std::get_if<GameEventTypes::PlayMusic>(&event)) {
+            audio.playMusic(
+                playMusicEvent->musicId,
+                playMusicEvent->volume,
+                playMusicEvent->pitch,
+                playMusicEvent->loop
+            );
         } else if (const auto* inputEvent = std::get_if<GameEventTypes::Input>(&event)) {
             if (inputEvent->state == InputState::Pressed) {
                 switch (inputEvent->verb) {
@@ -213,7 +221,8 @@ void Platformer::physicsStepHandler() {
 }
 
 void Platformer::run() {
-    TTF_Text* text = assets.getText("Player", GameAssets::Font::Monocraft, 20.f); // Just to test
+    TTF_Text* text = assets.getText("Player", GameAssets::Fonts::Monocraft, 20.f); // Just to test
+    GameEvents::Push(GameEventTypes::PlayMusic{GameAssets::Music::Test, 30, 1.1f, true});
     running = true;
     while (running) {
         const Uint64 frameStartNs = SDL_GetTicksNS();
@@ -232,6 +241,7 @@ void Platformer::run() {
         Drawing::text(text, assets.textResolutionScaleFactor, textPos, window);
         showDebugUi();
         showKeybindUi();
+        showAudioUi(audio);
         window.render(frameStartNs);
     }
 }

@@ -1,23 +1,51 @@
 #pragma once
+#include <SDL3_mixer/SDL_mixer.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <array>
 #include <box2d/box2d.h>
 #include <filesystem>
+#include <variant>
 #include <vector>
 
+// std::string_view is a efficient read-only version of std::string
+inline constexpr std::string_view AssetsFolderName = "assets";
+inline constexpr size_t GameAssetTypeCount = 2;
+
 namespace GameAssets {
-enum class Font : uint8_t {
+enum class Fonts : uint8_t {
     Monocraft,
     FontCount
 };
-enum class Sound : uint8_t {
-    Test,
+enum class Sounds : uint8_t {
+    Fart,
     SoundCount
 };
+enum class Music : uint8_t {
+    Test,
+    MusicCount
+};
+inline constexpr struct {
+    const std::array<const char*, static_cast<size_t>(GameAssets::Fonts::FontCount)> Fonts = {
+        "monocraft.ttf"
+    };
+    // AudioManager loads all sounds at startup but only loads music when requested.
+    // mp3 files not enabled
+    const std::array<const char*, static_cast<size_t>(GameAssets::Sounds::SoundCount)> Sounds = {
+        "fart.wav"
+    };
+    const std::array<const char*, static_cast<size_t>(GameAssets::Music::MusicCount)> Music = {
+        "test.ogg"
+    };
+} FileNames;
+inline struct {
+    std::filesystem::path Fonts = std::filesystem::path(AssetsFolderName) / "fonts";
+    std::filesystem::path Sounds = std::filesystem::path(AssetsFolderName) / "sounds";
+    std::filesystem::path Music = std::filesystem::path(AssetsFolderName) / "music";
+} Paths;
 } // namespace GameAssets
 
 struct CachedFont {
-    GameAssets::Font fontId;
+    GameAssets::Fonts fontId;
     float ptSize;
     TTF_FontStyleFlags style;
     TTF_Font* font;
@@ -25,14 +53,17 @@ struct CachedFont {
 
 class AssetManager {
   private:
-    std::array<std::vector<std::byte>, static_cast<size_t>(GameAssets::Font::FontCount)> fontData =
+    std::filesystem::path basePath;
+    std::vector<std::byte> loadFileToBuffer(const std::filesystem::path relativeFilePath);
+    std::array<std::vector<std::byte>, static_cast<size_t>(GameAssets::Fonts::FontCount)> fontData =
         {};
     std::vector<CachedFont> fontCache;
-    TTF_Font* getFont(GameAssets::Font font, float ptSize, TTF_FontStyleFlags style);
+    TTF_Font* getFont(GameAssets::Fonts font, float ptSize, TTF_FontStyleFlags style);
     TTF_TextEngine* textEngine;
 
   public:
     AssetManager(SDL_Renderer* renderer);
+    ~AssetManager();
 
     void closeAll();
 
@@ -42,13 +73,17 @@ class AssetManager {
 
     // Render text at a high resolution then scale down so that it still looks good while zoomed in
     float textResolutionScaleFactor = 50.f;
-
+    TTF_TextEngine* getTextEngine() const;
     TTF_Text* getText(
         std::string text,
-        GameAssets::Font fontId,
+        GameAssets::Fonts fontId,
         float ptSize,
         TTF_FontStyleFlags style = TTF_STYLE_NORMAL
     );
+    // Cache includes styling, data is the raw bytes that are referenced to generate styled fonts
+    void clearFontCache();
+    void clearFontData();
 
-    TTF_TextEngine* getTextEngine() const;
+    std::vector<std::byte> getSoundData(GameAssets::Sounds soundId);
+    std::vector<std::byte> getMusicData(GameAssets::Music musicId);
 };

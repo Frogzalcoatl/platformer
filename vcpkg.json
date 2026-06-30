@@ -5,7 +5,12 @@
     "sdl3",
     "sdl3-image",
     "sdl3-ttf",
-    "sdl3-mixer",
+    {
+      "name": "sdl3-mixer",
+      "features": [
+        "libvorbis"
+      ]
+    },
     "box2d",
     {
       "name": "imgui",

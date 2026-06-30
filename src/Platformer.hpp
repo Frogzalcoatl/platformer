@@ -1,5 +1,6 @@
 #pragma once
 #include "AssetManager.hpp"
+#include "AudioManager.hpp"
 #include "Camera.hpp"
 #include "Entity.hpp"
 #include "InputManager.hpp"
@@ -12,6 +13,7 @@ class Platformer {
   private:
     WindowManager window;
     AssetManager assets;
+    AudioManager audio;
     InputManager input;
     b2WorldId world;
     bool running = false;

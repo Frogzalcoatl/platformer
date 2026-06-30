@@ -29,11 +29,21 @@ WindowManager::WindowManager(const char* windowName, SDL_Color backgroundColor)
     ImGui_ImplSDLRenderer3_Init(sdlRenderer);
 }
 
+WindowManager::~WindowManager() {
+    cleanup();
+}
+
 void WindowManager::cleanup() {
-    SDL_DestroyRenderer(sdlRenderer);
-    SDL_Log("Destroyed SDL renderer");
-    SDL_DestroyWindow(sdlWindow);
-    SDL_Log("Destroyed SDL window");
+    if (sdlRenderer) {
+        SDL_DestroyRenderer(sdlRenderer);
+        sdlRenderer = nullptr;
+        SDL_Log("Destroyed SDL renderer");
+    }
+    if (sdlWindow) {
+        SDL_DestroyWindow(sdlWindow);
+        sdlWindow = nullptr;
+        SDL_Log("Destroyed SDL window");
+    }
 }
 
 void WindowManager::render(Uint64 frameStartNs) {
