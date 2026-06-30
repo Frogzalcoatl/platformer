@@ -41,3 +41,11 @@ void drawPolygon(
         static_cast<int>(indices.size())
     );
 }
+
+/* Finish later fr
+// Radians are counted from the positive x-axis
+static void drawArcSlice(
+    SDL_Vertex center, float radius, float minRadians, float maxRadians, WindowManager& window,
+    SDL_FColor color
+) {}
+*/

@@ -168,12 +168,12 @@ void Platformer::showDebugUi() const {
         b2Vec2 position = b2Body_GetPosition(player->getBodyId());
         b2Vec2 velocity = b2Body_GetLinearVelocity(player->getBodyId());
         ImGui::Text(
-            "\nPlayer:\nInput: %d %d %d %d\nPosition: %.2f, %.2f\nVelocity: %.2f, %.2f",
+            "\nPlayer:\nPosition: %.2f, %.2f\nVelocity: %.2f, %.2f\nInput: Up %d, Down %d, Left %d, Right %d, Sprint %d",
+            position.x, position.y, velocity.x, velocity.y,
             player->movement[static_cast<size_t>(EntityMovement::Up)],
             player->movement[static_cast<size_t>(EntityMovement::Down)],
             player->movement[static_cast<size_t>(EntityMovement::Left)],
-            player->movement[static_cast<size_t>(EntityMovement::Right)], position.x, position.y,
-            velocity.x, velocity.y
+            player->movement[static_cast<size_t>(EntityMovement::Right)], player->isSprinting
         );
     }
     if (camera.entityToFollow) {

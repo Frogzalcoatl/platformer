@@ -50,10 +50,14 @@ void Entity::update() {
         targetVelocity.y -= downwardAcceleration;
     }
     if (movement[static_cast<size_t>(EntityMovement::Left)]) {
-        targetVelocity.x -= maxHorizontalSpeed;
+        targetVelocity.x -= horizontalSpeed;
     }
     if (movement[static_cast<size_t>(EntityMovement::Right)]) {
-        targetVelocity.x += maxHorizontalSpeed;
+        targetVelocity.x += horizontalSpeed;
+    }
+    if (isSprinting) {
+        targetVelocity.x *= sprintMultiplier;
+        targetVelocity.y *= sprintMultiplier;
     }
     velocity.x = velocity.x + (targetVelocity.x - velocity.x) * horizontalAcceleration;
     velocity.y += targetVelocity.y;

@@ -28,10 +28,12 @@ void controlEntity(GameEventTypes::Input event, Entity& entity, Camera& camera) 
             if (camera.entityToFollow == &entity) {
                 camera.centerOnEntity();
             }
-            return;
         } else if (event.verb == InputVerb::Jump) {
             entity.jump();
         }
+    }
+    if (event.verb == InputVerb::Sprint) {
+        entity.isSprinting = event.state == InputState::Pressed;
     }
     auto directionOpt = inputVerbToDirection(event.verb);
     if (!directionOpt.has_value()) {

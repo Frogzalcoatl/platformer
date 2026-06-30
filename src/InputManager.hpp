@@ -13,6 +13,7 @@ enum class InputVerb : uint8_t {
     Left,
     Right,
     Jump,
+    Sprint,
     Confirm,
     Cancel,
     Respawn,
@@ -96,7 +97,8 @@ class InputManager {
         {InputVerb::ZoomReset, SDL_SCANCODE_KP_0},
         {InputVerb::Jump, SDL_SCANCODE_W},
         {InputVerb::Jump, SDL_SCANCODE_UP},
-        {InputVerb::Jump, SDL_SCANCODE_SPACE}
+        {InputVerb::Jump, SDL_SCANCODE_SPACE},
+        {InputVerb::Sprint, SDL_SCANCODE_LSHIFT}
     };
     const std::vector<DefaultButtonBinding> defaultButtonBindings = {
         {InputVerb::Up, SDL_GAMEPAD_BUTTON_DPAD_UP},
@@ -108,5 +110,9 @@ class InputManager {
         {InputVerb::Cancel, SDL_GAMEPAD_BUTTON_BACK},
         {InputVerb::Jump, SDL_GAMEPAD_BUTTON_SOUTH},
         {InputVerb::Jump, SDL_GAMEPAD_BUTTON_EAST},
+        {InputVerb::Sprint, SDL_GAMEPAD_BUTTON_NORTH},
+        {InputVerb::Sprint, SDL_GAMEPAD_BUTTON_WEST},
+        {InputVerb::Sprint, SDL_GAMEPAD_BUTTON_LEFT_SHOULDER},
+        {InputVerb::Sprint, SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER}
     };
 };
