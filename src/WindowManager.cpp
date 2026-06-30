@@ -29,7 +29,7 @@ WindowManager::WindowManager(const char* windowName, SDL_Color backgroundColor)
     ImGui_ImplSDLRenderer3_Init(sdlRenderer);
 }
 
-WindowManager::~WindowManager() {
+void WindowManager::cleanup() {
     SDL_DestroyRenderer(sdlRenderer);
     SDL_Log("Destroyed SDL renderer");
     SDL_DestroyWindow(sdlWindow);

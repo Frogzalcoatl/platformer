@@ -27,7 +27,8 @@ class AssetManager {
 
   public:
     AssetManager(SDL_Renderer* renderer);
-    ~AssetManager();
+
+    void closeAll();
 
     // Disable copying to protect the stability of memory buffers
     AssetManager(const AssetManager&) = delete;

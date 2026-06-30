@@ -9,8 +9,8 @@
 #include <imgui_impl_sdlrenderer3.h>
 
 Platformer::Platformer()
-    : window{"C++ Platformer", Colors.BackGround}, camera{Camera{nullptr, window}},
-      assets{window.getSdlRenderer()} {
+    : window{"C++ Platformer", Colors.BackGround}, assets{window.getSdlRenderer()},
+      camera{Camera{nullptr, window}} {
     b2WorldDef worldDef = b2DefaultWorldDef();
     worldDef.gravity = {0.0f, -60.f};
     world = b2CreateWorld(&worldDef);
@@ -241,8 +241,8 @@ void Platformer::close() {
     SDL_Log("Cleared entities");
     b2DestroyWorld(world);
     SDL_Log("Destroyed box2d world");
-    assets.~AssetManager();
-    window.~WindowManager();
+    assets.closeAll();
+    window.cleanup();
     ImGui_ImplSDLRenderer3_Shutdown();
     SDL_Log("Shutdown ImGui SDL3 renderer implementation");
     ImGui_ImplSDL3_Shutdown();

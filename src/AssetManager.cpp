@@ -5,7 +5,9 @@
 static std::vector<std::byte> loadFileToBuffer(const std::filesystem::path& filePath) {
     std::ifstream file(filePath, std::ios::binary | std::ios::ate);
     if (!file.is_open()) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Unable to open %s", filePath.c_str());
+        // Using .sring().c_str() instead of just .c_str() because just .c_str() returns a wchar_t
+        // which is not supported by SDL_Log
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Unable to open %s", filePath.string().c_str());
         return {};
     }
     const std::streamsize fileSize = file.tellg();
@@ -14,9 +16,12 @@ static std::vector<std::byte> loadFileToBuffer(const std::filesystem::path& file
     // reinterpret_cast is simply to avoid compiler warnings, unlike with static_cast, the data is
     // not manipulated in any way
     if (!file.read(reinterpret_cast<char*>(buffer.data()), fileSize)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Unable to read file %s", filePath.c_str());
+        SDL_LogError(
+            SDL_LOG_CATEGORY_APPLICATION, "Unable to read file %s", filePath.string().c_str()
+        );
         return {};
     }
+    SDL_Log("Read file %s", filePath.string().c_str());
     return buffer;
 }
 
@@ -34,7 +39,7 @@ AssetManager::AssetManager(SDL_Renderer* renderer) {
     }
 }
 
-AssetManager::~AssetManager() {
+void AssetManager::closeAll() {
     for (const CachedFont& chachedFont : fontCache) {
         TTF_CloseFont(chachedFont.font);
     }

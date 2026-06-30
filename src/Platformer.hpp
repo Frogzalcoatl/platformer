@@ -11,8 +11,8 @@
 class Platformer {
   private:
     WindowManager window;
-    InputManager input;
     AssetManager assets;
+    InputManager input;
     b2WorldId world;
     bool running = false;
     std::vector<std::unique_ptr<Entity>> entities;
