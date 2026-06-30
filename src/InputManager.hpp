@@ -53,9 +53,9 @@ class InputManager {
   private:
     std::array<std::array<ScancodeInfo, MaxBindsPerVerb>, static_cast<size_t>(InputVerb::Count)>
         scancodeBindings = {};
-    std::array<
-        std::array<SDL_GamepadButton, MaxBindsPerVerb>, static_cast<size_t>(InputVerb::Count)>
-        gButtonBindings = {};
+    std::
+        array<std::array<SDL_GamepadButton, MaxBindsPerVerb>, static_cast<size_t>(InputVerb::Count)>
+            gButtonBindings = {};
 
     int openMappingsFromPath(std::filesystem::path& path);
     bool addGamepadMappingsFromFiles();
@@ -97,7 +97,8 @@ class InputManager {
         {InputVerb::ZoomReset, SDL_SCANCODE_KP_0},
         {InputVerb::Jump, SDL_SCANCODE_W},
         {InputVerb::Jump, SDL_SCANCODE_UP},
-        {InputVerb::Sprint, SDL_SCANCODE_SPACE}
+        {InputVerb::Sprint, SDL_SCANCODE_SPACE},
+        {InputVerb::Sprint, SDL_SCANCODE_LSHIFT}
     };
     const std::vector<DefaultButtonBinding> defaultButtonBindings = {
         {InputVerb::Up, SDL_GAMEPAD_BUTTON_DPAD_UP},

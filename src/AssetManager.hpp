@@ -33,7 +33,10 @@ class AssetManager {
     AssetManager& operator=(const AssetManager&) = delete;
 
     TTF_Text* getText(
-        TTF_TextEngine* textEngine, std::string text, GameAssets::Font fontId, float ptSize,
+        TTF_TextEngine* textEngine,
+        std::string text,
+        GameAssets::Font fontId,
+        float ptSize,
         TTF_FontStyleFlags style = TTF_STYLE_NORMAL
     );
 };

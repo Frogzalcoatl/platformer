@@ -60,7 +60,10 @@ TTF_Font* AssetManager::getFont(GameAssets::Font fontId, float ptSize, TTF_FontS
 }
 
 TTF_Text* AssetManager::getText(
-    TTF_TextEngine* textEngine, std::string text, GameAssets::Font fontId, float ptSize,
+    TTF_TextEngine* textEngine,
+    std::string text,
+    GameAssets::Font fontId,
+    float ptSize,
     TTF_FontStyleFlags style
 ) {
     if (!textEngine) {

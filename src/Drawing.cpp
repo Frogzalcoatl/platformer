@@ -37,7 +37,11 @@ void Drawing::polygon(
     }
     std::vector<int> indices = fanTriangulation(polygon.count);
     SDL_RenderGeometry(
-        window.sdlRenderer, NULL, sdlVertices.data(), polygon.count, indices.data(),
+        window.sdlRenderer,
+        NULL,
+        sdlVertices.data(),
+        polygon.count,
+        indices.data(),
         static_cast<int>(indices.size())
     );
 }
@@ -54,7 +58,10 @@ static void drawArcSlice(
 static const float WorldTextScaling = 0.005f;
 
 void Drawing::text(
-    TTF_Text* text, b2Vec2 worldPosition, WindowManager& window, SDL_FColor textColor,
+    TTF_Text* text,
+    b2Vec2 worldPosition,
+    WindowManager& window,
+    SDL_FColor textColor,
     std::optional<SDL_FColor> backgroundColor
 ) {
     if (text == nullptr) {
@@ -75,15 +82,20 @@ void Drawing::text(
         windowPosition.y -= textHeight / 2.f;
         if (backgroundColor.has_value()) {
             SDL_FRect backgroundRect = SDL_FRect{
-                windowPosition.x, windowPosition.y, static_cast<float>(textWidth),
+                windowPosition.x,
+                windowPosition.y,
+                static_cast<float>(textWidth),
                 static_cast<float>(textHeight)
             };
             SDL_BlendMode oldBlendMode;
             SDL_GetRenderDrawBlendMode(window.sdlRenderer, &oldBlendMode);
             SDL_SetRenderDrawBlendMode(window.sdlRenderer, SDL_BLENDMODE_BLEND);
             SDL_SetRenderDrawColorFloat(
-                window.sdlRenderer, backgroundColor.value().r, backgroundColor.value().g,
-                backgroundColor.value().b, backgroundColor.value().a
+                window.sdlRenderer,
+                backgroundColor.value().r,
+                backgroundColor.value().g,
+                backgroundColor.value().b,
+                backgroundColor.value().a
             );
             SDL_RenderFillRect(window.sdlRenderer, &backgroundRect);
             SDL_SetRenderDrawBlendMode(window.sdlRenderer, oldBlendMode);

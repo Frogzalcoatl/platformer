@@ -7,8 +7,13 @@ Entity::Entity(b2WorldId world, b2Polygon polygon, b2Vec2 position, SDL_Color co
     : Entity(world, polygon, position, color, isStatic, b2DefaultBodyDef(), b2DefaultShapeDef()) {}
 
 Entity::Entity(
-    b2WorldId world, b2Polygon polygonArg, b2Vec2 position, SDL_Color color, bool isStatic,
-    b2BodyDef bodyDef, b2ShapeDef shapeDef
+    b2WorldId world,
+    b2Polygon polygonArg,
+    b2Vec2 position,
+    SDL_Color color,
+    bool isStatic,
+    b2BodyDef bodyDef,
+    b2ShapeDef shapeDef
 )
     : isStatic(isStatic) {
     bodyDef.position = position;

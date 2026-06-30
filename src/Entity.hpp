@@ -17,8 +17,13 @@ class Entity {
   public:
     Entity(b2WorldId world, b2Polygon polygon, b2Vec2 position, SDL_Color color, bool isStatic);
     Entity(
-        b2WorldId world, b2Polygon polygon, b2Vec2 position, SDL_Color color, bool isStatic,
-        b2BodyDef bodyDef, b2ShapeDef shapeDef
+        b2WorldId world,
+        b2Polygon polygon,
+        b2Vec2 position,
+        SDL_Color color,
+        bool isStatic,
+        b2BodyDef bodyDef,
+        b2ShapeDef shapeDef
     );
     ~Entity();
 

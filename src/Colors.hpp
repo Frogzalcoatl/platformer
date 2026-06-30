@@ -9,14 +9,17 @@ inline SDL_Color fColorToColor(const SDL_FColor& color) {
     return SDL_Color{
         static_cast<Uint8>(SDL_roundf(color.r * 255)),
         static_cast<Uint8>(SDL_roundf(color.g * 255)),
-        static_cast<Uint8>(SDL_roundf(color.b * 255)), static_cast<Uint8>(SDL_roundf(color.a * 255))
+        static_cast<Uint8>(SDL_roundf(color.b * 255)),
+        static_cast<Uint8>(SDL_roundf(color.a * 255))
     };
 }
 
 inline SDL_Color hexToColor(Uint32 rgba) {
     return SDL_Color{
-        static_cast<Uint8>((rgba >> 24) & 0xFF), static_cast<Uint8>((rgba >> 16) & 0xFF),
-        static_cast<Uint8>((rgba >> 8 & 0xFF)), static_cast<Uint8>(rgba & 0xFF)
+        static_cast<Uint8>((rgba >> 24) & 0xFF),
+        static_cast<Uint8>((rgba >> 16) & 0xFF),
+        static_cast<Uint8>((rgba >> 8 & 0xFF)),
+        static_cast<Uint8>(rgba & 0xFF)
     };
 }
 

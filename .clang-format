@@ -8,3 +8,5 @@ PointerAlignment: Left
 AlignAfterOpenBracket: BlockIndent
 Cpp11BracedListStyle: true
 BreakStringLiterals: false
+BinPackArguments: false
+BinPackParameters: OnePerLine

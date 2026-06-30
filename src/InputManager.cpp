@@ -13,6 +13,8 @@ std::string inputVerbToString(InputVerb verb) {
         return "Right";
     case InputVerb::Jump:
         return "Jump";
+    case InputVerb::Sprint:
+        return "Sprint";
     case InputVerb::Confirm:
         return "Confirm";
     case InputVerb::Cancel:
