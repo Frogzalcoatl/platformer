@@ -28,8 +28,8 @@ Platformer::Platformer()
     playerShapeDef.density = 1.f;
     entities.push_back(
         std::make_unique<Entity>(
-            world, b2MakeBox(0.5f, 0.5f), b2Vec2{0.f, 4.f}, Colors.Purple, false, playerBodyDef,
-            b2DefaultShapeDef()
+            world, b2MakeBox(0.5f, 0.5f), b2Vec2{0.f, 4.f}, hexToColor(0xBA988AFF), false,
+            playerBodyDef, b2DefaultShapeDef()
         )
     );
     player = entities.front().get();

@@ -13,6 +13,13 @@ inline SDL_Color fColorToColor(const SDL_FColor& color) {
     };
 }
 
+inline SDL_Color hexToColor(Uint32 rgba) {
+    return SDL_Color{
+        static_cast<Uint8>((rgba >> 24) & 0xFF), static_cast<Uint8>((rgba >> 16) & 0xFF),
+        static_cast<Uint8>((rgba >> 8 & 0xFF)), static_cast<Uint8>(rgba & 0xFF)
+    };
+}
+
 inline struct Colors {
     SDL_Color GrassGreen = {0, 154, 23, 255};
     SDL_Color Gray = {200, 200, 200, 255};
