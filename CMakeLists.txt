@@ -15,6 +15,16 @@ find_package(SDL3_mixer REQUIRED)
 find_package(box2d CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 
+find_path(DISCORD_INCLUDE_DIR discord_rpc.h)
+find_library(DISCORD_LIBRARY NAMES discord-rpc)
+if(DISCORD_INCLUDE_DIR AND DISCORD_LIBRARY)
+    add_library(discord-rpc::discord-rpc STATIC IMPORTED)
+    set_target_properties(discord-rpc::discord-rpc PROPERTIES
+        IMPORTED_LOCATION "${DISCORD_LIBRARY}"
+        INTERFACE_INCLUDE_DIRECTORIES "${DISCORD_INCLUDE_DIR}"
+    )
+endif()
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/src/*.cpp")
@@ -30,6 +40,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     SDL3_mixer::SDL3_mixer
     box2d::box2d
     imgui::imgui
+    discord-rpc::discord-rpc
 )
 
 if(MSVC)

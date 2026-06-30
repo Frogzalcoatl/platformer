@@ -1,7 +1,5 @@
 Physics interpolation
 
-Asset manager. not using packer since it would be overkill for right now
-
 Account for polygon radius
 Draw shape borders
 Draw fan triangulation borders

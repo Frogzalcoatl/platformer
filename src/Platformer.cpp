@@ -1,6 +1,7 @@
 #include "Platformer.hpp"
 #include "AudioUi.hpp"
 #include "Colors.hpp"
+#include "DiscordRpcManager.hpp"
 #include "Drawing.hpp"
 #include "Events.hpp"
 #include "KeybindUi.hpp"
@@ -18,6 +19,8 @@ Platformer::Platformer()
     SDL_Log("Created box2d world");
     camera.minViewableY = 0.f;
     updateKeybindsUi(input);
+    DiscordRpcManager::init();
+    DiscordRpcManager::setStatus("In Development...", nullptr);
     // Test player
     b2BodyDef playerBodyDef = b2DefaultBodyDef();
     playerBodyDef.fixedRotation = false;
@@ -245,10 +248,12 @@ void Platformer::run() {
         showKeybindUi();
         showAudioUi(audio);
         window.render(frameStartNs);
+        DiscordRpcManager::update();
     }
 }
 
 void Platformer::close() {
+    DiscordRpcManager::shutdown();
     entities.clear();
     SDL_Log("Cleared entities");
     b2DestroyWorld(world);

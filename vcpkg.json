@@ -18,6 +18,7 @@
         "sdl3-binding",
         "sdl3-renderer-binding"
       ]
-    }
+    },
+    "discord-rpc"
   ]
 }
