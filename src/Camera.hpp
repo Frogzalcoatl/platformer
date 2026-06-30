@@ -1,6 +1,6 @@
 #pragma once
-#include "entity.hpp"
-#include "windowManager.hpp"
+#include "Entity.hpp"
+#include "WindowManager.hpp"
 #include <box2d/box2d.h>
 #include <optional>
 

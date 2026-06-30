@@ -135,6 +135,8 @@ void Platformer::handleGameEvent() {
                     break;
                 case InputVerb::ZoomReset:
                     window.resetScaleMultiplier();
+                default:
+                    break;
                 }
             }
             if (player) {

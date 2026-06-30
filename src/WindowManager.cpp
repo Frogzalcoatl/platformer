@@ -1,4 +1,4 @@
-#include "windowManager.hpp"
+#include "WindowManager.hpp"
 #include "Colors.hpp"
 #include <box2d/box2d.h>
 #include <imgui.h>

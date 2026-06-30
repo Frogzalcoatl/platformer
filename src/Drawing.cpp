@@ -30,7 +30,7 @@ void Drawing::polygon(
     const b2Polygon& polygon, b2Transform& transform, WindowManager& window, SDL_FColor color
 ) {
     assert(polygon.count >= 3);
-    std::array<SDL_Vertex, B2_MAX_POLYGON_VERTICES> sdlVertices = {0};
+    std::array<SDL_Vertex, B2_MAX_POLYGON_VERTICES> sdlVertices;
     for (int i = 0; i < polygon.count; i++) {
         sdlVertices[i].color = color;
         sdlVertices[i].position = scaleB2Point(window, transform, polygon.vertices[i]);

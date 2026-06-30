@@ -1,6 +1,7 @@
 #pragma once
 #include "AssetManager.hpp"
 #include <SDL3_mixer/SDL_mixer.h>
+#include <array>
 #include <string>
 
 inline constexpr size_t SoundTrackCount = 8;
@@ -22,7 +23,7 @@ class AudioManager {
     std::string currentMusicName = "";
     const char* SoundTag = "Sounds";
     const char* MusicTag = "Music";
-    MIX_Audio* loadedSounds[static_cast<size_t>(GameAssets::Sounds::SoundCount)];
+    std::array<MIX_Audio*, static_cast<size_t>(GameAssets::Sounds::SoundCount)> loadedSounds;
     AssetManager* assets;
     std::array<float, static_cast<size_t>(AudioCategory::AudioCategoryCount)> volumeMultipliers;
 

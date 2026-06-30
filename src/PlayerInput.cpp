@@ -1,4 +1,4 @@
-#include "playerInput.hpp"
+#include "PlayerInput.hpp"
 #include "Camera.hpp"
 #include "Entity.hpp"
 #include "Events.hpp"

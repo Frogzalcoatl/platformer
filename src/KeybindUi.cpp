@@ -10,11 +10,11 @@ static std::string gButtonBindsStr = "";
 void updateKeybindsUi(InputManager& input) {
     scancodeBindsStr.clear();
     gButtonBindsStr.clear();
-    for (int i = 0; i < static_cast<int>(InputVerb::VerbCount); i++) {
+    for (size_t i = 0; i < static_cast<int>(InputVerb::VerbCount); i++) {
         scancodeBindsStr += "\n" + inputVerbToString(static_cast<InputVerb>(i)) + ": ";
         auto scancodes = input.getScancodesFromVerb(static_cast<InputVerb>(i));
         bool addedAny = false;
-        for (int j = 0; j < scancodes.max_size(); j++) {
+        for (size_t j = 0; j < scancodes.max_size(); j++) {
             if (scancodes[j].scancode == SDL_SCANCODE_UNKNOWN) {
                 continue;
             }
@@ -29,7 +29,7 @@ void updateKeybindsUi(InputManager& input) {
         gButtonBindsStr += "\n" + inputVerbToString(static_cast<InputVerb>(i)) + ": ";
         auto gButtons = input.getGamepadButtonsFromVerb(static_cast<InputVerb>(i));
         addedAny = false;
-        for (int j = 0; j < gButtons.max_size(); j++) {
+        for (size_t j = 0; j < gButtons.max_size(); j++) {
             if (gButtons[j] == SDL_GAMEPAD_BUTTON_INVALID) {
                 continue;
             }

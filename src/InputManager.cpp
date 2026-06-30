@@ -246,7 +246,7 @@ std::vector<GameEventTypes::Input> InputManager::getInputEventsFromSDLEvent(SDL_
         if (verbs.size() == 0) {
             break;
         }
-        for (int i = 0; i < verbs.size(); i++) {
+        for (size_t i = 0; i < verbs.size(); i++) {
             auto& amountPressed = keyboardVerbsPressed[static_cast<size_t>(verbs[i].verb)];
             if (event.type == SDL_EVENT_KEY_DOWN && !event.key.repeat) {
                 amountPressed++;
@@ -292,7 +292,7 @@ std::vector<GameEventTypes::Input> InputManager::getInputEventsFromSDLEvent(SDL_
             break;
         }
         auto& amountPressedArr = gamepadsVerbsPressed[event.gbutton.which];
-        for (int i = 0; i < verbs.size(); i++) {
+        for (size_t i = 0; i < verbs.size(); i++) {
             auto& amountPressed = amountPressedArr[static_cast<size_t>(verbs[i])];
             if (event.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN) {
                 amountPressed++;

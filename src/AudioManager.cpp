@@ -17,6 +17,7 @@ AudioManager::AudioManager(AssetManager& assetManager) : assets{&assetManager} {
         return;
     }
     SDL_Log("Created SDL mixer device");
+    loadedSounds.fill(nullptr);
     for (size_t i = 0; i < static_cast<size_t>(GameAssets::Sounds::SoundCount); i++) {
         const auto rawData = assets->getSoundData(static_cast<GameAssets::Sounds>(i));
         if (rawData.empty()) {
@@ -39,9 +40,10 @@ AudioManager::AudioManager(AssetManager& assetManager) : assets{&assetManager} {
                 GameAssets::FileNames.Sounds[i],
                 SDL_GetError()
             );
+            continue;
         }
+        SDL_Log("Loaded sound \"%s\"", GameAssets::FileNames.Sounds[i]);
     }
-    SDL_Log("Loaded sounds for SDL3 mixer");
     for (size_t i = 0; i < SoundTrackCount; i++) {
         soundTracks[i] = MIX_CreateTrack(mixerDevice);
         MIX_TagTrack(soundTracks[i], SoundTag);
@@ -88,6 +90,15 @@ void AudioManager::playSound(GameAssets::Sounds soundId, unsigned int volume, fl
     assert(
         soundId >= static_cast<GameAssets::Sounds>(0) && soundId < GameAssets::Sounds::SoundCount
     );
+    MIX_Audio* sound = loadedSounds[static_cast<size_t>(soundId)];
+    if (!sound) {
+        SDL_LogWarn(
+            SDL_LOG_CATEGORY_AUDIO,
+            "Ignoring attempt to play null sound \"%s\"",
+            GameAssets::FileNames.Sounds[static_cast<size_t>(soundId)]
+        );
+        return;
+    }
     MIX_Track* freeTrack = nullptr;
     for (size_t i = 0; i < SoundTrackCount; i++) {
         if (!MIX_TrackPlaying(soundTracks[i])) {
@@ -105,7 +116,7 @@ void AudioManager::playSound(GameAssets::Sounds soundId, unsigned int volume, fl
         static_cast<float>(volume) / 100.f *
             volumeMultipliers[static_cast<size_t>(AudioCategory::Sounds)]
     );
-    MIX_SetTrackAudio(freeTrack, loadedSounds[static_cast<size_t>(soundId)]);
+    MIX_SetTrackAudio(freeTrack, sound);
     MIX_PlayTrack(freeTrack, 0);
 }
 
