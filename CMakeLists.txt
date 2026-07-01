@@ -15,14 +15,42 @@ find_package(SDL3_mixer REQUIRED)
 find_package(box2d CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 
-find_path(DISCORD_INCLUDE_DIR discord_rpc.h)
-find_library(DISCORD_LIBRARY NAMES discord-rpc)
-if(DISCORD_INCLUDE_DIR AND DISCORD_LIBRARY)
-    add_library(discord-rpc::discord-rpc STATIC IMPORTED)
-    set_target_properties(discord-rpc::discord-rpc PROPERTIES
-        IMPORTED_LOCATION "${DISCORD_LIBRARY}"
-        INTERFACE_INCLUDE_DIRECTORIES "${DISCORD_INCLUDE_DIR}"
-    )
+find_path(DISCORD_INCLUDE_DIR NAMES discord_rpc.h)
+
+if(DISCORD_INCLUDE_DIR)
+    # Get the root installation directory of the triplet (the parent of /include)
+    get_filename_component(DISCORD_ROOT "${DISCORD_INCLUDE_DIR}/.." ABSOLUTE)
+    
+    # Construct the platform-independent library filename (e.g. "discord-rpc.lib" or "libdiscord-rpc.a")
+    set(DISCORD_LIB_NAME "${CMAKE_STATIC_LIBRARY_PREFIX}discord-rpc${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    
+    # Directly construct the Release and Debug absolute paths
+    set(DISCORD_LIBRARY_RELEASE "${DISCORD_ROOT}/lib/${DISCORD_LIB_NAME}")
+    set(DISCORD_LIBRARY_DEBUG "${DISCORD_ROOT}/debug/lib/${DISCORD_LIB_NAME}")
+    
+    # Print paths to the output during configuration for easy verification
+    message(STATUS "[Discord-RPC] Found header at: ${DISCORD_INCLUDE_DIR}")
+    message(STATUS "[Discord-RPC] Release library: ${DISCORD_LIBRARY_RELEASE}")
+    message(STATUS "[Discord-RPC] Debug library:   ${DISCORD_LIBRARY_DEBUG}")
+    
+    if(EXISTS "${DISCORD_LIBRARY_RELEASE}" AND EXISTS "${DISCORD_LIBRARY_DEBUG}")
+        add_library(discord-rpc::discord-rpc STATIC IMPORTED)
+        set_target_properties(discord-rpc::discord-rpc PROPERTIES
+            INTERFACE_INCLUDE_DIRECTORIES "${DISCORD_INCLUDE_DIR}"
+            IMPORTED_CONFIGURATIONS "RELEASE;DEBUG"
+            IMPORTED_LOCATION_RELEASE "${DISCORD_LIBRARY_RELEASE}"
+            IMPORTED_LOCATION_DEBUG "${DISCORD_LIBRARY_DEBUG}"
+        )
+    elseif(EXISTS "${DISCORD_LIBRARY_RELEASE}")
+        # Fallback if only Release is available
+        add_library(discord-rpc::discord-rpc STATIC IMPORTED)
+        set_target_properties(discord-rpc::discord-rpc PROPERTIES
+            INTERFACE_INCLUDE_DIRECTORIES "${DISCORD_INCLUDE_DIR}"
+            IMPORTED_LOCATION "${DISCORD_LIBRARY_RELEASE}"
+        )
+    else()
+        message(WARNING "[Discord-RPC] Could not locate the library file: ${DISCORD_LIBRARY_RELEASE}")
+    endif()
 endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
