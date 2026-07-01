@@ -18,7 +18,7 @@ AudioManager::AudioManager(AssetManager& assetManager) : assets{&assetManager} {
     }
     SDL_Log("Created SDL mixer device");
     loadedSounds.fill(nullptr);
-    for (size_t i = 0; i < static_cast<size_t>(GameAssets::Sounds::SoundCount); i++) {
+    for (size_t i = 0; i < static_cast<size_t>(GameAssets::Sounds::SoundsCount); i++) {
         const auto rawData = assets->getSoundData(static_cast<GameAssets::Sounds>(i));
         if (rawData.empty()) {
             continue;
@@ -42,7 +42,6 @@ AudioManager::AudioManager(AssetManager& assetManager) : assets{&assetManager} {
             );
             continue;
         }
-        SDL_Log("Loaded sound \"%s\"", GameAssets::FileNames.Sounds[i]);
     }
     for (size_t i = 0; i < SoundTrackCount; i++) {
         soundTracks[i] = MIX_CreateTrack(mixerDevice);
@@ -69,7 +68,7 @@ AudioManager::~AudioManager() {
             SDL_Log("Destroyed SDL Mixer sound track at index %zu", i);
         }
     }
-    for (size_t i = 0; i < static_cast<size_t>(GameAssets::Sounds::SoundCount); i++) {
+    for (size_t i = 0; i < static_cast<size_t>(GameAssets::Sounds::SoundsCount); i++) {
         if (loadedSounds[i]) {
             MIX_DestroyAudio(loadedSounds[i]);
             loadedSounds[i] = nullptr;
@@ -88,7 +87,7 @@ AudioManager::~AudioManager() {
 
 void AudioManager::playSound(GameAssets::Sounds soundId, unsigned int volume, float pitch) {
     assert(
-        soundId >= static_cast<GameAssets::Sounds>(0) && soundId < GameAssets::Sounds::SoundCount
+        soundId >= static_cast<GameAssets::Sounds>(0) && soundId < GameAssets::Sounds::SoundsCount
     );
     MIX_Audio* sound = loadedSounds[static_cast<size_t>(soundId)];
     if (!sound) {

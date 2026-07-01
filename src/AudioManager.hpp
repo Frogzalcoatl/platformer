@@ -23,7 +23,7 @@ class AudioManager {
     std::string currentMusicName = "";
     const char* SoundTag = "Sounds";
     const char* MusicTag = "Music";
-    std::array<MIX_Audio*, static_cast<size_t>(GameAssets::Sounds::SoundCount)> loadedSounds;
+    std::array<MIX_Audio*, static_cast<size_t>(GameAssets::Sounds::SoundsCount)> loadedSounds;
     AssetManager* assets;
     std::array<float, static_cast<size_t>(AudioCategory::AudioCategoryCount)> volumeMultipliers;
 

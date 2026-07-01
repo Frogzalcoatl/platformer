@@ -1,4 +1,5 @@
 #include "Drawing.hpp"
+#include <SDL3_image/SDL_image.h>
 #include <array>
 #include <cassert>
 #include <vector>
@@ -30,14 +31,19 @@ void Drawing::polygon(
     const b2Polygon& polygon, b2Transform& transform, WindowManager& window, SDL_FColor color
 ) {
     assert(polygon.count >= 3);
+    SDL_Renderer* renderer = window.getSdlRenderer();
+    if (!renderer) {
+        return;
+    }
     std::array<SDL_Vertex, B2_MAX_POLYGON_VERTICES> sdlVertices;
     for (int i = 0; i < polygon.count; i++) {
         sdlVertices[i].color = color;
         sdlVertices[i].position = scaleB2Point(window, transform, polygon.vertices[i]);
     }
     std::vector<int> indices = fanTriangulation(polygon.count);
+
     SDL_RenderGeometry(
-        window.getSdlRenderer(),
+        renderer,
         NULL,
         sdlVertices.data(),
         polygon.count,
@@ -57,10 +63,10 @@ static void drawArcSlice(
 static const float TextShrinkageMultiplier = 25.f;
 
 void Drawing::text(
+    WindowManager& window,
     TTF_Text* text,
     float textResolutionScaleFactor,
     b2Vec2 worldPosition,
-    WindowManager& window,
     SDL_FColor textColor,
     std::optional<SDL_FColor> backgroundColor
 ) {
@@ -68,6 +74,9 @@ void Drawing::text(
         return;
     }
     SDL_Renderer* renderer = window.getSdlRenderer();
+    if (!renderer) {
+        return;
+    }
     float oldRenderScaleX, oldRenderScaleY;
     SDL_GetRenderScale(renderer, &oldRenderScaleX, &oldRenderScaleY);
     float scaleFactor = window.getScaleFactor();
@@ -107,4 +116,29 @@ void Drawing::text(
     TTF_SetTextColorFloat(text, textColor.r, textColor.g, textColor.b, textColor.a);
     TTF_DrawRendererText(text, windowPosition.x, windowPosition.y);
     SDL_SetRenderScale(renderer, oldRenderScaleX, oldRenderScaleY);
+}
+
+void Drawing::texture(
+    WindowManager& window,
+    SDL_Texture* texture,
+    b2Vec2 worldPosition,
+    b2Vec2 worldSize,
+    double angle,
+    SDL_FlipMode flip
+) {
+    if (texture == nullptr) {
+        return;
+    }
+    SDL_Renderer* renderer = window.getSdlRenderer();
+    if (!renderer) {
+        return;
+    }
+    float scaleFactor = window.getScaleFactor();
+    WindowDimensions offset = window.getOffsetPixels();
+    SDL_FRect rect;
+    rect.w = worldSize.x * scaleFactor;
+    rect.h = worldSize.y * scaleFactor;
+    rect.x = worldPosition.x * scaleFactor + offset.x - rect.w / 2.f;
+    rect.y = worldPosition.y * scaleFactor * -1.f + offset.y - rect.h / 2.f;
+    SDL_RenderTextureRotated(renderer, texture, nullptr, &rect, angle, nullptr, flip);
 }

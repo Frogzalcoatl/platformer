@@ -42,17 +42,17 @@ Platformer::Platformer()
     // Tempoaray test entities
     entities.push_back(
         std::make_unique<Entity>(
-            world, b2MakeBox(50.f, 0.5f), b2Vec2{0.f, 0.5f}, Colors.GrassGreen, true
+            world, b2MakeBox(50.f, 1.5f), b2Vec2{0.f, 0.f}, Colors.GrassGreen, true
         )
     );
     entities.push_back(
         std::make_unique<Entity>(
-            world, b2MakeBox(0.5f, 10.f), b2Vec2{-18.f, 11.f}, Colors.Gray, true
+            world, b2MakeBox(0.5f, 10.f), b2Vec2{-18.f, 11.5f}, Colors.Gray, true
         )
     );
     entities.push_back(
         std::make_unique<Entity>(
-            world, b2MakeBox(0.5f, 10.f), b2Vec2{18.f, 11.f}, Colors.Gray, true
+            world, b2MakeBox(0.5f, 10.f), b2Vec2{18.f, 11.5f}, Colors.Gray, true
         )
     );
     b2BodyDef dynamicBodyDef = b2DefaultBodyDef();
@@ -72,13 +72,15 @@ Platformer::Platformer()
         std::make_unique<Entity>(
             world,
             b2MakeBox(0.5f, 1.f),
-            b2Vec2{-10.f, 2.f},
+            b2Vec2{-10.f, 3.f},
             Colors.Brown,
             false,
             dynamicBodyDef,
             b2DefaultShapeDef()
         )
     );
+    // Temporary test tiles
+    tiles.push_back(std::make_unique<Tile>(Vec2Int{0, 10}, assets, GameAssets::Textures::Test));
 }
 
 void Platformer::handleSdlEvent() {
@@ -247,9 +249,14 @@ void Platformer::run() {
                 entity->draw(window, alpha);
             }
         }
+        for (const auto& tile : tiles) {
+            if (tile) {
+                tile->draw(window);
+            }
+        }
         b2Vec2 textPos = player->getInterpolatedPosition(alpha);
         textPos.y += 2.f;
-        Drawing::text(text, assets.textResolutionScaleFactor, textPos, window);
+        Drawing::text(window, text, assets.textResolutionScaleFactor, textPos);
         showDebugUi();
         showKeybindUi();
         showAudioUi(audio);

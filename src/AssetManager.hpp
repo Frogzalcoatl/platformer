@@ -1,4 +1,5 @@
 #pragma once
+#include <SDL3_image/SDL_image.h>
 #include <SDL3_mixer/SDL_mixer.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <array>
@@ -18,11 +19,15 @@ enum class Fonts : uint8_t {
 };
 enum class Sounds : uint8_t {
     Fart,
-    SoundCount
+    SoundsCount
 };
 enum class Music : uint8_t {
     Test,
     MusicCount
+};
+enum class Textures : uint8_t {
+    Test,
+    TexturesCount
 };
 inline constexpr struct {
     const std::array<const char*, static_cast<size_t>(GameAssets::Fonts::FontCount)> Fonts = {
@@ -30,17 +35,20 @@ inline constexpr struct {
     };
     // AudioManager loads all sounds at startup but only loads music when requested.
     // mp3 files not enabled
-    const std::array<const char*, static_cast<size_t>(GameAssets::Sounds::SoundCount)> Sounds = {
+    const std::array<const char*, static_cast<size_t>(GameAssets::Sounds::SoundsCount)> Sounds = {
         "fart.wav"
     };
     const std::array<const char*, static_cast<size_t>(GameAssets::Music::MusicCount)> Music = {
         "test.ogg"
     };
+    const std::array<const char*, static_cast<size_t>(GameAssets::Textures::TexturesCount)>
+        Textures = {"test.png"};
 } FileNames;
 inline struct {
     std::filesystem::path Fonts = std::filesystem::path(AssetsFolderName) / "fonts";
     std::filesystem::path Sounds = std::filesystem::path(AssetsFolderName) / "sounds";
     std::filesystem::path Music = std::filesystem::path(AssetsFolderName) / "music";
+    std::filesystem::path Textures = std::filesystem::path(AssetsFolderName) / "textures";
 } Paths;
 } // namespace GameAssets
 
@@ -55,11 +63,12 @@ class AssetManager {
   private:
     std::filesystem::path basePath;
     std::vector<std::byte> loadFileToBuffer(const std::filesystem::path relativeFilePath);
-    std::array<std::vector<std::byte>, static_cast<size_t>(GameAssets::Fonts::FontCount)> fontData =
-        {};
+    std::array<std::vector<std::byte>, static_cast<size_t>(GameAssets::Fonts::FontCount)> fontData;
     std::vector<CachedFont> fontCache;
+    std::array<SDL_Texture*, static_cast<size_t>(GameAssets::Textures::TexturesCount)> textureCache;
     TTF_Font* getFont(GameAssets::Fonts font, float ptSize, TTF_FontStyleFlags style);
     TTF_TextEngine* textEngine;
+    SDL_Renderer* renderer;
 
   public:
     AssetManager(SDL_Renderer* renderer);
@@ -86,4 +95,6 @@ class AssetManager {
 
     std::vector<std::byte> getSoundData(GameAssets::Sounds soundId);
     std::vector<std::byte> getMusicData(GameAssets::Music musicId);
+
+    SDL_Texture* getTexture(GameAssets::Textures textureId);
 };

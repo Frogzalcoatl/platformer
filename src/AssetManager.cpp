@@ -27,13 +27,18 @@ AssetManager::loadFileToBuffer(const std::filesystem::path relativeFilePath) {
     return buffer;
 }
 
-AssetManager::AssetManager(SDL_Renderer* renderer) : basePath{SDL_GetBasePath()} {
+AssetManager::AssetManager(SDL_Renderer* renderer)
+    : basePath{SDL_GetBasePath()}, renderer{renderer} {
+    if (!renderer) {
+        return;
+    }
     textEngine = TTF_CreateRendererTextEngine(renderer);
     if (!textEngine) {
         SDL_LogError(
             SDL_LOG_CATEGORY_APPLICATION, "Unable to create SDL text engine: %s", SDL_GetError()
         );
     }
+    textureCache.fill(nullptr);
 }
 
 AssetManager::~AssetManager() {
@@ -47,6 +52,12 @@ void AssetManager::closeAll() {
         }
         fontCache.clear();
         SDL_Log("Closed cached fonts");
+    }
+    for (auto& texture : textureCache) {
+        if (texture) {
+            SDL_DestroyTexture(texture);
+            texture = nullptr;
+        }
     }
     if (textEngine) {
         TTF_DestroyRendererTextEngine(textEngine);
@@ -104,6 +115,9 @@ TTF_Font* AssetManager::getFont(GameAssets::Fonts fontId, float ptSize, TTF_Font
     newCachedFont.ptSize = ptSize;
     newCachedFont.style = style;
     fontCache.push_back(newCachedFont);
+    SDL_Log(
+        "Loaded SDL ttf from file \"%s\"", GameAssets::FileNames.Fonts[static_cast<size_t>(fontId)]
+    );
     return newFont;
 }
 
@@ -134,16 +148,64 @@ void AssetManager::clearFontData() {
 
 std::vector<std::byte> AssetManager::getSoundData(GameAssets::Sounds soundId) {
     assert(
-        soundId >= static_cast<GameAssets::Sounds>(0) && soundId < GameAssets::Sounds::SoundCount
+        soundId >= static_cast<GameAssets::Sounds>(0) && soundId < GameAssets::Sounds::SoundsCount
     );
     std::filesystem::path relativePath =
         GameAssets::Paths.Sounds / GameAssets::FileNames.Sounds[static_cast<size_t>(soundId)];
-    return loadFileToBuffer(relativePath);
+    auto data = loadFileToBuffer(relativePath);
+    SDL_Log(
+        "Got raw sound data from file \"%s\"",
+        GameAssets::FileNames.Sounds[static_cast<size_t>(soundId)]
+    );
+    return data;
 }
 
 std::vector<std::byte> AssetManager::getMusicData(GameAssets::Music musicId) {
     assert(musicId >= static_cast<GameAssets::Music>(0) && musicId < GameAssets::Music::MusicCount);
     std::filesystem::path relativePath =
         GameAssets::Paths.Music / GameAssets::FileNames.Music[static_cast<size_t>(musicId)];
-    return loadFileToBuffer(relativePath);
+    auto data = loadFileToBuffer(relativePath);
+    SDL_Log(
+        "Got raw music data from file \"%s\"",
+        GameAssets::FileNames.Music[static_cast<size_t>(musicId)]
+    );
+    return data;
+}
+
+SDL_Texture* AssetManager::getTexture(GameAssets::Textures textureId) {
+    assert(
+        textureId >= static_cast<GameAssets::Textures>(0) &&
+        textureId < GameAssets::Textures::TexturesCount
+    );
+    if (!renderer) {
+        SDL_LogError(
+            SDL_LOG_CATEGORY_APPLICATION,
+            "Unable to load SDL texture \"%s\": renderer is null",
+            GameAssets::FileNames.Textures[static_cast<size_t>(textureId)]
+        );
+        return nullptr;
+    }
+    auto& texture = textureCache[static_cast<size_t>(textureId)];
+    if (texture) {
+        return texture;
+    }
+    std::filesystem::path relativePath =
+        GameAssets::Paths.Textures / GameAssets::FileNames.Textures[static_cast<size_t>(textureId)];
+    std::filesystem::path fullPath = basePath / relativePath;
+    // r means open file for reading
+    texture = IMG_LoadTexture_IO(renderer, SDL_IOFromFile(fullPath.string().c_str(), "r"), true);
+    if (!texture) {
+        SDL_LogError(
+            SDL_LOG_CATEGORY_APPLICATION,
+            "Unable to load SDL texture \"%s\": %s",
+            GameAssets::FileNames.Textures[static_cast<size_t>(textureId)],
+            SDL_GetError()
+        );
+        return nullptr;
+    }
+    SDL_Log(
+        "Loaded SDL texture from file \"%s\"",
+        GameAssets::FileNames.Textures[static_cast<size_t>(textureId)]
+    );
+    return texture;
 }

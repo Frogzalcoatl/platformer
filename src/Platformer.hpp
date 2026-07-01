@@ -4,6 +4,7 @@
 #include "Camera.hpp"
 #include "Entity.hpp"
 #include "InputManager.hpp"
+#include "Tile.hpp"
 #include "WindowManager.hpp"
 #include <box2d/box2d.h>
 #include <memory>
@@ -18,6 +19,7 @@ class Platformer {
     b2WorldId world;
     bool running = false;
     std::vector<std::unique_ptr<Entity>> entities;
+    std::vector<std::unique_ptr<Tile>> tiles;
     Entity* player = nullptr;
     Camera camera;
 
