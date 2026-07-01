@@ -1,5 +1,3 @@
-Physics interpolation
-
 Account for polygon radius
 Draw shape borders
 Draw fan triangulation borders

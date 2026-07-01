@@ -25,7 +25,7 @@ class Platformer {
     uint64_t lastTime = 0;
     float accumulator = 0.f;
     const float physicsStep = 1.0f / 60.0f;
-    void physicsStepHandler();
+    float physicsStepHandler();
 
     void handleSdlEvent();
     void handleGameEvent();

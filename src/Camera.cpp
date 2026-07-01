@@ -12,13 +12,13 @@ b2Vec2 Camera::getSafeAreaSize() const {
     return safeAreaSize;
 }
 
-void Camera::run() {
+void Camera::run(float alpha) {
     if (!entityToFollow) {
         return;
     }
     const b2Vec2 currentOffsetWorld = window.getOffsetWorld();
     const b2Vec2 camPos = {-currentOffsetWorld.x, currentOffsetWorld.y};
-    const b2Vec2 entityPos = b2Body_GetPosition(entityToFollow->getBodyId());
+    const b2Vec2 entityPos = entityToFollow->getInterpolatedPosition(alpha);
     const b2Vec2 windowSizeWorld = window.getSizeWorld();
     const b2Vec2 entityOffset = {entityPos.x - camPos.x, entityPos.y - camPos.y};
     const float halfDeadZoneX = (windowSizeWorld.x * 0.5f) * safeArea.x;

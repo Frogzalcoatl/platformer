@@ -20,6 +20,8 @@ class Entity {
     SDL_FColor color;
     b2BodyId bodyId;
     b2Polygon polygon;
+    b2Vec2 previousPosition;
+    float previousAngle;
 
   public:
     Entity(b2WorldId world, b2Polygon polygon, b2Vec2 position, SDL_Color color, bool isStatic);
@@ -48,9 +50,13 @@ class Entity {
     b2Polygon getPolygon() const;
     SDL_Color getColor() const;
     b2Vec2 getPosition() const;
+    b2Vec2 getInterpolatedPosition(float alpha) const;
+    b2Rot getInterpolatedRotation(float alpha) const;
     void setColor(SDL_Color color);
 
-    void draw(WindowManager& window) const;
+    void savePreviousState();
+
+    void draw(WindowManager& window, float alpha) const;
     void jump();
     void update();
     void teleport(b2Vec2 location);

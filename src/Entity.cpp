@@ -26,6 +26,8 @@ Entity::Entity(
     polygon = polygonArg;
     b2CreatePolygonShape(bodyId, &shapeDef, &polygon);
     spawnPoint = position;
+    previousPosition = position;
+    previousAngle = b2Rot_GetAngle(bodyDef.rotation);
 }
 
 Entity::~Entity() {
@@ -52,8 +54,30 @@ b2Vec2 Entity::getPosition() const {
     return b2Body_GetPosition(bodyId);
 }
 
-void Entity::draw(WindowManager& window) const {
-    b2Transform transform = b2Body_GetTransform(bodyId);
+b2Vec2 Entity::getInterpolatedPosition(float alpha) const {
+    b2Vec2 currentPos = b2Body_GetPosition(bodyId);
+    b2Vec2 interpolatedPos;
+    interpolatedPos.x = previousPosition.x * (1.f - alpha) + currentPos.x * alpha;
+    interpolatedPos.y = previousPosition.y * (1.f - alpha) + currentPos.y * alpha;
+    return interpolatedPos;
+}
+
+b2Rot Entity::getInterpolatedRotation(float alpha) const {
+    b2Rot currentRot = b2Body_GetRotation(bodyId);
+    b2Rot previousRot = b2MakeRot(previousAngle);
+    b2Rot interpolatedRot = b2NLerp(previousRot, currentRot, alpha);
+    return interpolatedRot;
+}
+
+void Entity::savePreviousState() {
+    previousPosition = b2Body_GetPosition(bodyId);
+    previousAngle = b2Rot_GetAngle(b2Body_GetRotation(bodyId));
+}
+
+void Entity::draw(WindowManager& window, float alpha) const {
+    b2Transform transform;
+    transform.p = getInterpolatedPosition(alpha);
+    transform.q = getInterpolatedRotation(alpha);
     Drawing::polygon(polygon, transform, window, color);
 }
 

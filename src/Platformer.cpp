@@ -206,7 +206,7 @@ void Platformer::showDebugUi() const {
     ImGui::End();
 }
 
-void Platformer::physicsStepHandler() {
+float Platformer::physicsStepHandler() {
     currentTime = SDL_GetTicks();
     float deltaTime = (float)(currentTime - lastTime) / 1000.0f;
     lastTime = currentTime;
@@ -217,12 +217,18 @@ void Platformer::physicsStepHandler() {
     while (accumulator >= physicsStep) {
         for (const auto& entity : entities) {
             if (entity) {
+                entity->savePreviousState();
+            }
+        }
+        for (const auto& entity : entities) {
+            if (entity) {
                 entity->update();
             }
         }
         b2World_Step(world, physicsStep, 4);
         accumulator -= physicsStep;
     }
+    return accumulator / physicsStep;
 }
 
 void Platformer::run() {
@@ -233,15 +239,15 @@ void Platformer::run() {
         const Uint64 frameStartNs = SDL_GetTicksNS();
         handleSdlEvent();
         handleGameEvent();
-        physicsStepHandler();
+        float alpha = physicsStepHandler();
         window.clearFrame();
-        camera.run();
+        camera.run(alpha);
         for (const auto& entity : entities) {
             if (entity) {
-                entity->draw(window);
+                entity->draw(window, alpha);
             }
         }
-        b2Vec2 textPos = player->getPosition();
+        b2Vec2 textPos = player->getInterpolatedPosition(alpha);
         textPos.y += 2.f;
         Drawing::text(text, assets.textResolutionScaleFactor, textPos, window);
         showDebugUi();

@@ -14,7 +14,7 @@ class Camera {
 
   public:
     Camera(Entity* followEntity, WindowManager& window);
-    void run();
+    void run(float alpha);
     b2Vec2 getEntitySafeAreaValue() const;
     b2Vec2 getSafeAreaSize() const;
     void centerOnEntity();
