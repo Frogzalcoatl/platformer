@@ -1,5 +1,6 @@
 #include "InputManager.hpp"
 #include <cassert>
+#include <imgui.h>
 
 std::string inputVerbToString(InputVerb verb) {
     switch (verb) {
@@ -242,6 +243,10 @@ std::vector<GameEventTypes::Input> InputManager::getInputEventsFromSDLEvent(SDL_
     switch (event.type) {
     case SDL_EVENT_KEY_DOWN:
     case SDL_EVENT_KEY_UP: {
+        ImGuiIO& io = ImGui::GetIO();
+        if (io.WantCaptureKeyboard) {
+            break;
+        }
         std::vector<InputVerbInfo> verbs = getVerbsFromScancode(event.key.scancode);
         if (verbs.size() == 0) {
             break;
@@ -271,6 +276,10 @@ std::vector<GameEventTypes::Input> InputManager::getInputEventsFromSDLEvent(SDL_
         }
     }; break;
     case SDL_EVENT_MOUSE_WHEEL: {
+        ImGuiIO& io = ImGui::GetIO();
+        if (io.WantCaptureMouse) {
+            break;
+        }
         if (event.wheel.integer_y > 0) {
             inputEvents.push_back(
                 GameEventTypes::Input{
