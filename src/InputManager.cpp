@@ -260,7 +260,8 @@ std::vector<GameEventTypes::Input> InputManager::getInputEventsFromSDLEvent(SDL_
                     }
                 );
             }
-            if (amountPressed >= 1 && (verbs[i].activateOnRepeat || !event.key.repeat)) {
+            if (amountPressed >= 1 && (verbs[i].activateOnRepeat || !event.key.repeat) &&
+                event.type == SDL_EVENT_KEY_DOWN) {
                 inputEvents.push_back(
                     GameEventTypes::Input{
                         verbs[i].verb, InputState::Pressed, InputSource::KeyboardMouse
@@ -305,7 +306,7 @@ std::vector<GameEventTypes::Input> InputManager::getInputEventsFromSDLEvent(SDL_
                         verbs[i], InputState::Released, InputSource::Controller, event.gbutton.which
                     }
                 );
-            } else if (amountPressed >= 1) {
+            } else if (amountPressed >= 1 && event.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN) {
                 inputEvents.push_back(
                     GameEventTypes::Input{
                         verbs[i], InputState::Pressed, InputSource::Controller, event.gbutton.which
