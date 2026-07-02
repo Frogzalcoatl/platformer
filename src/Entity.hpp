@@ -11,7 +11,6 @@ enum class EntityMovement : uint8_t {
     Down,
     Left,
     Right,
-    IsRunning,
     EntityMovementCount
 };
 

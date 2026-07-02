@@ -9,21 +9,20 @@ Entity::Entity(b2WorldId world, b2Polygon polygon, b2Vec2 position, SDL_Color co
 
 Entity::Entity(
     b2WorldId world,
-    b2Polygon polygonArg,
+    b2Polygon polygon,
     b2Vec2 position,
     SDL_Color color,
     bool isStatic,
     b2BodyDef bodyDef,
     b2ShapeDef shapeDef
 )
-    : isStatic(isStatic) {
+    : isStatic(isStatic), polygon(polygon) {
     bodyDef.position = position;
     if (!isStatic) {
         bodyDef.type = b2_dynamicBody;
     }
     setColor(color);
     bodyId = b2CreateBody(world, &bodyDef);
-    polygon = polygonArg;
     b2CreatePolygonShape(bodyId, &shapeDef, &polygon);
     spawnPoint = position;
     previousPosition = position;
@@ -121,6 +120,8 @@ void Entity::teleport(b2Vec2 location) {
     b2Body_SetAngularVelocity(bodyId, 0.f);
     // b2Rot_identity is default rotation
     b2Body_SetTransform(bodyId, location, b2Rot_identity);
+    previousPosition = location;
+    previousAngle = b2Rot_GetAngle(b2Rot_identity);
 }
 
 void Entity::respawn() {

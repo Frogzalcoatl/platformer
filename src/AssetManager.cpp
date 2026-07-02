@@ -192,12 +192,13 @@ SDL_Texture* AssetManager::getTexture(GameAssets::Textures textureId) {
     std::filesystem::path relativePath =
         GameAssets::Paths.Textures / GameAssets::FileNames.Textures[static_cast<size_t>(textureId)];
     std::filesystem::path fullPath = basePath / relativePath;
-    // r means open file for reading
-    texture = IMG_LoadTexture_IO(renderer, SDL_IOFromFile(fullPath.string().c_str(), "r"), true);
+    texture = IMG_LoadTexture_IO(
+        renderer, SDL_IOFromFile(fullPath.string().c_str(), "r"), true
+    ); // "r" means open file for reading
     if (!texture) {
         SDL_LogError(
             SDL_LOG_CATEGORY_APPLICATION,
-            "Unable to load SDL texture \"%s\": %s",
+            "Unable to load SDL texture from file \"%s\": %s",
             GameAssets::FileNames.Textures[static_cast<size_t>(textureId)],
             SDL_GetError()
         );

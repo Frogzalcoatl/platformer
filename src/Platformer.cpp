@@ -34,7 +34,7 @@ Platformer::Platformer()
             hexToColor(0xBA988AFF),
             false,
             playerBodyDef,
-            b2DefaultShapeDef()
+            playerShapeDef
         )
     );
     player = entities.front().get();
@@ -166,7 +166,7 @@ void Platformer::showDebugUi() const {
     float scaleFactor = window.getScaleFactor();
     ImGui::Text(
         "\nWindow:\nSize Pixels: %d, %d\nSize World: %.1f, %.1f\nRender Offset: %d, "
-        "%d\nScale: %.2f (Factor %.2f)",
+        "%d\nScale: %.2f (%.2f Pixels / Meter)",
         windowSizePixels.x,
         windowSizePixels.y,
         windowSizeWorld.x,
@@ -235,7 +235,7 @@ float Platformer::physicsStepHandler() {
 
 void Platformer::run() {
     TTF_Text* text = assets.getText("Player", GameAssets::Fonts::Monocraft, 20.f); // Just to test
-    GameEvents::Push(GameEventTypes::PlayMusic{GameAssets::Music::Test, 30, 1.1f, true});
+    audio.playMusic(GameAssets::Music::Test, 30, 1.f, true);
     running = true;
     while (running) {
         const Uint64 frameStartNs = SDL_GetTicksNS();

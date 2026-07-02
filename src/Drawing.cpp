@@ -4,29 +4,6 @@
 #include <cassert>
 #include <vector>
 
-static SDL_FPoint scaleB2Point(WindowManager& window, b2Transform transform, b2Vec2 point) {
-    b2Vec2 worldPosition = b2TransformPoint(transform, point);
-    float scaleFactor = window.getScaleFactor();
-    WindowDimensions offset = window.getOffsetPixels();
-    worldPosition.x *= scaleFactor;
-    worldPosition.y *= scaleFactor;
-    worldPosition.y *= -1.f;
-    worldPosition.x += offset.x;
-    worldPosition.y += offset.y;
-    return SDL_FPoint{worldPosition.x, worldPosition.y};
-}
-
-// Returns indices for triangles
-static std::vector<int> fanTriangulation(int vertexCount) {
-    std::vector<int> indices;
-    for (int current = 2; current <= vertexCount - 1; current++) {
-        indices.push_back(0);
-        indices.push_back(current - 1);
-        indices.push_back(current);
-    }
-    return indices;
-}
-
 void Drawing::polygon(
     const b2Polygon& polygon, b2Transform& transform, WindowManager& window, SDL_FColor color
 ) {
@@ -35,13 +12,26 @@ void Drawing::polygon(
     if (!renderer) {
         return;
     }
+    const float scaleFactor = window.getScaleFactor();
+    const WindowDimensions offset = window.getOffsetPixels();
     std::array<SDL_Vertex, B2_MAX_POLYGON_VERTICES> sdlVertices;
     for (int i = 0; i < polygon.count; i++) {
         sdlVertices[i].color = color;
-        sdlVertices[i].position = scaleB2Point(window, transform, polygon.vertices[i]);
+        b2Vec2 worldPosition = b2TransformPoint(transform, polygon.vertices[i]);
+        worldPosition.x *= scaleFactor;
+        worldPosition.y *= scaleFactor;
+        worldPosition.y *= -1.f;
+        worldPosition.x += offset.x;
+        worldPosition.y += offset.y;
+        sdlVertices[i].position = SDL_FPoint{worldPosition.x, worldPosition.y};
     }
-    std::vector<int> indices = fanTriangulation(polygon.count);
-
+    // Fan triangulation
+    std::vector<int> indices;
+    for (int current = 2; current <= polygon.count - 1; current++) {
+        indices.push_back(0);
+        indices.push_back(current - 1);
+        indices.push_back(current);
+    }
     SDL_RenderGeometry(
         renderer,
         NULL,
@@ -123,7 +113,7 @@ void Drawing::texture(
     SDL_Texture* texture,
     b2Vec2 worldPosition,
     b2Vec2 worldSize,
-    double angle,
+    double sdlAngle,
     SDL_FlipMode flip
 ) {
     if (texture == nullptr) {
@@ -140,5 +130,10 @@ void Drawing::texture(
     rect.h = worldSize.y * scaleFactor;
     rect.x = worldPosition.x * scaleFactor + offset.x - rect.w / 2.f;
     rect.y = worldPosition.y * scaleFactor * -1.f + offset.y - rect.h / 2.f;
-    SDL_RenderTextureRotated(renderer, texture, nullptr, &rect, angle, nullptr, flip);
+    SDL_RenderTextureRotated(renderer, texture, nullptr, &rect, sdlAngle, nullptr, flip);
+}
+
+double Drawing::b2RotToSdlAngle(b2Rot rotation) {
+    float radians = b2Rot_GetAngle(rotation);
+    return -static_cast<double>(radians) * (180.0 / 3.14159265358979323846);
 }

@@ -87,3 +87,10 @@ void Camera::centerOnEntity() {
     }
     window.updateOffset(entityToFollow->getPosition());
 }
+
+void Camera::centerOnEntity(float alpha) {
+    if (!entityToFollow) {
+        return;
+    }
+    window.updateOffset(entityToFollow->getInterpolatedPosition(alpha));
+}

@@ -17,6 +17,13 @@ AudioManager::AudioManager(AssetManager& assetManager) : assets{&assetManager} {
         return;
     }
     SDL_Log("Created SDL mixer device");
+    for (size_t i = 0; i < SoundTrackCount; i++) {
+        soundTracks[i] = MIX_CreateTrack(mixerDevice);
+        MIX_TagTrack(soundTracks[i], SoundTag);
+    }
+    musicTrack = MIX_CreateTrack(mixerDevice);
+    MIX_TagTrack(musicTrack, MusicTag);
+    SDL_Log("Created SDL3 mixer audio tracks");
     loadedSounds.fill(nullptr);
     for (size_t i = 0; i < static_cast<size_t>(GameAssets::Sounds::SoundsCount); i++) {
         const auto rawData = assets->getSoundData(static_cast<GameAssets::Sounds>(i));
@@ -31,6 +38,7 @@ AudioManager::AudioManager(AssetManager& assetManager) : assets{&assetManager} {
                 GameAssets::FileNames.Sounds[i],
                 SDL_GetError()
             );
+            continue;
         }
         loadedSounds[i] = MIX_LoadAudio_IO(mixerDevice, io, true, true);
         if (!loadedSounds[i]) {
@@ -43,13 +51,6 @@ AudioManager::AudioManager(AssetManager& assetManager) : assets{&assetManager} {
             continue;
         }
     }
-    for (size_t i = 0; i < SoundTrackCount; i++) {
-        soundTracks[i] = MIX_CreateTrack(mixerDevice);
-        MIX_TagTrack(soundTracks[i], SoundTag);
-    }
-    musicTrack = MIX_CreateTrack(mixerDevice);
-    MIX_TagTrack(musicTrack, MusicTag);
-    SDL_Log("Created SDL3 mixer audio tracks");
     volumeMultipliers.fill(1.f);
 }
 
@@ -149,6 +150,7 @@ void AudioManager::playMusic(
             GameAssets::FileNames.Music[static_cast<size_t>(musicId)],
             SDL_GetError()
         );
+        return;
     }
     currentMusic = MIX_LoadAudio_IO(mixerDevice, io, false, true);
     if (!currentMusic) {
@@ -175,6 +177,7 @@ void AudioManager::playMusic(
     }
     MIX_PlayTrack(musicTrack, properties);
     SDL_DestroyProperties(properties);
+    currentMusicName = GameAssets::FileNames.Music[static_cast<size_t>(musicId)];
 }
 
 void AudioManager::setVolume(AudioCategory category, unsigned int volume) {
@@ -190,6 +193,10 @@ void AudioManager::setVolume(AudioCategory category, unsigned int volume) {
     }
 }
 
+void AudioManager::setMusicPitch(float pitch) {
+    MIX_SetTrackFrequencyRatio(musicTrack, pitch);
+}
+
 unsigned int AudioManager::getVolume(AudioCategory category) {
     assert(
         category >= static_cast<AudioCategory>(0) && category < AudioCategory::AudioCategoryCount
@@ -197,4 +204,53 @@ unsigned int AudioManager::getVolume(AudioCategory category) {
     return static_cast<unsigned int>(
         SDL_roundf(volumeMultipliers[static_cast<size_t>(category)] * 100)
     );
+}
+
+const char* AudioManager::getCurrentMusicName() const {
+    return currentMusicName;
+}
+
+float AudioManager::getMusicPitch() const {
+    return MIX_GetTrackFrequencyRatio(musicTrack);
+}
+
+bool AudioManager::isMusicLooping() const {
+    return MIX_GetTrackLoops(musicTrack) == -1 ? true : false;
+}
+
+Sint64 AudioManager::getMusicPlaybackPosition() const {
+    Sint64 sampleFrames = MIX_GetTrackPlaybackPosition(musicTrack);
+    return MIX_TrackFramesToMS(musicTrack, sampleFrames) / 1000;
+}
+
+Sint64 AudioManager::getMusicTimeRemaining() const {
+    Sint64 sampleFrames = MIX_GetTrackRemaining(musicTrack);
+    return MIX_TrackFramesToMS(musicTrack, sampleFrames) / 1000;
+}
+
+Sint64 AudioManager::getMusicLength() const {
+    // Using this instead of currentMusic in case currentMusic has stopped playing
+    MIX_Audio* music = MIX_GetTrackAudio(musicTrack);
+    Sint64 sampleFrames = MIX_GetAudioDuration(music);
+    return MIX_TrackFramesToMS(musicTrack, sampleFrames) / 1000;
+}
+
+std::string AudioManager::formattedMusicTime() const {
+    Sint64 lengthSeconds = getMusicLength();
+    Sint64 lengthMinutes = lengthSeconds / 60;
+    lengthSeconds %= 60;
+    Sint64 posSeconds = getMusicPlaybackPosition();
+    Sint64 posMinutes = lengthSeconds / 60;
+    posSeconds %= 60;
+    char buf[16];
+    std::snprintf(
+        buf,
+        sizeof(buf),
+        "%02lld:%02lld/%02lld:%02lld",
+        posMinutes,
+        posSeconds,
+        lengthMinutes,
+        lengthSeconds
+    );
+    return buf;
 }

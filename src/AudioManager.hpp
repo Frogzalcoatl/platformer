@@ -15,17 +15,18 @@ enum class AudioCategory : uint8_t {
 
 class AudioManager {
   private:
+    AssetManager* assets;
     MIX_Mixer* mixerDevice;
     MIX_Track* soundTracks[SoundTrackCount];
     MIX_Track* musicTrack;
-    MIX_Audio* currentMusic = nullptr;
-    float currentMusicVolume;
-    std::string currentMusicName = "";
     const char* SoundTag = "Sounds";
     const char* MusicTag = "Music";
     std::array<MIX_Audio*, static_cast<size_t>(GameAssets::Sounds::SoundsCount)> loadedSounds;
-    AssetManager* assets;
     std::array<float, static_cast<size_t>(AudioCategory::AudioCategoryCount)> volumeMultipliers;
+    MIX_Audio* currentMusic = nullptr;
+    float currentMusicVolume =
+        1.f; // Separate volume multiplier, based on volume passed into playMusic func
+    const char* currentMusicName = "";
 
   public:
     AudioManager(AssetManager& assets);
@@ -36,5 +37,13 @@ class AudioManager {
         GameAssets::Music musicId, unsigned int volume = 100, float pitch = 1.f, bool loop = false
     );
     void setVolume(AudioCategory category, unsigned int volume);
+    void setMusicPitch(float pitch);
     unsigned int getVolume(AudioCategory category);
+    const char* getCurrentMusicName() const;
+    float getMusicPitch() const;
+    bool isMusicLooping() const;
+    Sint64 getMusicPlaybackPosition() const; // In seconds
+    Sint64 getMusicTimeRemaining() const;    // In seconds
+    Sint64 getMusicLength() const;           // In seconds
+    std::string formattedMusicTime() const;  // MM:SS
 };

@@ -3,11 +3,6 @@
 #include "WindowManager.hpp"
 #include <SDL3_ttf/SDL_ttf.h>
 
-inline double b2RotToSdlAngle(b2Rot rotation) {
-    float radians = b2Rot_GetAngle(rotation);
-    return -static_cast<double>(radians) * (180.0 / 3.14159265358979323846);
-}
-
 namespace Drawing {
 void polygon(
     const b2Polygon& polygon,
@@ -28,7 +23,8 @@ void texture(
     SDL_Texture* texture,
     b2Vec2 worldPosition,
     b2Vec2 worldSize,
-    double angle = 0.0,
+    double sdlAngle = 0.0,
     SDL_FlipMode flip = SDL_FLIP_NONE
 );
+double b2RotToSdlAngle(b2Rot rotation);
 } // namespace Drawing

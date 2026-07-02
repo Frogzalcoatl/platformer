@@ -18,6 +18,7 @@ class Camera {
     b2Vec2 getEntitySafeAreaValue() const;
     b2Vec2 getSafeAreaSize() const;
     void centerOnEntity();
+    void centerOnEntity(float alpha);
     b2Vec2 safeArea = {0.15f, 0.15f};
     Entity* entityToFollow;
     std::optional<float> minViewableY;
