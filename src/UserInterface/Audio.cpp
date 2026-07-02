@@ -1,9 +1,9 @@
-#include "AudioUi.hpp"
+#include "./Audio.hpp"
 #include <imgui.h>
 
 static const int MaxVolume = 125;
 
-void showAudioUi(AudioManager& audioManager) {
+void UserInterface::audio(AudioManager& audioManager) {
     ImGui::Begin("Audio");
     int masterVolume = audioManager.getVolume(AudioCategory::Master);
     int soundVolume = audioManager.getVolume(AudioCategory::Sounds);

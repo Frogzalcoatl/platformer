@@ -34,7 +34,6 @@ class Platformer {
 
     void handleSdlEvent();
     void handleGameEvent();
-    void showDebugUi();
 
   public:
     Platformer();

@@ -1,4 +1,4 @@
-#include "KeybindUi.hpp"
+#include "./Keybinds.hpp"
 #include <imgui.h>
 #include <memory>
 
@@ -7,7 +7,7 @@ static const std::string inputSeparator = " / ";
 static std::string scancodeBindsStr = "";
 static std::string gButtonBindsStr = "";
 
-void updateKeybindsUi(InputManager& input) {
+void UserInterface::keybindsUpdate(InputManager& input) {
     scancodeBindsStr.clear();
     gButtonBindsStr.clear();
     for (size_t i = 0; i < static_cast<int>(InputVerb::VerbCount); i++) {
@@ -47,7 +47,7 @@ void updateKeybindsUi(InputManager& input) {
 static const char KeyboardTabLabel[] = "Keyboard";
 static const char ControllerTabLabel[] = "Controller";
 
-void showKeybindUi() {
+void UserInterface::keybindsShow() {
     ImGui::Begin("Controls");
     ImGui::BeginTabBar("ControlsTabBar");
     bool keyboardTab = ImGui::BeginTabItem(KeyboardTabLabel);

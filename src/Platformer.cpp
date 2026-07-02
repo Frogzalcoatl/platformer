@@ -1,10 +1,9 @@
 #include "Platformer.hpp"
-#include "AudioUi.hpp"
 #include "Colors.hpp"
 #include "DiscordRpcManager.hpp"
 #include "Drawing.hpp"
 #include "Events.hpp"
-#include "KeybindUi.hpp"
+#include "UserInterface/Index.hpp"
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_sdlrenderer3.h>
@@ -17,7 +16,7 @@ Platformer::Platformer()
     world = b2CreateWorld(&worldDef);
     SDL_Log("Created box2d world");
     camera.minViewableY = 0.f;
-    updateKeybindsUi(input);
+    UserInterface::keybindsUpdate(input);
     DiscordRpcManager::init();
     DiscordRpcManager::setStatus("In Development...", nullptr);
     // Test player
@@ -39,6 +38,7 @@ Platformer::Platformer()
     player = entities.front().get();
     camera.entityToFollow = player;
     entityController.setEntity(*player);
+    entityController.spawnPoint = b2Vec2{0.f, 4.f};
     // Tempoaray test entities
     entities.push_back(
         std::make_unique<Entity>(
@@ -151,83 +151,6 @@ void Platformer::handleGameEvent() {
     }
 }
 
-void Platformer::showDebugUi() {
-    ImGui::Begin("Debug Menu");
-    ImGui::Text("Renderer:");
-    ImGui::Text(
-        "%.1f/%s FPS (%.3f ms/frame)",
-        ImGui::GetIO().Framerate,
-        window.targetFpsStr().c_str(),
-        1000.0f / ImGui::GetIO().Framerate
-    );
-    ImGui::Checkbox("Show Fan Triangulation", &showFanTriangulation);
-    bool vsync = window.isVsyncEnabled();
-    if (ImGui::Checkbox("Vsync", &vsync)) {
-        window.setVsync(vsync);
-    }
-    bool fpsUnlimited = window.getFpsUnlimited();
-    if (ImGui::Checkbox("FPS Unlimited", &fpsUnlimited)) {
-        window.setFpsUnlimited(fpsUnlimited);
-    }
-    if (!vsync && !fpsUnlimited) {
-        static int tempFps = window.getTargetFps();
-        ImGui::SliderInt("Target FPS", &tempFps, 10, 250);
-        if (ImGui::IsItemDeactivatedAfterEdit()) {
-            window.setTargetFps(tempFps);
-        }
-    }
-    ImGui::Dummy(ImVec2{1.f, 1.f});
-    WindowDimensions offset = window.getOffsetPixels();
-    WindowDimensions windowSizePixels = window.getSizePixels();
-    b2Vec2 windowSizeWorld = window.getSizeWorld();
-    float scaleFactor = window.getScaleFactor();
-    ImGui::Text("\nWindow:");
-    ImGui::Text(
-        "Size Pixels: %d, %d\nSize World: %.1f, %.1f\nRender Offset: %d, "
-        "%d\nScale: %.2f (%.2f Pixels / Meter)",
-        windowSizePixels.x,
-        windowSizePixels.y,
-        windowSizeWorld.x,
-        windowSizeWorld.y,
-        offset.x,
-        offset.y,
-        window.scaleMultiplier,
-        scaleFactor
-    );
-    if (player) {
-        b2Vec2 position = b2Body_GetPosition(player->getBodyId());
-        b2Vec2 velocity = b2Body_GetLinearVelocity(player->getBodyId());
-        ImGui::Text("\nPlayer:");
-        ImGui::Text(
-            "Position: %.2f, %.2f\nVelocity: %.2f, %.2f\nInput: Up %d, Down %d, Left %d, Right %d, Sprint %d",
-            position.x,
-            position.y,
-            velocity.x,
-            velocity.y,
-            entityController.movement[static_cast<size_t>(EntityMovement::Up)],
-            entityController.movement[static_cast<size_t>(EntityMovement::Down)],
-            entityController.movement[static_cast<size_t>(EntityMovement::Left)],
-            entityController.movement[static_cast<size_t>(EntityMovement::Right)],
-            entityController.isSprinting
-        );
-    }
-    if (camera.entityToFollow) {
-        b2Vec2 safeAreaSize = camera.getSafeAreaSize();
-        b2Vec2 safeAreaValue = camera.getEntitySafeAreaValue();
-        ImGui::Text("\nSafe Area:");
-        ImGui::Text(
-            "Size: %.2f, %.2f\nRatio from Center: %.2f, %.2f",
-            safeAreaSize.x,
-            safeAreaSize.y,
-            safeAreaValue.x,
-            safeAreaValue.y
-        );
-    }
-    size_t controllersConnected = input.getGamepadCount();
-    ImGui::Text("\nControllers Connected: %zu", controllersConnected);
-    ImGui::End();
-}
-
 float Platformer::physicsStepHandler() {
     currentTime = SDL_GetTicks();
     float deltaTime = (float)(currentTime - lastTime) / 1000.0f;
@@ -279,9 +202,9 @@ void Platformer::run() {
         b2Vec2 textPos = player->getInterpolatedPosition(alpha);
         textPos.y += 2.f;
         Drawing::text(window, text, assets.textResolutionScaleFactor, textPos);
-        showDebugUi();
-        showKeybindUi();
-        showAudioUi(audio);
+        UserInterface::keybindsShow();
+        UserInterface::audio(audio);
+        UserInterface::debug(window, player, entityController, camera, input, showFanTriangulation);
         window.render(frameStartNs);
         DiscordRpcManager::update();
     }

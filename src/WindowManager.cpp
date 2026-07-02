@@ -149,6 +149,7 @@ void WindowManager::setFpsUnlimited(bool value) {
         setVsync(false);
     }
     fpsUnlimited = value;
+    SDL_Log("FPS Unlimited set to %s", value ? "true" : "false");
 }
 bool WindowManager::getFpsUnlimited() const {
     return fpsUnlimited;
