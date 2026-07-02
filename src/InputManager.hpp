@@ -88,6 +88,8 @@ class InputManager {
     int openMappingsFromPath(std::filesystem::path& path);
     bool addGamepadMappingsFromFiles();
 
+    bool isImGuiCapturingKeyboard = false;
+
   public:
     InputManager();
     void bindScancodeToVerb(InputVerb verb, ScancodeInfo binding, std::optional<int> atIndexOpt);

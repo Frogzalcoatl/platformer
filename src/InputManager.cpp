@@ -244,7 +244,27 @@ std::vector<GameEventTypes::Input> InputManager::getInputEventsFromSDLEvent(SDL_
     case SDL_EVENT_KEY_DOWN:
     case SDL_EVENT_KEY_UP: {
         ImGuiIO& io = ImGui::GetIO();
-        if (io.WantCaptureKeyboard) {
+        if (io.WantCaptureKeyboard != isImGuiCapturingKeyboard) {
+            isImGuiCapturingKeyboard = io.WantCaptureKeyboard;
+            if (isImGuiCapturingKeyboard) {
+                SDL_Log("Ran reset");
+                // Reset all verbs when ui lib captures keyboard.
+                for (size_t i = 0; i < keyboardVerbsPressed.size(); i++) {
+                    int& amountPressed = keyboardVerbsPressed[i];
+                    if (amountPressed > 0) {
+                        amountPressed = 0;
+                        inputEvents.push_back(
+                            GameEventTypes::Input{
+                                static_cast<InputVerb>(i),
+                                InputState::Released,
+                                InputSource::KeyboardMouse
+                            }
+                        );
+                    }
+                }
+            }
+        }
+        if (isImGuiCapturingKeyboard) {
             break;
         }
         std::vector<InputVerbInfo> verbs = getVerbsFromScancode(event.key.scancode);
@@ -256,6 +276,9 @@ std::vector<GameEventTypes::Input> InputManager::getInputEventsFromSDLEvent(SDL_
             if (event.type == SDL_EVENT_KEY_DOWN && !event.key.repeat) {
                 amountPressed++;
             } else if (event.type == SDL_EVENT_KEY_UP) {
+                if (amountPressed == 0) {
+                    continue;
+                }
                 amountPressed--;
             }
             if (amountPressed == 0) {
