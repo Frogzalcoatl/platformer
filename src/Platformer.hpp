@@ -3,6 +3,7 @@
 #include "AudioManager.hpp"
 #include "Camera.hpp"
 #include "Entity.hpp"
+#include "EntityController.hpp"
 #include "InputManager.hpp"
 #include "Tile.hpp"
 #include "WindowManager.hpp"
@@ -22,6 +23,7 @@ class Platformer {
     std::vector<std::unique_ptr<Tile>> tiles;
     Entity* player = nullptr;
     Camera camera;
+    EntityController entityController;
 
     uint64_t currentTime = 0;
     uint64_t lastTime = 0;

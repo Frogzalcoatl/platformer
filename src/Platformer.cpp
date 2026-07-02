@@ -5,7 +5,6 @@
 #include "Drawing.hpp"
 #include "Events.hpp"
 #include "KeybindUi.hpp"
-#include "PlayerInput.hpp"
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_sdlrenderer3.h>
@@ -39,6 +38,7 @@ Platformer::Platformer()
     );
     player = entities.front().get();
     camera.entityToFollow = player;
+    entityController.setEntity(*player);
     // Tempoaray test entities
     entities.push_back(
         std::make_unique<Entity>(
@@ -145,7 +145,7 @@ void Platformer::handleGameEvent() {
                 }
             }
             if (player) {
-                controlEntity(*inputEvent, *player, camera);
+                entityController.handleInput(*inputEvent, &camera);
             }
         }
     }
@@ -185,11 +185,11 @@ void Platformer::showDebugUi() const {
             position.y,
             velocity.x,
             velocity.y,
-            player->movement[static_cast<size_t>(EntityMovement::Up)],
-            player->movement[static_cast<size_t>(EntityMovement::Down)],
-            player->movement[static_cast<size_t>(EntityMovement::Left)],
-            player->movement[static_cast<size_t>(EntityMovement::Right)],
-            player->isSprinting
+            entityController.movement[static_cast<size_t>(EntityMovement::Up)],
+            entityController.movement[static_cast<size_t>(EntityMovement::Down)],
+            entityController.movement[static_cast<size_t>(EntityMovement::Left)],
+            entityController.movement[static_cast<size_t>(EntityMovement::Right)],
+            entityController.isSprinting
         );
     }
     if (camera.entityToFollow) {
@@ -222,11 +222,7 @@ float Platformer::physicsStepHandler() {
                 entity->savePreviousState();
             }
         }
-        for (const auto& entity : entities) {
-            if (entity) {
-                entity->update();
-            }
-        }
+        entityController.update();
         b2World_Step(world, physicsStep, 4);
         accumulator -= physicsStep;
     }

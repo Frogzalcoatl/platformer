@@ -1,0 +1,28 @@
+#pragma once
+#include "Camera.hpp"
+#include "Entity.hpp"
+#include "Events.hpp"
+
+class EntityController {
+  private:
+    Entity* entity;
+
+  public:
+    EntityController() = default;
+    EntityController(Entity& entity);
+    b2Vec2 spawnPoint = {0.f, 0.f};
+    float jumpForceNewtons = 20.f;
+    float horizontalSpeed = 10.f;
+    float horizontalAcceleration = 0.1f;
+    float downwardAcceleration = 2.5f;
+    std::array<bool, static_cast<size_t>(EntityMovement::EntityMovementCount)> movement = {false};
+    bool isSprinting = false;
+    float sprintMultiplier = 2.f;
+    void setEntity(Entity& entity);
+    void clearEntity();
+    Entity* getEntity() const;
+    void update();
+    void jump();
+    void respawn();
+    void handleInput(GameEventTypes::Input event, Camera* camera);
+};

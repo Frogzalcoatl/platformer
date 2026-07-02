@@ -16,7 +16,7 @@ Entity::Entity(
     b2BodyDef bodyDef,
     b2ShapeDef shapeDef
 )
-    : isStatic(isStatic), polygon(polygon) {
+    : polygon(polygon), isStatic(isStatic) {
     bodyDef.position = position;
     if (!isStatic) {
         bodyDef.type = b2_dynamicBody;
@@ -24,7 +24,6 @@ Entity::Entity(
     setColor(color);
     bodyId = b2CreateBody(world, &bodyDef);
     b2CreatePolygonShape(bodyId, &shapeDef, &polygon);
-    spawnPoint = position;
     previousPosition = position;
     previousAngle = b2Rot_GetAngle(bodyDef.rotation);
 }
@@ -80,39 +79,6 @@ void Entity::draw(WindowManager& window, float alpha) const {
     Drawing::polygon(polygon, transform, window, color);
 }
 
-void Entity::update() {
-    if (isStatic) {
-        return;
-    }
-    b2Vec2 velocity = b2Body_GetLinearVelocity(bodyId);
-    b2Vec2 targetVelocity = {
-        0.f,
-        0.f,
-    };
-    if (movement[static_cast<size_t>(EntityMovement::Down)]) {
-        targetVelocity.y -= downwardAcceleration;
-    }
-    if (movement[static_cast<size_t>(EntityMovement::Left)]) {
-        targetVelocity.x -= horizontalSpeed;
-    }
-    if (movement[static_cast<size_t>(EntityMovement::Right)]) {
-        targetVelocity.x += horizontalSpeed;
-    }
-    if (isSprinting) {
-        targetVelocity.x *= sprintMultiplier;
-        targetVelocity.y *= sprintMultiplier;
-    }
-    velocity.x = velocity.x + (targetVelocity.x - velocity.x) * horizontalAcceleration;
-    velocity.y += targetVelocity.y;
-    b2Body_SetLinearVelocity(bodyId, velocity);
-}
-
-void Entity::jump() {
-    b2Vec2 velocity = b2Body_GetLinearVelocity(bodyId);
-    b2Body_SetLinearVelocity(bodyId, b2Vec2{velocity.x, 0.f});
-    b2Body_ApplyLinearImpulseToCenter(bodyId, b2Vec2{0.f, jumpForceNewtons}, true);
-}
-
 void Entity::teleport(b2Vec2 location) {
     b2Body_SetLinearVelocity(
         bodyId, b2Vec2{0.f, -0.01f}
@@ -122,8 +88,4 @@ void Entity::teleport(b2Vec2 location) {
     b2Body_SetTransform(bodyId, location, b2Rot_identity);
     previousPosition = location;
     previousAngle = b2Rot_GetAngle(b2Rot_identity);
-}
-
-void Entity::respawn() {
-    teleport(spawnPoint);
 }
