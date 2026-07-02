@@ -1,6 +1,7 @@
 Account for polygon radius
 Draw shape borders
-Draw fan triangulation borders
+
+If cursor is inside ui dont zoom
 
 Tiling manager
     I'm assuming I'd need to figure out some way to automatically load static entities on exposed solid tiles.

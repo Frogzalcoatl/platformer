@@ -151,21 +151,39 @@ void Platformer::handleGameEvent() {
     }
 }
 
-void Platformer::showDebugUi() const {
+void Platformer::showDebugUi() {
     ImGui::Begin("Debug Menu");
+    ImGui::Text("Renderer:");
     ImGui::Text(
-        "Renderer:\n%.1f/%s FPS (%.3f ms/frame)\nVsync Enabled: %s",
+        "%.1f/%s FPS (%.3f ms/frame)",
         ImGui::GetIO().Framerate,
         window.targetFpsStr().c_str(),
-        1000.0f / ImGui::GetIO().Framerate,
-        window.isVsyncEnabled() ? "true" : "false"
+        1000.0f / ImGui::GetIO().Framerate
     );
+    ImGui::Checkbox("Show Fan Triangulation", &showFanTriangulation);
+    bool vsync = window.isVsyncEnabled();
+    if (ImGui::Checkbox("Vsync", &vsync)) {
+        window.setVsync(vsync);
+    }
+    bool fpsUnlimited = window.getFpsUnlimited();
+    if (ImGui::Checkbox("FPS Unlimited", &fpsUnlimited)) {
+        window.setFpsUnlimited(fpsUnlimited);
+    }
+    if (!vsync && !fpsUnlimited) {
+        static int tempFps = window.getTargetFps();
+        ImGui::SliderInt("Target FPS", &tempFps, 10, 250);
+        if (ImGui::IsItemDeactivatedAfterEdit()) {
+            window.setTargetFps(tempFps);
+        }
+    }
+    ImGui::Dummy(ImVec2{1.f, 1.f});
     WindowDimensions offset = window.getOffsetPixels();
     WindowDimensions windowSizePixels = window.getSizePixels();
     b2Vec2 windowSizeWorld = window.getSizeWorld();
     float scaleFactor = window.getScaleFactor();
+    ImGui::Text("\nWindow:");
     ImGui::Text(
-        "\nWindow:\nSize Pixels: %d, %d\nSize World: %.1f, %.1f\nRender Offset: %d, "
+        "Size Pixels: %d, %d\nSize World: %.1f, %.1f\nRender Offset: %d, "
         "%d\nScale: %.2f (%.2f Pixels / Meter)",
         windowSizePixels.x,
         windowSizePixels.y,
@@ -179,8 +197,9 @@ void Platformer::showDebugUi() const {
     if (player) {
         b2Vec2 position = b2Body_GetPosition(player->getBodyId());
         b2Vec2 velocity = b2Body_GetLinearVelocity(player->getBodyId());
+        ImGui::Text("\nPlayer:");
         ImGui::Text(
-            "\nPlayer:\nPosition: %.2f, %.2f\nVelocity: %.2f, %.2f\nInput: Up %d, Down %d, Left %d, Right %d, Sprint %d",
+            "Position: %.2f, %.2f\nVelocity: %.2f, %.2f\nInput: Up %d, Down %d, Left %d, Right %d, Sprint %d",
             position.x,
             position.y,
             velocity.x,
@@ -195,8 +214,9 @@ void Platformer::showDebugUi() const {
     if (camera.entityToFollow) {
         b2Vec2 safeAreaSize = camera.getSafeAreaSize();
         b2Vec2 safeAreaValue = camera.getEntitySafeAreaValue();
+        ImGui::Text("\nSafe Area:");
         ImGui::Text(
-            "\nSafe Area:\nSize: %.2f, %.2f\nRatio from Center: %.2f, %.2f",
+            "Size: %.2f, %.2f\nRatio from Center: %.2f, %.2f",
             safeAreaSize.x,
             safeAreaSize.y,
             safeAreaValue.x,
@@ -243,6 +263,12 @@ void Platformer::run() {
         for (const auto& entity : entities) {
             if (entity) {
                 entity->draw(window, alpha);
+                if (showFanTriangulation) {
+                    b2Transform transform;
+                    transform.p = entity->getInterpolatedPosition(alpha);
+                    transform.q = entity->getInterpolatedRotation(alpha);
+                    Drawing::showFanTriangulation(entity->getPolygon(), transform, window);
+                }
             }
         }
         for (const auto& tile : tiles) {

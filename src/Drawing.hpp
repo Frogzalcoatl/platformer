@@ -10,6 +10,12 @@ void polygon(
     WindowManager& window,
     SDL_FColor color = colorToFColor(Colors.White)
 );
+void showFanTriangulation(
+    const b2Polygon& polygon,
+    b2Transform& transform,
+    WindowManager& window,
+    SDL_FColor color = colorToFColor(Colors.Red)
+);
 void text(
     WindowManager& window,
     TTF_Text* text,

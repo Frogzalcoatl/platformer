@@ -24,6 +24,7 @@ class Platformer {
     Entity* player = nullptr;
     Camera camera;
     EntityController entityController;
+    bool showFanTriangulation = false;
 
     uint64_t currentTime = 0;
     uint64_t lastTime = 0;
@@ -33,7 +34,7 @@ class Platformer {
 
     void handleSdlEvent();
     void handleGameEvent();
-    void showDebugUi() const;
+    void showDebugUi();
 
   public:
     Platformer();

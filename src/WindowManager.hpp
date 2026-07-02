@@ -19,6 +19,7 @@ class WindowManager {
     Uint64 targetFps = 240;
     Uint64 targetFrameTimeNs = 1000000000ULL / targetFps;
     bool vsync = false;
+    bool fpsUnlimited;
     SDL_Renderer* sdlRenderer;
     SDL_Window* sdlWindow;
 
@@ -27,7 +28,6 @@ class WindowManager {
   public:
     float scaleMultiplier = 1.f;
     SDL_Color backgroundColor;
-    bool unlimitedFps = false;
 
     WindowManager(const char* windowName, SDL_Color backgroundColor);
     ~WindowManager();
@@ -47,6 +47,8 @@ class WindowManager {
     void setTargetFps(Uint64 value);
     void setVsync(bool value);
     bool isVsyncEnabled() const;
+    void setFpsUnlimited(bool value);
+    bool getFpsUnlimited() const;
 
     void render(Uint64 frameStartNs);
     void clearFrame();

@@ -50,7 +50,7 @@ void WindowManager::render(Uint64 frameStartNs) {
     ImGui::Render();
     ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), sdlRenderer);
     SDL_RenderPresent(sdlRenderer);
-    if (unlimitedFps || vsync) {
+    if (fpsUnlimited || vsync) {
         return;
     }
     const Uint64 frameTimeNs = SDL_GetTicksNS() - frameStartNs;
@@ -107,8 +107,18 @@ Uint64 WindowManager::getTargetFps() const {
 }
 
 std::string WindowManager::targetFpsStr() const {
-    if (unlimitedFps) {
-        return "unlimited";
+    if (vsync) {
+        SDL_DisplayID displayID = SDL_GetDisplayForWindow(sdlWindow);
+        if (displayID == 0) {
+            return "Unknown";
+        }
+        const SDL_DisplayMode* mode = SDL_GetCurrentDisplayMode(displayID);
+        if (!mode) {
+            return "Unknown";
+        }
+        return std::to_string(static_cast<int>(SDL_roundf(mode->refresh_rate))) + ".0";
+    } else if (fpsUnlimited) {
+        return "Unlimited";
     } else {
         return std::to_string(targetFps) + ".0";
     }
@@ -132,6 +142,16 @@ void WindowManager::setVsync(bool value) {
 
 bool WindowManager::isVsyncEnabled() const {
     return vsync;
+}
+
+void WindowManager::setFpsUnlimited(bool value) {
+    if (vsync && value) {
+        setVsync(false);
+    }
+    fpsUnlimited = value;
+}
+bool WindowManager::getFpsUnlimited() const {
+    return fpsUnlimited;
 }
 
 void WindowManager::toggleFullscreen() {

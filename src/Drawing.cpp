@@ -42,6 +42,38 @@ void Drawing::polygon(
     );
 }
 
+void Drawing::showFanTriangulation(
+    const b2Polygon& polygon, b2Transform& transform, WindowManager& window, SDL_FColor color
+) {
+    assert(polygon.count >= 3);
+    SDL_Renderer* renderer = window.getSdlRenderer();
+    if (!renderer) {
+        return;
+    }
+    const float scaleFactor = window.getScaleFactor();
+    const WindowDimensions offset = window.getOffsetPixels();
+    std::vector<SDL_FPoint> points;
+    points.reserve(polygon.count);
+    for (int i = 0; i < polygon.count; i++) {
+        b2Vec2 worldPosition = b2TransformPoint(transform, polygon.vertices[i]);
+        worldPosition.x *= scaleFactor;
+        worldPosition.y *= scaleFactor;
+        worldPosition.y *= -1.f;
+        worldPosition.x += offset.x;
+        worldPosition.y += offset.y;
+        points.push_back(SDL_FPoint{worldPosition.x, worldPosition.y});
+    }
+    SDL_SetRenderDrawColorFloat(renderer, color.r, color.g, color.b, color.a);
+    std::vector<SDL_FPoint> perimeter;
+    perimeter.reserve(polygon.count + 1);
+    perimeter.insert(perimeter.end(), points.begin(), points.end());
+    perimeter.push_back(points[0]);
+    SDL_RenderLines(renderer, perimeter.data(), static_cast<int>(perimeter.size()));
+    for (int i = 2; i < polygon.count; i++) {
+        SDL_RenderLine(renderer, points[0].x, points[0].y, points[i].x, points[i].y);
+    }
+}
+
 /* Finish later fr
 // Radians are counted from the positive x-axis
 static void drawArcSlice(
