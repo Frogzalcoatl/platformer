@@ -47,11 +47,7 @@ AssetManager::~AssetManager() {
 
 void AssetManager::closeAll() {
     if (fontCache.size() > 0) {
-        for (const CachedFont& chachedFont : fontCache) {
-            TTF_CloseFont(chachedFont.font);
-        }
-        fontCache.clear();
-        SDL_Log("Closed cached fonts");
+        clearFontCache();
     }
     for (auto& texture : textureCache) {
         if (texture) {
@@ -135,6 +131,9 @@ TTF_Text* AssetManager::getText(
 }
 
 void AssetManager::clearFontCache() {
+    for (const CachedFont& chachedFont : fontCache) {
+        TTF_CloseFont(chachedFont.font);
+    }
     fontCache.clear();
     SDL_Log("Cleared font cache");
 }
@@ -146,30 +145,66 @@ void AssetManager::clearFontData() {
     SDL_Log("Cleared raw font data");
 }
 
-std::vector<std::byte> AssetManager::getSoundData(GameAssets::Sounds soundId) {
+MIX_Audio* AssetManager::getSound(GameAssets::Sounds soundId, MIX_Mixer* mixerDevice) {
     assert(
         soundId >= static_cast<GameAssets::Sounds>(0) && soundId < GameAssets::Sounds::SoundsCount
     );
-    std::filesystem::path relativePath =
-        GameAssets::Paths.Sounds / GameAssets::FileNames.Sounds[static_cast<size_t>(soundId)];
-    auto data = loadFileToBuffer(relativePath);
+    std::filesystem::path path = basePath / GameAssets::Paths.Sounds /
+                                 GameAssets::FileNames.Sounds[static_cast<size_t>(soundId)];
+    SDL_IOStream* io = SDL_IOFromFile(path.string().c_str(), "r");
+    if (!io) {
+        SDL_LogWarn(
+            SDL_LOG_CATEGORY_AUDIO,
+            "Unable to create SDL io for sound \"%s\": %s",
+            GameAssets::FileNames.Sounds[static_cast<size_t>(soundId)],
+            SDL_GetError()
+        );
+        return nullptr;
+    }
+    MIX_Audio* sound = MIX_LoadAudio_IO(mixerDevice, io, true, true);
+    if (!sound) {
+        SDL_LogError(
+            SDL_LOG_CATEGORY_AUDIO,
+            "Unable to load audio io for sound \"%s\": %s",
+            GameAssets::FileNames.Sounds[static_cast<size_t>(soundId)],
+            SDL_GetError()
+        );
+        return nullptr;
+    }
     SDL_Log(
-        "Got raw sound data from file \"%s\"",
-        GameAssets::FileNames.Sounds[static_cast<size_t>(soundId)]
+        "Loaded sound from file \"%s\"", GameAssets::FileNames.Sounds[static_cast<size_t>(soundId)]
     );
-    return data;
+    return sound;
 }
 
-std::vector<std::byte> AssetManager::getMusicData(GameAssets::Music musicId) {
+MIX_Audio* AssetManager::getMusic(GameAssets::Music musicId, MIX_Mixer* mixerDevice) {
     assert(musicId >= static_cast<GameAssets::Music>(0) && musicId < GameAssets::Music::MusicCount);
-    std::filesystem::path relativePath =
-        GameAssets::Paths.Music / GameAssets::FileNames.Music[static_cast<size_t>(musicId)];
-    auto data = loadFileToBuffer(relativePath);
+    std::filesystem::path path = basePath / GameAssets::Paths.Music /
+                                 GameAssets::FileNames.Music[static_cast<size_t>(musicId)];
+    SDL_IOStream* io = SDL_IOFromFile(path.string().c_str(), "r");
+    if (!io) {
+        SDL_LogWarn(
+            SDL_LOG_CATEGORY_AUDIO,
+            "Unable to create SDL io for music \"%s\": %s",
+            GameAssets::FileNames.Music[static_cast<size_t>(musicId)],
+            SDL_GetError()
+        );
+        return nullptr;
+    }
+    MIX_Audio* music = MIX_LoadAudio_IO(mixerDevice, io, false, true);
+    if (!music) {
+        SDL_LogError(
+            SDL_LOG_CATEGORY_AUDIO,
+            "Mixer failed to load audio IO for music \"%s\": %s",
+            GameAssets::FileNames.Music[static_cast<size_t>(musicId)],
+            SDL_GetError()
+        );
+        return nullptr;
+    }
     SDL_Log(
-        "Got raw music data from file \"%s\"",
-        GameAssets::FileNames.Music[static_cast<size_t>(musicId)]
+        "Loaded music from file \"%s\"", GameAssets::FileNames.Music[static_cast<size_t>(musicId)]
     );
-    return data;
+    return music;
 }
 
 SDL_Texture* AssetManager::getTexture(GameAssets::Textures textureId) {

@@ -26,30 +26,7 @@ AudioManager::AudioManager(AssetManager& assetManager) : assets{&assetManager} {
     SDL_Log("Created SDL3 mixer audio tracks");
     loadedSounds.fill(nullptr);
     for (size_t i = 0; i < static_cast<size_t>(GameAssets::Sounds::SoundsCount); i++) {
-        const auto rawData = assets->getSoundData(static_cast<GameAssets::Sounds>(i));
-        if (rawData.empty()) {
-            continue;
-        }
-        SDL_IOStream* io = SDL_IOFromConstMem(rawData.data(), rawData.size());
-        if (!io) {
-            SDL_LogWarn(
-                SDL_LOG_CATEGORY_AUDIO,
-                "Unable to create SDL io for sound \"%s\": %s",
-                GameAssets::FileNames.Sounds[i],
-                SDL_GetError()
-            );
-            continue;
-        }
-        loadedSounds[i] = MIX_LoadAudio_IO(mixerDevice, io, true, true);
-        if (!loadedSounds[i]) {
-            SDL_LogError(
-                SDL_LOG_CATEGORY_AUDIO,
-                "Unable to load audio io for sound \"%s\": %s",
-                GameAssets::FileNames.Sounds[i],
-                SDL_GetError()
-            );
-            continue;
-        }
+        loadedSounds[i] = assets->getSound(static_cast<GameAssets::Sounds>(i), mixerDevice);
     }
     volumeMultipliers.fill(1.f);
 }
@@ -137,29 +114,8 @@ void AudioManager::playMusic(
         );
         return;
     }
-    const auto rawData = assets->getMusicData(musicId);
-    if (rawData.empty()) {
-        // Already logs error to console inside getMusicData func
-        return;
-    }
-    SDL_IOStream* io = SDL_IOFromConstMem(rawData.data(), rawData.size());
-    if (!io) {
-        SDL_LogWarn(
-            SDL_LOG_CATEGORY_AUDIO,
-            "Unable to create SDL io for music \"%s\": %s",
-            GameAssets::FileNames.Music[static_cast<size_t>(musicId)],
-            SDL_GetError()
-        );
-        return;
-    }
-    currentMusic = MIX_LoadAudio_IO(mixerDevice, io, false, true);
+    currentMusic = assets->getMusic(musicId, mixerDevice);
     if (!currentMusic) {
-        SDL_LogError(
-            SDL_LOG_CATEGORY_AUDIO,
-            "Mixer failed to load audio IO for music \"%s\": %s",
-            GameAssets::FileNames.Music[static_cast<size_t>(musicId)],
-            SDL_GetError()
-        );
         return;
     }
     MIX_SetTrackFrequencyRatio(musicTrack, pitch);

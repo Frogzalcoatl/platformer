@@ -1,7 +1,6 @@
 #pragma once
 #include "AssetManager.hpp"
 #include "AudioManager.hpp"
-#include "Camera.hpp"
 #include "InputManager.hpp"
 #include "Level.hpp"
 #include "WindowManager.hpp"
@@ -15,7 +14,6 @@ class Platformer {
     AssetManager assets;
     AudioManager audio;
     InputManager input;
-    Camera camera;
     std::unique_ptr<Level> currentLevel;
     bool showFanTriangulation = false;
 

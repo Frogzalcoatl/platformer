@@ -1,7 +1,8 @@
 #include "Level.hpp"
 #include "Drawing.hpp"
 
-Level::Level(const char* levelName) : levelName(levelName) {
+Level::Level(const char* levelName, WindowManager& window)
+    : camera(nullptr, window), levelName(levelName) {
     b2WorldDef worldDef = b2DefaultWorldDef();
     worldDef.gravity = {0.0f, -60.f};
     world = b2CreateWorld(&worldDef);
@@ -38,6 +39,7 @@ float Level::update() {
 }
 
 void Level::draw(WindowManager& window, float alpha, bool showFanTriangulation) {
+    camera.run(alpha);
     for (const auto& entity : entities) {
         if (entity) {
             entity->draw(window, alpha);
@@ -56,7 +58,7 @@ void Level::draw(WindowManager& window, float alpha, bool showFanTriangulation) 
     }
 }
 
-void Level::handleInput(GameEventTypes::Input event, Camera* camera) {
+void Level::handleInput(GameEventTypes::Input event) {
     EntityController* playerForInput = nullptr;
     for (auto& player : players) {
         if (!player) {
@@ -69,7 +71,7 @@ void Level::handleInput(GameEventTypes::Input event, Camera* camera) {
     if (!playerForInput) {
         return;
     }
-    playerForInput->handleInput(event, camera);
+    playerForInput->handleInput(event, &camera);
 }
 
 void Level::addEntity(std::unique_ptr<Entity> entity) {
@@ -98,8 +100,8 @@ b2WorldId Level::getWorldId() const {
     return world;
 }
 
-std::unique_ptr<Level> getTemplateLevel(AssetManager& assets) {
-    auto level = std::make_unique<Level>("Template");
+std::unique_ptr<Level> getTemplateLevel(AssetManager& assets, WindowManager& window) {
+    auto level = std::make_unique<Level>("Template", window);
     b2BodyDef playerBodyDef = b2DefaultBodyDef();
     playerBodyDef.fixedRotation = false;
     b2ShapeDef playerShapeDef = b2DefaultShapeDef();
@@ -114,6 +116,8 @@ std::unique_ptr<Level> getTemplateLevel(AssetManager& assets) {
         playerBodyDef,
         playerShapeDef
     );
+    level->camera.minViewableY = 0.f;
+    level->camera.entityToFollow = playerEntity.get();
     auto controller = std::make_unique<EntityController>(*playerEntity);
     controller->spawnPoint = b2Vec2{0.f, 4.f};
     level->addPlayer(std::move(controller));

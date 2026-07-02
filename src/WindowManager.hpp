@@ -19,7 +19,7 @@ class WindowManager {
     Uint64 targetFps = 240;
     Uint64 targetFrameTimeNs = 1000000000ULL / targetFps;
     bool vsync = false;
-    bool fpsUnlimited;
+    bool fpsUnlimited = false;
     SDL_Renderer* sdlRenderer;
     SDL_Window* sdlWindow;
 

@@ -21,6 +21,7 @@ getPolygonPoints(const b2Polygon& polygon, b2Transform& transform, WindowManager
     return points;
 }
 
+// TODO: Account for polygon radius
 void Drawing::polygon(
     const b2Polygon& polygon, b2Transform& transform, WindowManager& window, SDL_FColor color
 ) {
@@ -88,14 +89,6 @@ void Drawing::showFanTriangulation(
         SDL_RenderLine(renderer, points[0].x, points[0].y, points[i].x, points[i].y);
     }
 }
-
-/* Finish later fr
-// Radians are counted from the positive x-axis
-static void drawArcSlice(
-    SDL_Vertex center, float radius, float minRadians, float maxRadians, WindowManager& window,
-    SDL_FColor color
-) {}
-*/
 
 static const float TextShrinkageMultiplier = 25.f;
 

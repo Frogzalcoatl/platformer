@@ -9,17 +9,11 @@
 #include <imgui_impl_sdlrenderer3.h>
 
 Platformer::Platformer()
-    : window{"C++ Platformer", Colors.BackGround}, assets{window.getSdlRenderer()}, audio{assets},
-      camera{Camera{nullptr, window}} {
+    : window{"C++ Platformer", Colors.BackGround}, assets{window.getSdlRenderer()}, audio{assets} {
     UserInterface::keybindsUpdate(input);
     DiscordRpcManager::init();
     DiscordRpcManager::setStatus("In Development...", nullptr);
-    currentLevel = getTemplateLevel(assets);
-    const auto& players = currentLevel->getPlayers();
-    if (players.size() >= 1) {
-        camera.entityToFollow = players[0]->getEntity();
-    }
-    camera.minViewableY = 0.f;
+    currentLevel = getTemplateLevel(assets, window);
 }
 
 void Platformer::handleSdlEvent() {
@@ -83,7 +77,7 @@ void Platformer::handleGameEvent() {
                     break;
                 }
             }
-            currentLevel->handleInput(*inputEvent, &camera);
+            currentLevel->handleInput(*inputEvent);
         }
     }
 }
@@ -98,18 +92,23 @@ void Platformer::run() {
         handleGameEvent();
         float alpha = currentLevel->update();
         window.clearFrame();
-        camera.run(alpha);
         if (currentLevel) {
             currentLevel->draw(window, alpha, showFanTriangulation);
         }
-        if (camera.entityToFollow) {
-            b2Vec2 textPos = camera.entityToFollow->getInterpolatedPosition(alpha);
+        if (currentLevel->camera.entityToFollow) {
+            b2Vec2 textPos = currentLevel->camera.entityToFollow->getInterpolatedPosition(alpha);
             textPos.y += 2.f;
             Drawing::text(window, text, assets.textResolutionScaleFactor, textPos);
         }
         UserInterface::keybindsShow();
         UserInterface::audio(audio);
-        UserInterface::debug(window, camera.entityToFollow, camera, input, showFanTriangulation);
+        UserInterface::debug(
+            window,
+            currentLevel->camera.entityToFollow,
+            currentLevel->camera,
+            input,
+            showFanTriangulation
+        );
         window.render(frameStartNs);
         DiscordRpcManager::update();
     }

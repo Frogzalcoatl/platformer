@@ -247,8 +247,6 @@ std::vector<GameEventTypes::Input> InputManager::getInputEventsFromSDLEvent(SDL_
         if (io.WantCaptureKeyboard != isImGuiCapturingKeyboard) {
             isImGuiCapturingKeyboard = io.WantCaptureKeyboard;
             if (isImGuiCapturingKeyboard) {
-                SDL_Log("Ran reset");
-                // Reset all verbs when ui lib captures keyboard.
                 for (size_t i = 0; i < keyboardVerbsPressed.size(); i++) {
                     int& amountPressed = keyboardVerbsPressed[i];
                     if (amountPressed > 0) {

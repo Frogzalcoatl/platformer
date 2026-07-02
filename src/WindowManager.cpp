@@ -131,6 +131,9 @@ void WindowManager::setTargetFps(Uint64 value) {
 }
 
 void WindowManager::setVsync(bool value) {
+    if (value && fpsUnlimited) {
+        setFpsUnlimited(false);
+    }
     int arg = value == true ? 1 : 0;
     if (!SDL_SetRenderVSync(sdlRenderer, arg)) {
         SDL_LogError(SDL_LOG_CATEGORY_RENDER, "Failed to toggle VSync: %s", SDL_GetError());

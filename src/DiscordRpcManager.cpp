@@ -12,7 +12,7 @@ static const char* ApplicationId = "1521649642360668300";
 static void handleDiscordReady(const DiscordUser* connectedUser) {
     (void)connectedUser;
     isConnected = true;
-    SDL_Log("discord-rpc connected");
+    SDL_Log("Discord RPC connected");
     DiscordRpcManager::setStatus(presence.state, presence.details);
 }
 
@@ -20,7 +20,7 @@ static void handleDiscordDisconnected(int errorCode, const char* message) {
     (void)errorCode;
     (void)message;
     isConnected = false;
-    SDL_Log("discord-rpc disconnected");
+    SDL_Log("Discord RPC disconnected");
 }
 
 static void discordConnect() {
@@ -42,7 +42,7 @@ void DiscordRpcManager::setStatus(const char* state, const char* details) {
     presence.largeImageText = "Platformer";
     Discord_UpdatePresence(&presence);
     SDL_Log(
-        "discord-rpc updated status: \"%s\" | \"%s\" | \"%s\"",
+        "Set Discord RPC status: \"%s\" | \"%s\" | \"%s\"",
         presence.largeImageText,
         presence.state,
         presence.details
@@ -62,5 +62,5 @@ void DiscordRpcManager::update() {
 
 void DiscordRpcManager::shutdown() {
     Discord_Shutdown();
-    SDL_Log("Shutdown discord-rpc");
+    SDL_Log("Shutdown Discord RPC");
 }

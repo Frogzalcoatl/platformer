@@ -61,7 +61,7 @@ struct CachedFont {
 
 class AssetManager {
   private:
-    std::filesystem::path basePath;
+    const std::filesystem::path basePath;
     std::vector<std::byte> loadFileToBuffer(const std::filesystem::path relativeFilePath);
     std::array<std::vector<std::byte>, static_cast<size_t>(GameAssets::Fonts::FontCount)> fontData;
     std::vector<CachedFont> fontCache;
@@ -93,8 +93,8 @@ class AssetManager {
     void clearFontCache();
     void clearFontData();
 
-    std::vector<std::byte> getSoundData(GameAssets::Sounds soundId);
-    std::vector<std::byte> getMusicData(GameAssets::Music musicId);
+    MIX_Audio* getSound(GameAssets::Sounds soundId, MIX_Mixer* mixerDevice);
+    MIX_Audio* getMusic(GameAssets::Music musicId, MIX_Mixer* mixerDevice);
 
     SDL_Texture* getTexture(GameAssets::Textures textureId);
 };

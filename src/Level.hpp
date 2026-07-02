@@ -17,12 +17,12 @@ class Level {
     const float physicsStep = 1.0f / 60.0f;
 
   public:
+    Camera camera;
     const char* levelName;
-    Level(const char* levelName);
+    Level(const char* levelName, WindowManager& window);
     ~Level();
-    // Returns alpha
-    float update();
-    void handleInput(GameEventTypes::Input event, Camera* camera);
+    float update(); // Returns alpha
+    void handleInput(GameEventTypes::Input event);
     void draw(WindowManager& window, float alpha, bool showFanTriangulation = false);
     void addEntity(std::unique_ptr<Entity> entity);
     void addTile(std::unique_ptr<Tile> tile);
@@ -33,4 +33,4 @@ class Level {
     b2WorldId getWorldId() const;
 };
 
-std::unique_ptr<Level> getTemplateLevel(AssetManager& assets);
+std::unique_ptr<Level> getTemplateLevel(AssetManager& assets, WindowManager& window);
