@@ -4,7 +4,6 @@
 void UserInterface::debug(
     WindowManager& window,
     Entity* player,
-    EntityController& entityController,
     Camera& camera,
     InputManager& input,
     bool& showFanTriangulation
@@ -56,16 +55,11 @@ void UserInterface::debug(
         b2Vec2 velocity = b2Body_GetLinearVelocity(player->getBodyId());
         ImGui::Text("\nPlayer:");
         ImGui::Text(
-            "Position: %.2f, %.2f\nVelocity: %.2f, %.2f\nInput: Up %d, Down %d, Left %d, Right %d, Sprint %d",
+            "Position: %.2f, %.2f\nVelocity: %.2f, %.2f",
             position.x,
             position.y,
             velocity.x,
-            velocity.y,
-            entityController.movement[static_cast<size_t>(EntityMovement::Up)],
-            entityController.movement[static_cast<size_t>(EntityMovement::Down)],
-            entityController.movement[static_cast<size_t>(EntityMovement::Left)],
-            entityController.movement[static_cast<size_t>(EntityMovement::Right)],
-            entityController.isSprinting
+            velocity.y
         );
     }
     if (camera.entityToFollow) {

@@ -19,7 +19,8 @@ static std::optional<EntityMovement> inputVerbToDirection(InputVerb verb) {
     }
 }
 
-EntityController::EntityController(Entity& entity) : entity(&entity) {
+EntityController::EntityController(Entity& entity, std::optional<SDL_JoystickID> joystickId)
+    : entity(&entity), joystickId(joystickId) {
 }
 
 void EntityController::setEntity(Entity& entity) {

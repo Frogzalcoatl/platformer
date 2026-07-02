@@ -2,6 +2,8 @@
 #include "Camera.hpp"
 #include "Entity.hpp"
 #include "Events.hpp"
+#include "InputManager.hpp"
+#include <optional>
 
 class EntityController {
   private:
@@ -9,7 +11,8 @@ class EntityController {
 
   public:
     EntityController() = default;
-    EntityController(Entity& entity);
+    EntityController(Entity& entity, std::optional<SDL_JoystickID> joystickId = std::nullopt);
+    std::optional<SDL_JoystickID> joystickId;
     b2Vec2 spawnPoint = {0.f, 0.f};
     float jumpForceNewtons = 20.f;
     float horizontalSpeed = 10.f;

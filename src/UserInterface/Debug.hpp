@@ -9,7 +9,6 @@ namespace UserInterface {
 void debug(
     WindowManager& window,
     Entity* player,
-    EntityController& entityController,
     Camera& camera,
     InputManager& input,
     bool& showFanTriangulation

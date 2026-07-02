@@ -11,76 +11,15 @@
 Platformer::Platformer()
     : window{"C++ Platformer", Colors.BackGround}, assets{window.getSdlRenderer()}, audio{assets},
       camera{Camera{nullptr, window}} {
-    b2WorldDef worldDef = b2DefaultWorldDef();
-    worldDef.gravity = {0.0f, -60.f};
-    world = b2CreateWorld(&worldDef);
-    SDL_Log("Created box2d world");
-    camera.minViewableY = 0.f;
     UserInterface::keybindsUpdate(input);
     DiscordRpcManager::init();
     DiscordRpcManager::setStatus("In Development...", nullptr);
-    // Test player
-    b2BodyDef playerBodyDef = b2DefaultBodyDef();
-    playerBodyDef.fixedRotation = false;
-    b2ShapeDef playerShapeDef = b2DefaultShapeDef();
-    playerShapeDef.density = 1.f;
-    entities.push_back(
-        std::make_unique<Entity>(
-            world,
-            b2MakeBox(0.5f, 0.5f),
-            b2Vec2{0.f, 4.f},
-            hexToColor(0xBA988AFF),
-            false,
-            playerBodyDef,
-            playerShapeDef
-        )
-    );
-    player = entities.front().get();
-    camera.entityToFollow = player;
-    entityController.setEntity(*player);
-    entityController.spawnPoint = b2Vec2{0.f, 4.f};
-    // Tempoaray test entities
-    entities.push_back(
-        std::make_unique<Entity>(
-            world, b2MakeBox(50.f, 1.5f), b2Vec2{0.f, 0.f}, Colors.GrassGreen, true
-        )
-    );
-    entities.push_back(
-        std::make_unique<Entity>(
-            world, b2MakeBox(0.5f, 10.f), b2Vec2{-18.f, 11.5f}, Colors.Gray, true
-        )
-    );
-    entities.push_back(
-        std::make_unique<Entity>(
-            world, b2MakeBox(0.5f, 10.f), b2Vec2{18.f, 11.5f}, Colors.Gray, true
-        )
-    );
-    b2BodyDef dynamicBodyDef = b2DefaultBodyDef();
-    dynamicBodyDef.type = b2_dynamicBody;
-    entities.push_back(
-        std::make_unique<Entity>(
-            world,
-            b2MakeBox(0.5f, 2.f),
-            b2Vec2{10.f, 3.f},
-            Colors.Brown,
-            false,
-            dynamicBodyDef,
-            b2DefaultShapeDef()
-        )
-    );
-    entities.push_back(
-        std::make_unique<Entity>(
-            world,
-            b2MakeBox(0.5f, 1.f),
-            b2Vec2{-10.f, 3.f},
-            Colors.Brown,
-            false,
-            dynamicBodyDef,
-            b2DefaultShapeDef()
-        )
-    );
-    // Temporary test tiles
-    tiles.push_back(std::make_unique<Tile>(Vec2Int{0, 10}, assets, GameAssets::Textures::Test));
+    currentLevel = getTemplateLevel(assets);
+    const auto& players = currentLevel->getPlayers();
+    if (players.size() >= 1) {
+        camera.entityToFollow = players[0]->getEntity();
+    }
+    camera.minViewableY = 0.f;
 }
 
 void Platformer::handleSdlEvent() {
@@ -144,32 +83,9 @@ void Platformer::handleGameEvent() {
                     break;
                 }
             }
-            if (player) {
-                entityController.handleInput(*inputEvent, &camera);
-            }
+            currentLevel->handleInput(*inputEvent, &camera);
         }
     }
-}
-
-float Platformer::physicsStepHandler() {
-    currentTime = SDL_GetTicks();
-    float deltaTime = (float)(currentTime - lastTime) / 1000.0f;
-    lastTime = currentTime;
-    if (deltaTime > 0.1f) {
-        deltaTime = 0.1f;
-    }
-    accumulator += deltaTime;
-    while (accumulator >= physicsStep) {
-        for (const auto& entity : entities) {
-            if (entity) {
-                entity->savePreviousState();
-            }
-        }
-        entityController.update();
-        b2World_Step(world, physicsStep, 4);
-        accumulator -= physicsStep;
-    }
-    return accumulator / physicsStep;
 }
 
 void Platformer::run() {
@@ -180,31 +96,20 @@ void Platformer::run() {
         const Uint64 frameStartNs = SDL_GetTicksNS();
         handleSdlEvent();
         handleGameEvent();
-        float alpha = physicsStepHandler();
+        float alpha = currentLevel->update();
         window.clearFrame();
         camera.run(alpha);
-        for (const auto& entity : entities) {
-            if (entity) {
-                entity->draw(window, alpha);
-                if (showFanTriangulation) {
-                    b2Transform transform;
-                    transform.p = entity->getInterpolatedPosition(alpha);
-                    transform.q = entity->getInterpolatedRotation(alpha);
-                    Drawing::showFanTriangulation(entity->getPolygon(), transform, window);
-                }
-            }
+        if (currentLevel) {
+            currentLevel->draw(window, alpha, showFanTriangulation);
         }
-        for (const auto& tile : tiles) {
-            if (tile) {
-                tile->draw(window);
-            }
+        if (camera.entityToFollow) {
+            b2Vec2 textPos = camera.entityToFollow->getInterpolatedPosition(alpha);
+            textPos.y += 2.f;
+            Drawing::text(window, text, assets.textResolutionScaleFactor, textPos);
         }
-        b2Vec2 textPos = player->getInterpolatedPosition(alpha);
-        textPos.y += 2.f;
-        Drawing::text(window, text, assets.textResolutionScaleFactor, textPos);
         UserInterface::keybindsShow();
         UserInterface::audio(audio);
-        UserInterface::debug(window, player, entityController, camera, input, showFanTriangulation);
+        UserInterface::debug(window, camera.entityToFollow, camera, input, showFanTriangulation);
         window.render(frameStartNs);
         DiscordRpcManager::update();
     }
@@ -212,10 +117,6 @@ void Platformer::run() {
 
 void Platformer::close() {
     DiscordRpcManager::shutdown();
-    entities.clear();
-    SDL_Log("Cleared entities");
-    b2DestroyWorld(world);
-    SDL_Log("Destroyed box2d world");
     assets.closeAll();
     window.cleanup();
     ImGui_ImplSDLRenderer3_Shutdown();

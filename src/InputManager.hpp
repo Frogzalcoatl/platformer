@@ -66,7 +66,7 @@ struct Input {
     InputVerb verb;
     InputState state;
     InputSource source;
-    std::optional<SDL_JoystickID> joystickID = std::nullopt;
+    std::optional<SDL_JoystickID> joystickId = std::nullopt;
 };
 }; // namespace GameEventTypes
 
