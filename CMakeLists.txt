@@ -55,7 +55,24 @@ endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/src/*.cpp")
+set(SOURCES
+    src/AssetManager.cpp
+    src/AudioManager.cpp
+    src/Camera.cpp
+    src/DiscordRpcManager.cpp
+    src/Drawing.cpp
+    src/Entity.cpp
+    src/EntityController.cpp
+    src/Events.cpp
+    src/FormatLogs.cpp
+    src/InputManager.cpp
+    src/Level.cpp
+    src/Main.cpp
+    src/Platformer.cpp
+    src/Tile.cpp
+    src/UiManager.cpp
+    src/WindowManager.cpp
+)
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 
@@ -85,10 +102,9 @@ if(WIN32)
     )
 endif()
 
-add_custom_target(copy_assets ALL
+add_custom_target(copy_assets
     COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
             "${CMAKE_CURRENT_SOURCE_DIR}/assets"
             "$<TARGET_FILE_DIR:${PROJECT_NAME}>/assets"
     COMMENT "Copying modified assets to the build directory next to the executable"
 )
-add_dependencies(${PROJECT_NAME} copy_assets)
