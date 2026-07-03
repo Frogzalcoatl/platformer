@@ -28,4 +28,5 @@ class EntityController {
     void jump();
     void respawn();
     void handleInput(GameEventTypes::Input event, Camera* camera);
+    void resetMovement();
 };

@@ -89,6 +89,12 @@ void Platformer::handleGameEvent() {
                     break;
                 case InputVerb::Cancel:
                     ui.runCancelEvent();
+                    if (currentLevel) {
+                        const auto& players = currentLevel.get()->getPlayers();
+                        for (const auto& player : players) {
+                            player->resetMovement();
+                        }
+                    }
                     break;
                 default:
                     break;

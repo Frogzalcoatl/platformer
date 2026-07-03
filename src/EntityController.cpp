@@ -107,3 +107,10 @@ void EntityController::handleInput(GameEventTypes::Input event, Camera* camera) 
     bool shouldBeMoving = event.state == InputState::Pressed;
     movement[static_cast<size_t>(direction)] = shouldBeMoving;
 }
+
+void EntityController::resetMovement() {
+    for (size_t i = 0; i < movement.size(); i++) {
+        movement[i] = false;
+    }
+    isSprinting = false;
+}
