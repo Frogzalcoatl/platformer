@@ -32,8 +32,8 @@ class AudioManager {
     AudioManager(AssetManager& assets);
     ~AudioManager();
 
-    void playSound(GameAssets::Sounds soundId, unsigned int volume = 100, float pitch = 1.f);
-    void playMusic(
+    bool playSound(GameAssets::Sounds soundId, unsigned int volume = 100, float pitch = 1.f);
+    bool playMusic(
         GameAssets::Music musicId, unsigned int volume = 100, float pitch = 1.f, bool loop = false
     );
     void setVolume(AudioCategory category, unsigned int volume);

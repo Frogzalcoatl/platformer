@@ -94,12 +94,12 @@ void UiManager::runCancelEvent() {
 void UiManager::drawDebug(
     WindowManager& window, Entity* player, Camera* camera, InputManager& input
 ) {
-    ImGui::Begin("Debug Menu");
     ImGui::PushFont(monocraftSmall);
+    ImGui::Begin("Debug Menu");
     ImGui::Text("Window:");
     WindowDimensions windowSize = window.getSize();
     ImGui::Text(
-        "Size: %d, %d\n%.1f/%s FPS (%.3f ms/frame)",
+        "Size: %d, %d\nFPS: %.1f/%s (%.3f ms/frame)",
         windowSize.x,
         windowSize.y,
         ImGui::GetIO().Framerate,
@@ -108,7 +108,6 @@ void UiManager::drawDebug(
     );
     ImGui::Dummy(ImVec2{1.f, 1.f});
     if (player) {
-        ImGui::Dummy(ImVec2{1.f, 1.f});
         b2Vec2 position = b2Body_GetPosition(player->getBodyId());
         b2Vec2 velocity = b2Body_GetLinearVelocity(player->getBodyId());
         ImGui::Text("\nPlayer:");
@@ -119,9 +118,9 @@ void UiManager::drawDebug(
             velocity.x,
             velocity.y
         );
+        ImGui::Dummy(ImVec2{1.f, 1.f});
     }
     if (camera && camera->entityToFollow) {
-        ImGui::Dummy(ImVec2{1.f, 1.f});
         b2Vec2 safeAreaSize = camera->getSafeAreaSize();
         b2Vec2 safeAreaValue = camera->getEntitySafeAreaValue();
         ImGui::Text("\nCamera:");
@@ -132,8 +131,8 @@ void UiManager::drawDebug(
             safeAreaValue.x,
             safeAreaValue.y
         );
+        ImGui::Dummy(ImVec2{1.f, 1.f});
     }
-    ImGui::Dummy(ImVec2{1.f, 1.f});
     size_t controllersConnected = input.getGamepadCount();
     ImGui::Text("\nControllers Connected: %zu", controllersConnected);
     ImGui::PopFont();

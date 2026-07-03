@@ -12,17 +12,17 @@ WindowManager::WindowManager(const char* windowName, SDL_Color backgroundColor)
         SDL_CreateWindow(windowName, size.x, size.y, SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED);
     if (!sdlWindow) {
         SDL_LogError(
-            SDL_LOG_CATEGORY_APPLICATION, "Unable to create SDL Window: %s", SDL_GetError()
+            SDL_LOG_CATEGORY_APPLICATION, "Unable to create SDL3 Window: %s", SDL_GetError()
         );
         return;
     }
-    SDL_Log("Created SDL Window with name \"%s\"", windowName);
+    SDL_Log("Created SDL3 Window with name \"%s\"", windowName);
     sdlRenderer = SDL_CreateRenderer(sdlWindow, nullptr);
     if (!sdlRenderer) {
-        SDL_LogError(SDL_LOG_CATEGORY_RENDER, "Unable to create SDL renderer: %s", SDL_GetError());
+        SDL_LogError(SDL_LOG_CATEGORY_RENDER, "Unable to create SDL3 renderer: %s", SDL_GetError());
         return;
     }
-    SDL_Log("Created SDL renderer");
+    SDL_Log("Created SDL3 renderer");
     setVsync(vsync);
     setTargetFps(240);
     ImGui_ImplSDL3_InitForSDLRenderer(sdlWindow, sdlRenderer);
@@ -37,12 +37,12 @@ void WindowManager::cleanup() {
     if (sdlRenderer) {
         SDL_DestroyRenderer(sdlRenderer);
         sdlRenderer = nullptr;
-        SDL_Log("Destroyed SDL renderer");
+        SDL_Log("Destroyed SDL3 renderer");
     }
     if (sdlWindow) {
         SDL_DestroyWindow(sdlWindow);
         sdlWindow = nullptr;
-        SDL_Log("Destroyed SDL window");
+        SDL_Log("Destroyed SDL3 window");
     }
 }
 

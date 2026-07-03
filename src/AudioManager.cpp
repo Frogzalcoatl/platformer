@@ -16,7 +16,7 @@ AudioManager::AudioManager(AssetManager& assetManager) : assets{&assetManager} {
         );
         return;
     }
-    SDL_Log("Created SDL mixer device");
+    SDL_Log("Created SDL3 mixer device");
     for (size_t i = 0; i < SoundTrackCount; i++) {
         soundTracks[i] = MIX_CreateTrack(mixerDevice);
         MIX_TagTrack(soundTracks[i], SoundTag);
@@ -36,14 +36,14 @@ AudioManager::~AudioManager() {
         MIX_SetTrackAudio(musicTrack, nullptr);
         MIX_DestroyTrack(musicTrack);
         musicTrack = nullptr;
-        SDL_Log("Destroyed SDL Mixer music track");
+        SDL_Log("Destroyed SDL3 Mixer music track");
     }
     for (size_t i = 0; i < SoundTrackCount; i++) {
         if (soundTracks[i]) {
             MIX_SetTrackAudio(soundTracks[i], nullptr);
             MIX_DestroyTrack(soundTracks[i]);
             soundTracks[i] = nullptr;
-            SDL_Log("Destroyed SDL Mixer sound track at index %zu", i);
+            SDL_Log("Destroyed SDL3 Mixer sound track at index %zu", i);
         }
     }
     for (size_t i = 0; i < static_cast<size_t>(GameAssets::Sounds::SoundsCount); i++) {
@@ -59,11 +59,11 @@ AudioManager::~AudioManager() {
     if (mixerDevice) {
         MIX_DestroyMixer(mixerDevice);
         mixerDevice = nullptr;
-        SDL_Log("Destroyed SDL mixer device");
+        SDL_Log("Destroyed SDL3 mixer device");
     }
 }
 
-void AudioManager::playSound(GameAssets::Sounds soundId, unsigned int volume, float pitch) {
+bool AudioManager::playSound(GameAssets::Sounds soundId, unsigned int volume, float pitch) {
     assert(
         soundId >= static_cast<GameAssets::Sounds>(0) && soundId < GameAssets::Sounds::SoundsCount
     );
@@ -74,7 +74,7 @@ void AudioManager::playSound(GameAssets::Sounds soundId, unsigned int volume, fl
             "Ignoring attempt to play null sound \"%s\"",
             GameAssets::FileNames.Sounds[static_cast<size_t>(soundId)]
         );
-        return;
+        return false;
     }
     MIX_Track* freeTrack = nullptr;
     for (size_t i = 0; i < SoundTrackCount; i++) {
@@ -95,14 +95,21 @@ void AudioManager::playSound(GameAssets::Sounds soundId, unsigned int volume, fl
     );
     MIX_SetTrackAudio(freeTrack, sound);
     MIX_PlayTrack(freeTrack, 0);
+    return true;
 }
 
-void AudioManager::playMusic(
+bool AudioManager::playMusic(
     GameAssets::Music musicId, unsigned int volume, float pitch, bool loop
 ) {
     assert(musicId >= static_cast<GameAssets::Music>(0) && musicId < GameAssets::Music::MusicCount);
     if (!musicTrack) {
-        return;
+        SDL_LogError(
+            SDL_LOG_CATEGORY_AUDIO,
+            "Unable to player music %s due to null SDL3 mixer music track",
+            GameAssets::FileNames.Music[static_cast<size_t>(musicId)]
+        );
+        clearCurrentMusic();
+        return false;
     }
     MIX_PauseTrack(musicTrack);
     if (currentMusic) {
@@ -115,11 +122,13 @@ void AudioManager::playMusic(
             "Unable to play music %s due to null asset manager ptr",
             GameAssets::FileNames.Music[static_cast<size_t>(musicId)]
         );
-        return;
+        clearCurrentMusic();
+        return false;
     }
     currentMusic = assets->getMusic(musicId, mixerDevice);
     if (!currentMusic) {
-        return;
+        clearCurrentMusic();
+        return false;
     }
     MIX_SetTrackFrequencyRatio(musicTrack, pitch);
     MIX_SetTagGain(
@@ -137,6 +146,7 @@ void AudioManager::playMusic(
     MIX_PlayTrack(musicTrack, properties);
     SDL_DestroyProperties(properties);
     currentMusicName = GameAssets::FileNames.Music[static_cast<size_t>(musicId)];
+    return true;
 }
 
 void AudioManager::setVolume(AudioCategory category, unsigned int volume) {
@@ -165,6 +175,7 @@ void AudioManager::clearCurrentMusic() {
         MIX_DestroyAudio(currentMusic);
         currentMusic = nullptr;
     }
+    MIX_SetTrackAudio(musicTrack, nullptr);
     currentMusicName = "";
 }
 
@@ -215,7 +226,6 @@ Sint64 AudioManager::getMusicTimeRemaining() const {
 }
 
 Sint64 AudioManager::getMusicLength() const {
-    // Using this instead of currentMusic in case currentMusic has stopped playing
     MIX_Audio* music = MIX_GetTrackAudio(musicTrack);
     Sint64 sampleFrames = MIX_GetAudioDuration(music);
     return MIX_TrackFramesToMS(musicTrack, sampleFrames) / 1000;

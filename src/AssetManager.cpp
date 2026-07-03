@@ -35,7 +35,7 @@ AssetManager::AssetManager(SDL_Renderer* renderer)
     textEngine = TTF_CreateRendererTextEngine(renderer);
     if (!textEngine) {
         SDL_LogError(
-            SDL_LOG_CATEGORY_APPLICATION, "Unable to create SDL text engine: %s", SDL_GetError()
+            SDL_LOG_CATEGORY_APPLICATION, "Unable to create SDL3 text engine: %s", SDL_GetError()
         );
     }
     textureCache.fill(nullptr);
@@ -112,7 +112,7 @@ TTF_Font* AssetManager::getFont(GameAssets::Fonts fontId, float ptSize, TTF_Font
     newCachedFont.style = style;
     fontCache.push_back(newCachedFont);
     SDL_Log(
-        "Loaded SDL ttf from file \"%s\"", GameAssets::FileNames.Fonts[static_cast<size_t>(fontId)]
+        "Loaded SDL3 ttf from file \"%s\"", GameAssets::FileNames.Fonts[static_cast<size_t>(fontId)]
     );
     return newFont;
 }
@@ -162,7 +162,7 @@ MIX_Audio* AssetManager::getSound(GameAssets::Sounds soundId, MIX_Mixer* mixerDe
     if (!io) {
         SDL_LogWarn(
             SDL_LOG_CATEGORY_AUDIO,
-            "Unable to create SDL io for sound \"%s\": %s",
+            "Unable to create SDL3 io for sound \"%s\": %s",
             GameAssets::FileNames.Sounds[static_cast<size_t>(soundId)],
             SDL_GetError()
         );
@@ -190,9 +190,9 @@ MIX_Audio* AssetManager::getMusic(GameAssets::Music musicId, MIX_Mixer* mixerDev
                                  GameAssets::FileNames.Music[static_cast<size_t>(musicId)];
     SDL_IOStream* io = SDL_IOFromFile(path.string().c_str(), "r");
     if (!io) {
-        SDL_LogWarn(
+        SDL_LogError(
             SDL_LOG_CATEGORY_AUDIO,
-            "Unable to create SDL io for music \"%s\": %s",
+            "Unable to create SDL3 io for music \"%s\": %s",
             GameAssets::FileNames.Music[static_cast<size_t>(musicId)],
             SDL_GetError()
         );
@@ -222,7 +222,7 @@ SDL_Texture* AssetManager::getTexture(GameAssets::Textures textureId) {
     if (!renderer) {
         SDL_LogError(
             SDL_LOG_CATEGORY_APPLICATION,
-            "Unable to load SDL texture \"%s\": renderer is null",
+            "Unable to load SDL3 texture \"%s\": renderer is null",
             GameAssets::FileNames.Textures[static_cast<size_t>(textureId)]
         );
         return nullptr;
@@ -240,14 +240,14 @@ SDL_Texture* AssetManager::getTexture(GameAssets::Textures textureId) {
     if (!texture) {
         SDL_LogError(
             SDL_LOG_CATEGORY_APPLICATION,
-            "Unable to load SDL texture from file \"%s\": %s",
+            "Unable to load SDL3 texture from file \"%s\": %s",
             GameAssets::FileNames.Textures[static_cast<size_t>(textureId)],
             SDL_GetError()
         );
         return nullptr;
     }
     SDL_Log(
-        "Loaded SDL texture from file \"%s\"",
+        "Loaded SDL3 texture from file \"%s\"",
         GameAssets::FileNames.Textures[static_cast<size_t>(textureId)]
     );
     return texture;

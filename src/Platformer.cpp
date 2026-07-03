@@ -11,7 +11,7 @@ Platformer::Platformer()
     : window{"C++ Platformer", Colors.BackGround}, assets{window.getSdlRenderer()}, audio{assets},
       ui{assets} {
     DiscordRpcManager::init();
-    DiscordRpcManager::setStatus("In Development...", nullptr);
+    DiscordRpcManager::setStatus("In Development", nullptr);
 }
 
 void Platformer::handleSdlEvent() {
@@ -110,15 +110,19 @@ void Platformer::handleGameEvent() {
     }
 }
 
+static bool playMusicFailed = false;
+
 void Platformer::run() {
     TTF_Text* text = assets.getText("Player", GameAssets::Fonts::Monocraft, 20.f); // Just to test
     running = true;
     while (running) {
-        if (!audio.isMusicPlaying()) {
+        if (!audio.isMusicPlaying() && !playMusicFailed) {
             GameAssets::Music randomSong = static_cast<GameAssets::Music>(
                 SDL_floorf(static_cast<float>(GameAssets::Music::MusicCount) * SDL_randf())
             );
-            audio.playMusic(randomSong, 30, audio.getMusicPitch(), false);
+            if (!audio.playMusic(randomSong, 30, audio.getMusicPitch(), false)) {
+                playMusicFailed = true;
+            }
         }
         const Uint64 frameStartNs = SDL_GetTicksNS();
         handleSdlEvent();

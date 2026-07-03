@@ -13,6 +13,7 @@ Level::~Level() {
     entities.clear();
     players.clear();
     b2DestroyWorld(world);
+    SDL_Log("Destroyed box2d world for level \"%s\"", levelName);
 }
 
 float Level::update() {
