@@ -41,12 +41,14 @@ void DiscordRpcManager::setStatus(const char* state, const char* details) {
     presence.largeImageKey = "icon";
     presence.largeImageText = "Platformer";
     Discord_UpdatePresence(&presence);
-    SDL_Log(
-        "Set Discord RPC status: \"%s\" | \"%s\" | \"%s\"",
-        presence.largeImageText,
-        presence.state,
-        presence.details
-    );
+    if (isConnected) {
+        SDL_Log(
+            "Set Discord RPC status: \"%s\" | \"%s\" | \"%s\"",
+            presence.largeImageText,
+            presence.state,
+            presence.details
+        );
+    }
 }
 
 void DiscordRpcManager::update() {

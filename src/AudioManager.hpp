@@ -46,13 +46,14 @@ class AudioManager {
     UniqueMixer mixerDevice;
     std::array<UniqueTrack, SoundTrackCount> soundTracks;
     UniqueTrack musicTrack;
-    const char* SoundTag = "Sounds";
-    const char* MusicTag = "Music";
+    std::array<const char*, static_cast<size_t>(AudioCategory::AudioCategoryCount)> TagNames = {
+        "Master", "Sounds", "Music"
+    };
     std::array<UniqueAudio, static_cast<size_t>(GameAssets::Sounds::SoundsCount)> loadedSounds;
-    std::array<float, static_cast<size_t>(AudioCategory::AudioCategoryCount)> volumeMultipliers;
-    UniqueAudio currentMusic = nullptr;
+    std::array<float, static_cast<size_t>(AudioCategory::AudioCategoryCount)> tagGain;
     float currentMusicVolume =
         1.f; // Separate volume multiplier, based on volume passed into playMusic func
+    UniqueAudio currentMusic = nullptr;
     const char* currentMusicName = "";
 
   public:
@@ -65,6 +66,8 @@ class AudioManager {
     void setVolume(AudioCategory category, unsigned int volume);
     void setMusicPitch(float pitch);
     void clearCurrentMusic();
+    void pauseCategory(AudioCategory category);
+    void unpauseCategory(AudioCategory category);
     unsigned int getVolume(AudioCategory category);
     const char* getCurrentMusicName() const;
     float getMusicPitch() const;

@@ -80,7 +80,7 @@ void EntityController::respawn() {
 
 void EntityController::handleInput(GameEventTypes::Input event, Camera* camera) {
     assert(event.state == InputState::Pressed || event.state == InputState::Released);
-    assert(event.verb >= static_cast<InputVerb>(0) && event.verb < InputVerb::VerbCount);
+    assert(event.verb < InputVerb::VerbCount);
     if (!entity) {
         return;
     }

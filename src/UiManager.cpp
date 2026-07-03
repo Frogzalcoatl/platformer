@@ -24,10 +24,8 @@ UiManager::UiManager(AssetManager& assets, UiState startingState) : currentState
 }
 
 void UiManager::setState(UiState state) {
-    assert(state >= static_cast<UiState>(0) && state < UiState::UiStateCount);
+    assert(state < UiState::UiStateCount);
     currentState = state;
-    if (state == UiState::Settings || state == UiState::PausedSettings) {
-    }
 }
 
 UiState UiManager::getState() const {

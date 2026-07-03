@@ -15,7 +15,7 @@ AssetManager::loadFileToBuffer(const std::filesystem::path& relativeFilePath) {
     }
     const std::streamsize fileSize = file.tellg();
     if (fileSize <= 0) {
-        missingFileFatalError("File is empty of invalid: " + fullPath.string());
+        missingFileFatalError("File is empty or invalid: " + fullPath.string());
         return {};
     }
     std::vector<std::byte> buffer(static_cast<size_t>(fileSize));
@@ -61,7 +61,7 @@ TTF_Font* AssetManager::getFont(GameAssets::Fonts fontId, float ptSize, TTF_Font
     ptSize *= TextResolutionScaleFactor;
     const float epsilon = 0.001f; // If difference is less than this value then its a match
     for (size_t i = 0; i < fontCache.size(); i++) {
-        if (fontCache[i].fontId == fontId && (fontCache[i].ptSize - ptSize) < epsilon &&
+        if (fontCache[i].fontId == fontId && std::abs(fontCache[i].ptSize - ptSize) < epsilon &&
             fontCache[i].style == style) {
             return fontCache[i].font.get();
         }
@@ -105,8 +105,8 @@ TTF_Font* AssetManager::getFont(GameAssets::Fonts fontId, float ptSize, TTF_Font
     return newFont;
 }
 
-TTF_Text* AssetManager::getText(
-    std::string text, GameAssets::Fonts fontId, float ptSize, TTF_FontStyleFlags style
+UniqueText AssetManager::getText(
+    const std::string& text, GameAssets::Fonts fontId, float ptSize, TTF_FontStyleFlags style
 ) {
     if (!textEngine) {
         missingFileFatalError("Unable to get text. SDL3 text engine is null.");
@@ -120,7 +120,7 @@ TTF_Text* AssetManager::getText(
         missingFileFatalError(message);
         return nullptr;
     }
-    return TTF_CreateText(textEngine.get(), font, text.c_str(), text.length());
+    return UniqueText(TTF_CreateText(textEngine.get(), font, text.c_str(), text.length()));
 }
 
 void AssetManager::clearFontCache() {
@@ -136,16 +136,14 @@ void AssetManager::clearFontData() {
 }
 
 std::string AssetManager::getFontPath(GameAssets::Fonts fontId) {
-    assert(fontId >= static_cast<GameAssets::Fonts>(0) && fontId < GameAssets::Fonts::FontsCount);
+    assert(fontId < GameAssets::Fonts::FontsCount);
     std::filesystem::path path = basePath / GameAssets::Paths.Fonts /
                                  GameAssets::FileNames.Fonts[static_cast<size_t>(fontId)];
     return path.string();
 }
 
 MIX_Audio* AssetManager::getSound(GameAssets::Sounds soundId, MIX_Mixer* mixerDevice) {
-    assert(
-        soundId >= static_cast<GameAssets::Sounds>(0) && soundId < GameAssets::Sounds::SoundsCount
-    );
+    assert(soundId < GameAssets::Sounds::SoundsCount);
     std::filesystem::path path = basePath / GameAssets::Paths.Sounds /
                                  GameAssets::FileNames.Sounds[static_cast<size_t>(soundId)];
     SDL_IOStream* io = SDL_IOFromFile(path.string().c_str(), "r");
@@ -173,7 +171,7 @@ MIX_Audio* AssetManager::getSound(GameAssets::Sounds soundId, MIX_Mixer* mixerDe
 }
 
 MIX_Audio* AssetManager::getMusic(GameAssets::Music musicId, MIX_Mixer* mixerDevice) {
-    assert(musicId >= static_cast<GameAssets::Music>(0) && musicId < GameAssets::Music::MusicCount);
+    assert(musicId < GameAssets::Music::MusicCount);
     std::filesystem::path path = basePath / GameAssets::Paths.Music /
                                  GameAssets::FileNames.Music[static_cast<size_t>(musicId)];
     SDL_IOStream* io = SDL_IOFromFile(path.string().c_str(), "r");
@@ -202,11 +200,11 @@ MIX_Audio* AssetManager::getMusic(GameAssets::Music musicId, MIX_Mixer* mixerDev
 
 SDL_Texture* AssetManager::getTexture(GameAssets::Textures textureId) {
     assert(
-        textureId >= static_cast<GameAssets::Textures>(0) &&
+
         textureId < GameAssets::Textures::TexturesCount
     );
     if (!renderer) {
-        std::string message = "Unable to load texture for file \"";
+        std::string message = "Unable to load SDL3 texture from file \"";
         message += GameAssets::FileNames.Textures[static_cast<size_t>(textureId)];
         message += "\":\nSDl3 renderer is null";
         missingFileFatalError(message);
@@ -219,12 +217,9 @@ SDL_Texture* AssetManager::getTexture(GameAssets::Textures textureId) {
     std::filesystem::path relativePath =
         GameAssets::Paths.Textures / GameAssets::FileNames.Textures[static_cast<size_t>(textureId)];
     std::filesystem::path fullPath = basePath / relativePath;
-    texture.reset(
-        IMG_LoadTexture_IO(
-            renderer, SDL_IOFromFile(fullPath.string().c_str(), "r"), true
-        ) // "r" means open file for reading
-    );    // Transfers ownership to the new pointer
-    if (!texture) {
+    SDL_IOStream* io =
+        SDL_IOFromFile(fullPath.string().c_str(), "r"); // "r" means open file for reading
+    if (!io) {
         std::string message = "Unable to load SDL3 texture from file \"";
         message += GameAssets::FileNames.Textures[static_cast<size_t>(textureId)];
         message += "\":\n";
@@ -232,6 +227,7 @@ SDL_Texture* AssetManager::getTexture(GameAssets::Textures textureId) {
         missingFileFatalError(message);
         return nullptr;
     }
+    texture.reset(IMG_LoadTexture_IO(renderer, io, true)); // Transfers ownership to the new pointer
     SDL_Log(
         "Loaded SDL3 texture from file \"%s\"",
         GameAssets::FileNames.Textures[static_cast<size_t>(textureId)]

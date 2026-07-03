@@ -119,7 +119,7 @@ static bool playMusicFailed = false; // Just for testing
 
 void Platformer::run() {
     running = true;
-    TTF_Text* text =
+    UniqueText text =
         assets.getText("Player", GameAssets::Fonts::Monocraft, 20.f); // Just for testing
     while (running) {
         if (!audio.isMusicPlaying() && !playMusicFailed) {
@@ -146,7 +146,7 @@ void Platformer::run() {
                     currentLevel->camera.entityToFollow->getInterpolatedPosition(alpha);
                 textPos.y += 2.f;
                 Drawing::text(
-                    text,
+                    text.get(),
                     window,
                     textPos,
                     currentLevel->camera.getScaleFactor(),

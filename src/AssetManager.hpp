@@ -107,9 +107,17 @@ struct TTF_TextEngine_Deleter {
         }
     }
 };
+struct TTF_Text_Deleter {
+    void operator()(TTF_Text* t) const {
+        if (t) {
+            TTF_DestroyText(t);
+        }
+    }
+};
 using UniqueTexture = std::unique_ptr<SDL_Texture, SDL_Texture_Deleter>;
 using UniqueFont = std::unique_ptr<TTF_Font, TTF_Font_Deleter>;
 using UniqueTextEngine = std::unique_ptr<TTF_TextEngine, TTF_TextEngine_Deleter>;
+using UniqueText = std::unique_ptr<TTF_Text, TTF_Text_Deleter>;
 
 struct CachedFont {
     GameAssets::Fonts fontId;
@@ -142,8 +150,8 @@ class AssetManager {
     // Render text at a high resolution then scale down so that it still looks good while zoomed in
     const float TextResolutionScaleFactor = 50.f;
     TTF_TextEngine* getTextEngine() const;
-    TTF_Text* getText(
-        std::string text,
+    UniqueText getText(
+        const std::string& text,
         GameAssets::Fonts fontId,
         float ptSize,
         TTF_FontStyleFlags style = TTF_STYLE_NORMAL
