@@ -4,6 +4,21 @@
 #include "InputManager.hpp"
 #include <variant>
 
+enum class UiState : uint8_t {
+    MainMenu,
+    Settings,
+    Playing,
+    Paused,
+    PausedSettings,
+    UiStateCount
+};
+
+enum class LevelName : uint8_t {
+    None,
+    Template,
+    LevelNameCount
+};
+
 namespace GameEventTypes {
 struct CloseWindow {};
 struct PlaySound {
@@ -21,6 +36,12 @@ struct SetVolume {
     AudioCategory category;
     unsigned int volume;
 };
+struct SetUiState {
+    UiState state;
+};
+struct SetLevelName {
+    LevelName level;
+};
 } // namespace GameEventTypes
 
 using GameEvent = std::variant<
@@ -28,7 +49,9 @@ using GameEvent = std::variant<
     GameEventTypes::PlaySound,
     GameEventTypes::PlayMusic,
     GameEventTypes::SetVolume,
-    GameEventTypes::Input>;
+    GameEventTypes::Input,
+    GameEventTypes::SetUiState,
+    GameEventTypes::SetLevelName>;
 
 namespace GameEvents {
 bool Poll(GameEvent& event);

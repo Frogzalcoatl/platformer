@@ -72,11 +72,13 @@ void Entity::savePreviousState() {
     previousAngle = b2Rot_GetAngle(b2Body_GetRotation(bodyId));
 }
 
-void Entity::draw(WindowManager& window, float alpha) const {
+void Entity::draw(
+    WindowManager& window, float alpha, float scaleFactor, WindowDimensions offsetPixels
+) const {
     b2Transform transform;
     transform.p = getInterpolatedPosition(alpha);
     transform.q = getInterpolatedRotation(alpha);
-    Drawing::polygon(polygon, transform, window, color);
+    Drawing::polygon(polygon, window, transform, scaleFactor, offsetPixels, color);
 }
 
 void Entity::teleport(b2Vec2 location) {

@@ -3,34 +3,42 @@
 #include <cassert>
 #include <vector>
 
-static std::vector<SDL_FPoint>
-getPolygonPoints(const b2Polygon& polygon, b2Transform& transform, WindowManager& window) {
-    const float scaleFactor = window.getScaleFactor();
-    const WindowDimensions offset = window.getOffsetPixels();
+static std::vector<SDL_FPoint> getPolygonPoints(
+    const b2Polygon& polygon,
+    b2Transform& transform,
+    float scaleFactor,
+    WindowDimensions offsetPixels
+) {
     std::vector<SDL_FPoint> points;
     points.reserve(polygon.count);
     for (int i = 0; i < polygon.count; i++) {
-        b2Vec2 worldPosition = b2TransformPoint(transform, polygon.vertices[i]);
-        worldPosition.x *= scaleFactor;
-        worldPosition.y *= scaleFactor;
-        worldPosition.y *= -1.f;
-        worldPosition.x += offset.x;
-        worldPosition.y += offset.y;
-        points.push_back(SDL_FPoint{worldPosition.x, worldPosition.y});
+        b2Vec2 pos = b2TransformPoint(transform, polygon.vertices[i]);
+        pos.x *= scaleFactor;
+        pos.y *= scaleFactor;
+        pos.y *= -1.f;
+        pos.x += offsetPixels.x;
+        pos.y += offsetPixels.y;
+        points.push_back(SDL_FPoint{pos.x, pos.y});
     }
     return points;
 }
 
 // TODO: Account for polygon radius
 void Drawing::polygon(
-    const b2Polygon& polygon, b2Transform& transform, WindowManager& window, SDL_FColor color
+    const b2Polygon& polygon,
+    WindowManager& window,
+    b2Transform& transform,
+    float scaleFactor,
+    WindowDimensions offsetPixels,
+    SDL_FColor color
 ) {
     assert(polygon.count >= 3);
     SDL_Renderer* renderer = window.getSdlRenderer();
     if (!renderer) {
         return;
     }
-    std::vector<SDL_FPoint> points = getPolygonPoints(polygon, transform, window);
+    std::vector<SDL_FPoint> points =
+        getPolygonPoints(polygon, transform, scaleFactor, offsetPixels);
     std::vector<SDL_Vertex> vertices;
     for (size_t i = 0; i < points.size(); i++) {
         SDL_Vertex vertex;
@@ -57,28 +65,40 @@ void Drawing::polygon(
 }
 
 void Drawing::polygonBorders(
-    const b2Polygon& polygon, b2Transform& transform, WindowManager& window, SDL_FColor color
+    const b2Polygon& polygon,
+    WindowManager& window,
+    b2Transform& transform,
+    float scaleFactor,
+    WindowDimensions offsetPixels,
+    SDL_FColor color
 ) {
     assert(polygon.count >= 3);
     SDL_Renderer* renderer = window.getSdlRenderer();
     if (!renderer) {
         return;
     }
-    std::vector<SDL_FPoint> points = getPolygonPoints(polygon, transform, window);
+    std::vector<SDL_FPoint> points =
+        getPolygonPoints(polygon, transform, scaleFactor, offsetPixels);
     SDL_SetRenderDrawColorFloat(renderer, color.r, color.g, color.b, color.a);
     points.push_back(points[0]);
     SDL_RenderLines(renderer, points.data(), static_cast<int>(points.size()));
 }
 
 void Drawing::showFanTriangulation(
-    const b2Polygon& polygon, b2Transform& transform, WindowManager& window, SDL_FColor color
+    const b2Polygon& polygon,
+    WindowManager& window,
+    b2Transform& transform,
+    float scaleFactor,
+    WindowDimensions offsetPixels,
+    SDL_FColor color
 ) {
     assert(polygon.count >= 3);
     SDL_Renderer* renderer = window.getSdlRenderer();
     if (!renderer) {
         return;
     }
-    std::vector<SDL_FPoint> points = getPolygonPoints(polygon, transform, window);
+    std::vector<SDL_FPoint> points =
+        getPolygonPoints(polygon, transform, scaleFactor, offsetPixels);
     SDL_SetRenderDrawColorFloat(renderer, color.r, color.g, color.b, color.a);
     std::vector<SDL_FPoint> perimeter;
     perimeter.reserve(polygon.count + 1);
@@ -93,10 +113,12 @@ void Drawing::showFanTriangulation(
 static const float TextShrinkageMultiplier = 25.f;
 
 void Drawing::text(
-    WindowManager& window,
     TTF_Text* text,
-    float textResolutionScaleFactor,
+    WindowManager& window,
     b2Vec2 worldPosition,
+    float scaleFactor,
+    WindowDimensions offsetPixels,
+    float textResolutionScaleFactor,
     SDL_FColor textColor,
     std::optional<SDL_FColor> backgroundColor
 ) {
@@ -109,11 +131,9 @@ void Drawing::text(
     }
     float oldRenderScaleX, oldRenderScaleY;
     SDL_GetRenderScale(renderer, &oldRenderScaleX, &oldRenderScaleY);
-    float scaleFactor = window.getScaleFactor();
     textResolutionScaleFactor *= TextShrinkageMultiplier;
     scaleFactor /= textResolutionScaleFactor;
     SDL_SetRenderScale(renderer, scaleFactor, scaleFactor);
-    WindowDimensions offsetPixels = window.getOffsetPixels();
     b2Vec2 windowPosition;
     windowPosition.x = worldPosition.x * textResolutionScaleFactor + offsetPixels.x / scaleFactor;
     windowPosition.y =
@@ -149,10 +169,12 @@ void Drawing::text(
 }
 
 void Drawing::texture(
-    WindowManager& window,
     SDL_Texture* texture,
+    WindowManager& window,
     b2Vec2 worldPosition,
     b2Vec2 worldSize,
+    float scaleFactor,
+    WindowDimensions offsetPixels,
     double sdlAngle,
     SDL_FlipMode flip
 ) {
@@ -163,13 +185,11 @@ void Drawing::texture(
     if (!renderer) {
         return;
     }
-    float scaleFactor = window.getScaleFactor();
-    WindowDimensions offset = window.getOffsetPixels();
     SDL_FRect rect;
     rect.w = worldSize.x * scaleFactor;
     rect.h = worldSize.y * scaleFactor;
-    rect.x = worldPosition.x * scaleFactor + offset.x - rect.w / 2.f;
-    rect.y = worldPosition.y * scaleFactor * -1.f + offset.y - rect.h / 2.f;
+    rect.x = worldPosition.x * scaleFactor + offsetPixels.x - rect.w / 2.f;
+    rect.y = worldPosition.y * scaleFactor * -1.f + offsetPixels.y - rect.h / 2.f;
     SDL_RenderTextureRotated(renderer, texture, nullptr, &rect, sdlAngle, nullptr, flip);
 }
 

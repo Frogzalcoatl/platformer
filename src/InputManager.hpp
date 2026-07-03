@@ -22,6 +22,7 @@ enum class InputVerb : uint8_t {
     ZoomIn,
     ZoomOut,
     ZoomReset,
+    ToggleDebug,
     VerbCount
 };
 
@@ -88,7 +89,7 @@ class InputManager {
     int openMappingsFromPath(std::filesystem::path& path);
     bool addGamepadMappingsFromFiles();
 
-    bool isImGuiCapturingKeyboard = false;
+    // bool isImGuiCapturingKeyboard = false;
 
   public:
     InputManager();
@@ -131,7 +132,8 @@ class InputManager {
         {InputVerb::Jump, SDL_SCANCODE_W},
         {InputVerb::Jump, SDL_SCANCODE_UP},
         {InputVerb::Sprint, SDL_SCANCODE_SPACE},
-        {InputVerb::Sprint, SDL_SCANCODE_LSHIFT}
+        {InputVerb::Sprint, SDL_SCANCODE_LSHIFT},
+        {InputVerb::ToggleDebug, SDL_SCANCODE_F3}
     };
     const std::vector<DefaultButtonBinding> defaultButtonBindings = {
         {InputVerb::Up, SDL_GAMEPAD_BUTTON_DPAD_UP},

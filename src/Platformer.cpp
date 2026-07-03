@@ -3,17 +3,15 @@
 #include "DiscordRpcManager.hpp"
 #include "Drawing.hpp"
 #include "Events.hpp"
-#include "UserInterface/Index.hpp"
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_sdlrenderer3.h>
 
 Platformer::Platformer()
-    : window{"C++ Platformer", Colors.BackGround}, assets{window.getSdlRenderer()}, audio{assets} {
-    UserInterface::keybindsUpdate(input);
+    : window{"C++ Platformer", Colors.BackGround}, assets{window.getSdlRenderer()}, audio{assets},
+      ui{assets} {
     DiscordRpcManager::init();
     DiscordRpcManager::setStatus("In Development...", nullptr);
-    currentLevel = getTemplateLevel(assets, window);
 }
 
 void Platformer::handleSdlEvent() {
@@ -26,6 +24,9 @@ void Platformer::handleSdlEvent() {
         }; break;
         case SDL_EVENT_WINDOW_RESIZED: {
             window.handleResize(event.window.data1, event.window.data2);
+            if (currentLevel) {
+                currentLevel->camera.handleWindowResize(event.window.data1, event.window.data2);
+            }
         }; break;
         case SDL_EVENT_KEY_DOWN:
         case SDL_EVENT_KEY_UP:
@@ -38,8 +39,9 @@ void Platformer::handleSdlEvent() {
             }
         }; break;
         case SDL_EVENT_GAMEPAD_ADDED:
-        case SDL_EVENT_GAMEPAD_REMOVED:
+        case SDL_EVENT_GAMEPAD_REMOVED: {
             input.handleGamepadDeviceEvent(event.gdevice);
+        }
         };
         break;
     }
@@ -59,25 +61,51 @@ void Platformer::handleGameEvent() {
                 playMusicEvent->pitch,
                 playMusicEvent->loop
             );
+        } else if (const auto* setVolume = std::get_if<GameEventTypes::SetVolume>(&event)) {
+            audio.setVolume(setVolume->category, setVolume->volume);
         } else if (const auto* inputEvent = std::get_if<GameEventTypes::Input>(&event)) {
+            UiState uiState = ui.getState();
             if (inputEvent->state == InputState::Pressed) {
                 switch (inputEvent->verb) {
                 case InputVerb::ToggleFullscreen:
                     window.toggleFullscreen();
                     break;
                 case InputVerb::ZoomIn:
-                    window.incrementScaleMultiplierBy(0.05f);
+                    if (currentLevel && uiState == UiState::Playing) {
+                        currentLevel->camera.incrementScaleMultiplierBy(0.05f);
+                    }
                     break;
                 case InputVerb::ZoomOut:
-                    window.incrementScaleMultiplierBy(-0.05f);
+                    if (currentLevel && uiState == UiState::Playing) {
+                        currentLevel->camera.incrementScaleMultiplierBy(-0.05f);
+                    }
                     break;
                 case InputVerb::ZoomReset:
-                    window.resetScaleMultiplier();
+                    if (currentLevel && uiState == UiState::Playing) {
+                        currentLevel->camera.resetScaleMultiplier();
+                    }
+                    break;
+                case InputVerb::ToggleDebug:
+                    ui.showDebug = !ui.showDebug;
+                    break;
+                case InputVerb::Cancel:
+                    ui.runCancelEvent();
+                    break;
                 default:
                     break;
                 }
             }
-            currentLevel->handleInput(*inputEvent);
+            if (currentLevel && uiState == UiState::Playing) {
+                currentLevel->handleInput(*inputEvent);
+            }
+        } else if (const auto* setUiState = std::get_if<GameEventTypes::SetUiState>(&event)) {
+            ui.setState(setUiState->state);
+        } else if (const auto* setLevelName = std::get_if<GameEventTypes::SetLevelName>(&event)) {
+            if (setLevelName->level == LevelName::Template) {
+                currentLevel = getTemplateLevel(assets, window);
+            } else if (setLevelName->level == LevelName::None) {
+                currentLevel = nullptr;
+            }
         }
     }
 }
@@ -90,25 +118,29 @@ void Platformer::run() {
         const Uint64 frameStartNs = SDL_GetTicksNS();
         handleSdlEvent();
         handleGameEvent();
-        float alpha = currentLevel->update();
         window.clearFrame();
         if (currentLevel) {
+            UiState currentState = ui.getState();
+            float alpha = 0.f;
+            if (currentState == UiState::Playing) {
+                alpha = currentLevel->update();
+            }
             currentLevel->draw(window, alpha, showFanTriangulation);
+            if (currentLevel->camera.entityToFollow) {
+                b2Vec2 textPos =
+                    currentLevel->camera.entityToFollow->getInterpolatedPosition(alpha);
+                textPos.y += 2.f;
+                Drawing::text(
+                    text,
+                    window,
+                    textPos,
+                    currentLevel->camera.getScaleFactor(),
+                    currentLevel->camera.getOffsetPixels(),
+                    assets.textResolutionScaleFactor
+                );
+            }
         }
-        if (currentLevel->camera.entityToFollow) {
-            b2Vec2 textPos = currentLevel->camera.entityToFollow->getInterpolatedPosition(alpha);
-            textPos.y += 2.f;
-            Drawing::text(window, text, assets.textResolutionScaleFactor, textPos);
-        }
-        UserInterface::keybindsShow();
-        UserInterface::audio(audio);
-        UserInterface::debug(
-            window,
-            currentLevel->camera.entityToFollow,
-            currentLevel->camera,
-            input,
-            showFanTriangulation
-        );
+        ui.render(window, audio, input, currentLevel.get(), showFanTriangulation);
         window.render(frameStartNs);
         DiscordRpcManager::update();
     }

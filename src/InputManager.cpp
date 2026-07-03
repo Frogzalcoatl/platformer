@@ -243,6 +243,7 @@ std::vector<GameEventTypes::Input> InputManager::getInputEventsFromSDLEvent(SDL_
     switch (event.type) {
     case SDL_EVENT_KEY_DOWN:
     case SDL_EVENT_KEY_UP: {
+        /* Not needed atm
         ImGuiIO& io = ImGui::GetIO();
         if (io.WantCaptureKeyboard != isImGuiCapturingKeyboard) {
             isImGuiCapturingKeyboard = io.WantCaptureKeyboard;
@@ -265,6 +266,7 @@ std::vector<GameEventTypes::Input> InputManager::getInputEventsFromSDLEvent(SDL_
         if (isImGuiCapturingKeyboard) {
             break;
         }
+        */
         std::vector<InputVerbInfo> verbs = getVerbsFromScancode(event.key.scancode);
         if (verbs.size() == 0) {
             break;

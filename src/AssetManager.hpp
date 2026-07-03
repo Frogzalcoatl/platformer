@@ -92,6 +92,7 @@ class AssetManager {
     // Cache includes styling, data is the raw bytes that are referenced to generate styled fonts
     void clearFontCache();
     void clearFontData();
+    std::string getFontPath(GameAssets::Fonts fontId);
 
     MIX_Audio* getSound(GameAssets::Sounds soundId, MIX_Mixer* mixerDevice);
     MIX_Audio* getMusic(GameAssets::Music musicId, MIX_Mixer* mixerDevice);

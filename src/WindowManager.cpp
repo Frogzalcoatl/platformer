@@ -78,24 +78,8 @@ SDL_Renderer* WindowManager::getSdlRenderer() const {
     return sdlRenderer;
 };
 
-WindowDimensions WindowManager::getSizePixels() const {
+WindowDimensions WindowManager::getSize() const {
     return size;
-}
-
-b2Vec2 WindowManager::getSizeWorld() const {
-    return b2Vec2{size.x / scaleFactor, size.y / scaleFactor};
-}
-
-WindowDimensions WindowManager::getOffsetPixels() const {
-    return offsetPixels;
-}
-
-b2Vec2 WindowManager::getOffsetWorld() const {
-    return offsetWorld;
-}
-
-float WindowManager::getScaleFactor() const {
-    return scaleFactor;
 }
 
 bool WindowManager::getIsFullscreen() const {
@@ -120,7 +104,7 @@ std::string WindowManager::targetFpsStr() const {
     } else if (fpsUnlimited) {
         return "Unlimited";
     } else {
-        return std::to_string(targetFps) + ".0";
+        return std::to_string(targetFps);
     }
 }
 
@@ -154,6 +138,7 @@ void WindowManager::setFpsUnlimited(bool value) {
     fpsUnlimited = value;
     SDL_Log("FPS Unlimited set to %s", value ? "true" : "false");
 }
+
 bool WindowManager::getFpsUnlimited() const {
     return fpsUnlimited;
 }
@@ -163,39 +148,7 @@ void WindowManager::toggleFullscreen() {
     SDL_SetWindowFullscreen(sdlWindow, isFullscreen);
 }
 
-void WindowManager::updateScaleFactor() {
-    int dividend = b2MinInt(size.x, size.y);
-    scaleFactor = dividend / 20.f * scaleMultiplier;
-}
-
-void WindowManager::updateOffset(std::optional<b2Vec2> worldPosition) {
-    if (worldPosition.has_value()) {
-        offsetWorld = worldPosition.value();
-        offsetWorld.x = -offsetWorld.x;
-    }
-    offsetPixels.x = static_cast<int>(SDL_roundf(offsetWorld.x * scaleFactor));
-    offsetPixels.y = static_cast<int>(SDL_roundf(offsetWorld.y * scaleFactor));
-
-    offsetPixels.x += size.x / 2;
-    offsetPixels.y += size.y / 2;
-}
-
-void WindowManager::handleResize(int x, int y) {
-    size.x = x;
-    size.y = y;
-    updateScaleFactor();
-    updateOffset(std::nullopt);
-}
-
-void WindowManager::incrementScaleMultiplierBy(float amount) {
-    if (scaleMultiplier + amount <= 0) {
-        return;
-    }
-    scaleMultiplier += amount;
-    updateScaleFactor();
-}
-
-void WindowManager::resetScaleMultiplier() {
-    scaleMultiplier = 1.f;
-    updateScaleFactor();
+void WindowManager::handleResize(int sizeX, int sizeY) {
+    size.x = sizeX;
+    size.y = sizeY;
 }

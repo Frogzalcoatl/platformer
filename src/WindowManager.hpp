@@ -12,9 +12,6 @@ struct WindowDimensions {
 class WindowManager {
   private:
     WindowDimensions size;
-    WindowDimensions offsetPixels;
-    b2Vec2 offsetWorld = {0.f, 0.f};
-    float scaleFactor = 1.f;
     bool isFullscreen = false;
     Uint64 targetFps = 240;
     Uint64 targetFrameTimeNs = 1000000000ULL / targetFps;
@@ -23,10 +20,7 @@ class WindowManager {
     SDL_Renderer* sdlRenderer;
     SDL_Window* sdlWindow;
 
-    void updateScaleFactor();
-
   public:
-    float scaleMultiplier = 1.f;
     SDL_Color backgroundColor;
 
     WindowManager(const char* windowName, SDL_Color backgroundColor);
@@ -36,11 +30,7 @@ class WindowManager {
 
     SDL_Window* getSdlWindow() const;
     SDL_Renderer* getSdlRenderer() const;
-    WindowDimensions getSizePixels() const;
-    b2Vec2 getSizeWorld() const;
-    WindowDimensions getOffsetPixels() const;
-    b2Vec2 getOffsetWorld() const;
-    float getScaleFactor() const;
+    WindowDimensions getSize() const;
     bool getIsFullscreen() const;
     Uint64 getTargetFps() const;
     std::string targetFpsStr() const;
@@ -49,12 +39,8 @@ class WindowManager {
     bool isVsyncEnabled() const;
     void setFpsUnlimited(bool value);
     bool getFpsUnlimited() const;
-
     void render(Uint64 frameStartNs);
     void clearFrame();
     void toggleFullscreen();
     void handleResize(int sizeX, int sizeY);
-    void incrementScaleMultiplierBy(float amount);
-    void resetScaleMultiplier();
-    void updateOffset(std::optional<b2Vec2> worldPosition);
 };

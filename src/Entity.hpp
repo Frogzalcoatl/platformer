@@ -47,6 +47,8 @@ class Entity {
 
     void savePreviousState();
 
-    void draw(WindowManager& window, float alpha) const;
+    void draw(
+        WindowManager& window, float alpha, float scaleFactor, WindowDimensions offsetPixels
+    ) const;
     void teleport(b2Vec2 location);
 };

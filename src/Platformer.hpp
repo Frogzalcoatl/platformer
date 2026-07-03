@@ -3,6 +3,7 @@
 #include "AudioManager.hpp"
 #include "InputManager.hpp"
 #include "Level.hpp"
+#include "UiManager.hpp"
 #include "WindowManager.hpp"
 #include <memory>
 #include <vector>
@@ -14,10 +15,9 @@ class Platformer {
     AssetManager assets;
     AudioManager audio;
     InputManager input;
+    UiManager ui;
     std::unique_ptr<Level> currentLevel;
     bool showFanTriangulation = false;
-
-    float physicsStepHandler();
 
     void handleSdlEvent();
     void handleGameEvent();

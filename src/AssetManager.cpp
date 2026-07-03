@@ -145,6 +145,13 @@ void AssetManager::clearFontData() {
     SDL_Log("Cleared raw font data");
 }
 
+std::string AssetManager::getFontPath(GameAssets::Fonts fontId) {
+    assert(fontId >= static_cast<GameAssets::Fonts>(0) && fontId < GameAssets::Fonts::FontCount);
+    std::filesystem::path path = basePath / GameAssets::Paths.Fonts /
+                                 GameAssets::FileNames.Fonts[static_cast<size_t>(fontId)];
+    return path.string();
+}
+
 MIX_Audio* AssetManager::getSound(GameAssets::Sounds soundId, MIX_Mixer* mixerDevice) {
     assert(
         soundId >= static_cast<GameAssets::Sounds>(0) && soundId < GameAssets::Sounds::SoundsCount

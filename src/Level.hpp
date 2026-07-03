@@ -1,5 +1,4 @@
 #pragma once
-#include "Entity.hpp"
 #include "EntityController.hpp"
 #include "Tile.hpp"
 #include <box2d/box2d.h>

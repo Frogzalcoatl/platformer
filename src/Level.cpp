@@ -10,6 +10,8 @@ Level::Level(const char* levelName, WindowManager& window)
 }
 
 Level::~Level() {
+    entities.clear();
+    players.clear();
     b2DestroyWorld(world);
 }
 
@@ -42,18 +44,24 @@ void Level::draw(WindowManager& window, float alpha, bool showFanTriangulation) 
     camera.run(alpha);
     for (const auto& entity : entities) {
         if (entity) {
-            entity->draw(window, alpha);
+            entity->draw(window, alpha, camera.getScaleFactor(), camera.getOffsetPixels());
             if (showFanTriangulation) {
                 b2Transform transform;
                 transform.p = entity->getInterpolatedPosition(alpha);
                 transform.q = entity->getInterpolatedRotation(alpha);
-                Drawing::showFanTriangulation(entity->getPolygon(), transform, window);
+                Drawing::showFanTriangulation(
+                    entity->getPolygon(),
+                    window,
+                    transform,
+                    camera.getScaleFactor(),
+                    camera.getOffsetPixels()
+                );
             }
         }
     }
     for (const auto& tile : tiles) {
         if (tile) {
-            tile->draw(window);
+            tile->draw(window, camera.getScaleFactor(), camera.getOffsetPixels());
         }
     }
 }
