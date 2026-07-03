@@ -38,10 +38,12 @@ class AudioManager {
     );
     void setVolume(AudioCategory category, unsigned int volume);
     void setMusicPitch(float pitch);
+    void clearCurrentMusic();
     unsigned int getVolume(AudioCategory category);
     const char* getCurrentMusicName() const;
     float getMusicPitch() const;
     bool isMusicLooping() const;
+    bool isMusicPlaying() const;
     Sint64 getMusicPlaybackPosition() const; // In seconds
     Sint64 getMusicTimeRemaining() const;    // In seconds
     Sint64 getMusicLength() const;           // In seconds

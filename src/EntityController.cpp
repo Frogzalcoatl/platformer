@@ -91,8 +91,8 @@ void EntityController::handleInput(GameEventTypes::Input event, Camera* camera) 
                 camera->centerOnEntity();
             }
         } else if (event.verb == InputVerb::Jump) {
-            float pitch = SDL_randf() * (1.25f - 0.75f) + 0.75f;
-            GameEvents::Push(GameEventTypes::PlaySound{GameAssets::Sounds::Fart, 50, pitch});
+            float pitch = SDL_randf() * (1.25f - 1.f) + 1.f;
+            GameEvents::Push(GameEventTypes::PlaySound{GameAssets::Sounds::Jump, 50, pitch});
             jump();
         }
     }

@@ -3,8 +3,11 @@
 
 UiManager::UiManager(AssetManager& assets, UiState startingState) : currentState(startingState) {
     ImGuiIO& io = ImGui::GetIO();
-    monocraftSmall = io.Fonts->AddFontFromFileTTF(
+    monocraftExtraSmall = io.Fonts->AddFontFromFileTTF(
         assets.getFontPath(GameAssets::Fonts::Monocraft).c_str(), 12.f
+    );
+    monocraftSmall = io.Fonts->AddFontFromFileTTF(
+        assets.getFontPath(GameAssets::Fonts::Monocraft).c_str(), 18.f
     );
     monocraftMedium = io.Fonts->AddFontFromFileTTF(
         assets.getFontPath(GameAssets::Fonts::Monocraft).c_str(), 24.f
@@ -12,11 +15,19 @@ UiManager::UiManager(AssetManager& assets, UiState startingState) : currentState
     monocraftLarge = io.Fonts->AddFontFromFileTTF(
         assets.getFontPath(GameAssets::Fonts::Monocraft).c_str(), 36.f
     );
+    monocraftExtraLarge = io.Fonts->AddFontFromFileTTF(
+        assets.getFontPath(GameAssets::Fonts::Monocraft).c_str(), 72.f
+    );
+    monocraftTitle = io.Fonts->AddFontFromFileTTF(
+        assets.getFontPath(GameAssets::Fonts::Monocraft).c_str(), 128.f
+    );
 }
 
 void UiManager::setState(UiState state) {
     assert(state >= static_cast<UiState>(0) && state < UiState::UiStateCount);
     currentState = state;
+    if (state == UiState::Settings || state == UiState::PausedSettings) {
+    }
 }
 
 UiState UiManager::getState() const {
@@ -44,13 +55,13 @@ void UiManager::render(
         drawMainMenu();
     }; break;
     case UiState::Settings: {
-        drawSettings(window, showFanTriangulation, audio);
+        drawSettings(window, audio, input, showFanTriangulation);
     }; break;
     case UiState::Paused: {
         drawPauseMenu();
     }; break;
     case UiState::PausedSettings: {
-        drawSettings(window, showFanTriangulation, audio);
+        drawSettings(window, audio, input, showFanTriangulation);
     }; break;
     default:
         break;
@@ -113,9 +124,9 @@ void UiManager::drawDebug(
         ImGui::Dummy(ImVec2{1.f, 1.f});
         b2Vec2 safeAreaSize = camera->getSafeAreaSize();
         b2Vec2 safeAreaValue = camera->getEntitySafeAreaValue();
-        ImGui::Text("\nSafe Area:");
+        ImGui::Text("\nCamera:");
         ImGui::Text(
-            "Size: %.2f, %.2f\nRatio from Center: %.2f, %.2f",
+            "Safe Area Size: %.2f, %.2f\nPlayer Ratio from Center: %.2f, %.2f",
             safeAreaSize.x,
             safeAreaSize.y,
             safeAreaValue.x,
@@ -129,13 +140,28 @@ void UiManager::drawDebug(
     ImGui::End();
 }
 
-void UiManager::drawMainMenu() {
+void UiManager::drawLargeLogo() {
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImVec2 workPos = viewport->WorkPos;
     ImVec2 workSize = viewport->WorkSize;
-    ImVec2 menuPos = ImVec2{workPos.x + workSize.x * 0.5f, workPos.y + workSize.y * 0.5f};
+    ImVec2 centerPos = ImVec2{workPos.x + workSize.x * 0.5f, workPos.y + workSize.y * 0.5f};
+    ImGui::SetNextWindowPos(ImVec2{centerPos.x, 50.f}, ImGuiCond_Always, ImVec2{0.5, 0.f});
+    if (ImGui::Begin("Main Menu Title", nullptr, staticFlags)) {
+        ImGui::PushFont(monocraftTitle);
+        ImGui::Text("Platformer");
+        ImGui::PopFont();
+    }
+    ImGui::End();
+}
+
+void UiManager::drawMainMenu() {
+    drawLargeLogo();
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImVec2 workPos = viewport->WorkPos;
+    ImVec2 workSize = viewport->WorkSize;
+    ImVec2 centerPos = ImVec2{workPos.x + workSize.x * 0.5f, workPos.y + workSize.y * 0.5f};
     ImVec2 menuSize = ImVec2{425.f, 375.f};
-    ImGui::SetNextWindowPos(menuPos, ImGuiCond_Always, ImVec2{0.5, 0.5});
+    ImGui::SetNextWindowPos(centerPos, ImGuiCond_Always, ImVec2{0.5, 0.5});
     ImGui::SetNextWindowSize(menuSize);
     if (ImGui::Begin("Main Menu", nullptr, staticFlags)) {
         ImGui::PushFont(monocraftLarge);
@@ -166,7 +192,7 @@ void UiManager::drawMainMenu() {
 }
 
 void UiManager::drawSettings(
-    WindowManager& window, bool& showFanTriangulation, AudioManager& audio
+    WindowManager& window, AudioManager& audio, InputManager& input, bool& showFanTriangulation
 ) {
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImVec2 workPos = viewport->WorkPos;
@@ -177,28 +203,38 @@ void UiManager::drawSettings(
     const ImVec2 verticalSpacingDummy{0.f, 10.f};
     const ImVec2 horizontalSpacingDummy{10.f, 0.f};
     if (ImGui::Begin("Settings", nullptr, staticFlags)) {
-        ImGui::PushFont(monocraftMedium);
-        if (ImGui::Button("Back", ImVec2{60.f, 30.f})) {
+        ImGui::PushFont(monocraftLarge);
+        if (ImGui::Button("Back", ImVec2{100.f, 45.f})) {
             runCancelEvent();
         }
         ImGui::SameLine();
         ImGui::Dummy(horizontalSpacingDummy);
         ImGui::SameLine();
+        ImGui::PushFont(monocraftLarge);
         ImGui::BeginTabBar("SettingsTabBar");
         if (ImGui::BeginTabItem("Display")) {
-            ImGui::PushFont(monocraftLarge);
             ImGui::Text("Display");
-            ImGui::PopFont();
+            ImGui::PushFont(monocraftMedium);
             ImGui::Dummy(verticalSpacingDummy);
-            ImGui::Text(
-                "%.0f/%s FPS (%.3f ms/frame)",
-                ImGui::GetIO().Framerate,
-                window.targetFpsStr().c_str(),
-                1000.0f / ImGui::GetIO().Framerate
-            );
+            int framerate = static_cast<int>(ImGui::GetIO().Framerate);
+            if (framerate >= 1000) {
+                ImGui::Text(
+                    "%05d/%s FPS (%.3f ms/frame)",
+                    framerate,
+                    window.targetFpsStr().c_str(),
+                    1000.0f / framerate
+                );
+            } else {
+                ImGui::Text(
+                    "%d/%s FPS (%.3f ms/frame)",
+                    framerate,
+                    window.targetFpsStr().c_str(),
+                    1000.0f / framerate
+                );
+            }
             ImGui::Dummy(verticalSpacingDummy);
             bool vsync = window.isVsyncEnabled();
-            if (ImGui::Checkbox("Vsync (Idk if this is working)", &vsync)) {
+            if (ImGui::Checkbox("VSync (Idk if this is working)", &vsync)) {
                 window.setVsync(vsync);
             }
             ImGui::Dummy(verticalSpacingDummy);
@@ -216,12 +252,14 @@ void UiManager::drawSettings(
             }
             ImGui::Dummy(verticalSpacingDummy);
             ImGui::Checkbox("Show Triangles", &showFanTriangulation);
+            ImGui::PopFont();
             ImGui::EndTabItem();
         }
+        ImGui::PopFont();
+        ImGui::PushFont(monocraftLarge);
         if (ImGui::BeginTabItem("Audio")) {
-            ImGui::PushFont(monocraftLarge);
             ImGui::Text("Audio");
-            ImGui::PopFont();
+            ImGui::PushFont(monocraftMedium);
             int masterVolume = audio.getVolume(AudioCategory::Master);
             int soundVolume = audio.getVolume(AudioCategory::Sounds);
             int musicVolume = audio.getVolume(AudioCategory::Music);
@@ -274,14 +312,36 @@ void UiManager::drawSettings(
                 audio.isMusicLooping() ? "(Looping)" : ""
             );
             ImGui::Text("Timestamp: %s", audio.formattedMusicTime().c_str());
-            ImGui::EndTabItem();
-        }
-        if (ImGui::BeginTabItem("Controls")) {
-            ImGui::PushFont(monocraftLarge);
-            ImGui::Text("Controls");
+            ImGui::Dummy(verticalSpacingDummy);
+            if (ImGui::Button("Play Random Music")) {
+                audio.clearCurrentMusic();
+            }
             ImGui::PopFont();
             ImGui::EndTabItem();
         }
+        ImGui::PopFont();
+        ImGui::PushFont(monocraftLarge);
+        if (ImGui::BeginTabItem("Controls")) {
+            ImGui::Text("Controls (Unfinished)");
+            const ScancodeBindings& scancodeBidings = input.getScancodeBindings();
+            for (size_t i = 0; i < static_cast<size_t>(InputVerb::VerbCount); i++) {
+                ImGui::Dummy(ImVec2{0.f, 10.f});
+                std::string currentVerb = inputVerbToString(static_cast<InputVerb>(i)).c_str();
+                ImGui::Text("%s: ", currentVerb.c_str());
+                ImGui::SameLine();
+                ImGui::SetCursorPosX(350.f);
+                for (int j = 0; j < MaxBindsPerVerb; j++) {
+                    std::string current = SDL_GetScancodeName(scancodeBidings[i][j].scancode);
+                    current += "##" + currentVerb + "Index" + std::to_string(j);
+                    ImGui::Button(current.c_str(), ImVec2{200.f, 50.f});
+                    ImGui::SameLine();
+                    ImGui::Dummy(ImVec2{10.f, 0.f});
+                    ImGui::SameLine();
+                }
+            }
+            ImGui::EndTabItem();
+        }
+        ImGui::PopFont();
     }
     ImGui::EndTabBar();
     ImGui::PopFont();
@@ -289,6 +349,7 @@ void UiManager::drawSettings(
 }
 
 void UiManager::drawPauseMenu() {
+    drawLargeLogo();
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImVec2 workPos = viewport->WorkPos;
     ImVec2 workSize = viewport->WorkSize;
@@ -304,10 +365,10 @@ void UiManager::drawPauseMenu() {
         float buttonHeight = 75.f;
         float cursorX = (windowWidth - buttonWidth) * 0.5f;
         ImGui::SetCursorPosY(50.f);
-        const char* pausedText = "> Paused <";
+        const char pausedText[] = "> Paused <";
         ImVec2 pauseTextSize = ImGui::CalcTextSize(pausedText);
         ImGui::SetCursorPosX((windowWidth - pauseTextSize.x) * 0.5f);
-        ImGui::Text("> Paused <");
+        ImGui::Text(pausedText);
         ImGui::Dummy(ImVec2(0, 50.f));
         ImGui::SetCursorPosX(cursorX);
         if (ImGui::Button("Resume", ImVec2{buttonWidth, buttonHeight})) {

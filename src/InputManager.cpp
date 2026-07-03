@@ -30,6 +30,8 @@ std::string inputVerbToString(InputVerb verb) {
         return "Zoom Out";
     case InputVerb::ZoomReset:
         return "Zoom Reset";
+    case InputVerb::ToggleDebug:
+        return "Toggle Debug";
     default:
         return "";
     }
@@ -38,7 +40,7 @@ std::string inputVerbToString(InputVerb verb) {
 InputManager::InputManager() {
     addGamepadMappingsFromFiles();
     for (int i = 0; i < static_cast<int>(InputVerb::VerbCount); i++) {
-        gButtonBindings[i].fill(SDL_GAMEPAD_BUTTON_INVALID); // Invalid represents empty.
+        gamepadBindings[i].fill(SDL_GAMEPAD_BUTTON_INVALID); // Invalid represents empty.
     }
     for (const auto& binding : defaultVerbBindings) {
         bindScancodeToVerb(
@@ -159,6 +161,10 @@ std::array<ScancodeInfo, MaxBindsPerVerb> InputManager::getScancodesFromVerb(Inp
     return scancodeBindings[static_cast<size_t>(verb)];
 }
 
+const ScancodeBindings& InputManager::getScancodeBindings() const {
+    return scancodeBindings;
+}
+
 void InputManager::bindGamepadButtonToVerb(
     InputVerb verb, SDL_GamepadButton button, std::optional<int> atIndexOpt
 ) {
@@ -166,7 +172,7 @@ void InputManager::bindGamepadButtonToVerb(
     if (button <= SDL_GAMEPAD_BUTTON_INVALID || button >= SDL_GAMEPAD_BUTTON_COUNT) {
         return;
     }
-    auto& bindings = gButtonBindings[static_cast<size_t>(verb)];
+    auto& bindings = gamepadBindings[static_cast<size_t>(verb)];
     if (atIndexOpt.has_value()) {
         const int& atIndex = atIndexOpt.value();
         assert(atIndex >= 0 && atIndex < MaxBindsPerVerb);
@@ -190,7 +196,7 @@ void InputManager::unbindGamepadButtonFromVerb(InputVerb verb, SDL_GamepadButton
     if (button <= SDL_GAMEPAD_BUTTON_INVALID || button >= SDL_GAMEPAD_BUTTON_COUNT) {
         return;
     }
-    auto& bindings = gButtonBindings[static_cast<size_t>(verb)];
+    auto& bindings = gamepadBindings[static_cast<size_t>(verb)];
     for (int i = 0; i < MaxBindsPerVerb; i++) {
         if (bindings[i] == button) {
             bindings[i] = SDL_GAMEPAD_BUTTON_INVALID; // Invalid represents empty
@@ -201,7 +207,7 @@ void InputManager::unbindGamepadButtonFromVerb(InputVerb verb, SDL_GamepadButton
 void InputManager::clearGamepadButtonBindingAtIndex(InputVerb verb, int index) {
     assert(verb >= static_cast<InputVerb>(0) && verb < InputVerb::VerbCount);
     assert(index >= 0 && index < MaxBindsPerVerb);
-    auto& bindings = gButtonBindings[static_cast<size_t>(verb)];
+    auto& bindings = gamepadBindings[static_cast<size_t>(verb)];
     bindings[index] = SDL_GAMEPAD_BUTTON_INVALID; // Invalid represents empty
 }
 
@@ -211,7 +217,7 @@ std::vector<InputVerb> InputManager::getVerbsFromGamepadButton(SDL_GamepadButton
         return verbs;
     }
     for (int i = 0; i < static_cast<int>(InputVerb::VerbCount); i++) {
-        for (SDL_GamepadButton& buttonBinding : gButtonBindings[i]) {
+        for (SDL_GamepadButton& buttonBinding : gamepadBindings[i]) {
             if (buttonBinding == button) {
                 verbs.push_back(static_cast<InputVerb>(i));
             }
@@ -223,7 +229,7 @@ std::vector<InputVerb> InputManager::getVerbsFromGamepadButton(SDL_GamepadButton
 std::array<SDL_GamepadButton, MaxBindsPerVerb>
 InputManager::getGamepadButtonsFromVerb(InputVerb verb) {
     assert(verb >= static_cast<InputVerb>(0) && verb < InputVerb::VerbCount);
-    return gButtonBindings[static_cast<size_t>(verb)];
+    return gamepadBindings[static_cast<size_t>(verb)];
 }
 
 void InputManager::handleGamepadDeviceEvent(SDL_GamepadDeviceEvent& event) {
@@ -349,4 +355,8 @@ std::vector<GameEventTypes::Input> InputManager::getInputEventsFromSDLEvent(SDL_
     }; break;
     }
     return inputEvents;
+}
+
+const GamepadBindings& InputManager::getGamepadBindings() const {
+    return gamepadBindings;
 }

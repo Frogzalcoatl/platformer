@@ -101,6 +101,9 @@ void AudioManager::playMusic(
     GameAssets::Music musicId, unsigned int volume, float pitch, bool loop
 ) {
     assert(musicId >= static_cast<GameAssets::Music>(0) && musicId < GameAssets::Music::MusicCount);
+    if (!musicTrack) {
+        return;
+    }
     MIX_PauseTrack(musicTrack);
     if (currentMusic) {
         MIX_DestroyAudio(currentMusic);
@@ -153,6 +156,18 @@ void AudioManager::setMusicPitch(float pitch) {
     MIX_SetTrackFrequencyRatio(musicTrack, pitch);
 }
 
+void AudioManager::clearCurrentMusic() {
+    if (!musicTrack) {
+        return;
+    }
+    MIX_PauseTrack(musicTrack);
+    if (currentMusic) {
+        MIX_DestroyAudio(currentMusic);
+        currentMusic = nullptr;
+    }
+    currentMusicName = "";
+}
+
 unsigned int AudioManager::getVolume(AudioCategory category) {
     assert(
         category >= static_cast<AudioCategory>(0) && category < AudioCategory::AudioCategoryCount
@@ -172,6 +187,21 @@ float AudioManager::getMusicPitch() const {
 
 bool AudioManager::isMusicLooping() const {
     return MIX_GetTrackLoops(musicTrack) == -1 ? true : false;
+}
+
+bool AudioManager::isMusicPlaying() const {
+    if (!currentMusic || !musicTrack) {
+        return false;
+    }
+    if (isMusicLooping()) {
+        return true;
+    }
+    Sint64 playbackFrames = MIX_GetTrackPlaybackPosition(musicTrack);
+    Sint64 playbackPositionMS = MIX_TrackFramesToMS(musicTrack, playbackFrames);
+    MIX_Audio* music = MIX_GetTrackAudio(musicTrack);
+    Sint64 durationFrames = MIX_GetAudioDuration(music);
+    Sint64 musicLengthMS = MIX_TrackFramesToMS(musicTrack, durationFrames);
+    return playbackPositionMS != musicLengthMS;
 }
 
 Sint64 AudioManager::getMusicPlaybackPosition() const {

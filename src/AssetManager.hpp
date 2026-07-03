@@ -19,10 +19,25 @@ enum class Fonts : uint8_t {
 };
 enum class Sounds : uint8_t {
     Fart,
+    Jump,
     SoundsCount
 };
 enum class Music : uint8_t {
-    Test,
+    M2023_4,
+    M2023_11,
+    M2023_14,
+    M2023_23,
+    M2023_29,
+    M2023_35,
+    M2023_37,
+    M2024_3,
+    M2024_5,
+    M2024_7,
+    M2024_8,
+    M2026_2,
+    M2026_3,
+    M2026_4,
+    M2026_5,
     MusicCount
 };
 enum class Textures : uint8_t {
@@ -36,10 +51,24 @@ inline constexpr struct {
     // AudioManager loads all sounds at startup but only loads music when requested.
     // mp3 files not enabled
     const std::array<const char*, static_cast<size_t>(GameAssets::Sounds::SoundsCount)> Sounds = {
-        "fart.wav"
+        "fart.wav", "jump.wav"
     };
     const std::array<const char*, static_cast<size_t>(GameAssets::Music::MusicCount)> Music = {
-        "test.ogg"
+        "2023_4 (unfinished).ogg",
+        "2023_11(3).ogg",
+        "2023_14.ogg",
+        "2023_23.ogg",
+        "2023_29.ogg",
+        "2023_35.ogg",
+        "2023_37.ogg",
+        "2024_3.ogg",
+        "2024_5.ogg",
+        "2024_7.ogg",
+        "2024_8.ogg",
+        "2026_2.ogg",
+        "2026_3.ogg",
+        "2026_4.ogg",
+        "2026_5.ogg"
     };
     const std::array<const char*, static_cast<size_t>(GameAssets::Textures::TexturesCount)>
         Textures = {"test.png"};
