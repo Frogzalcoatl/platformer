@@ -5,17 +5,17 @@
 #include <array>
 #include <box2d/box2d.h>
 #include <filesystem>
+#include <memory>
 #include <variant>
 #include <vector>
 
 // std::string_view is a efficient read-only version of std::string
 inline constexpr std::string_view AssetsFolderName = "assets";
-inline constexpr size_t GameAssetTypeCount = 2;
 
 namespace GameAssets {
 enum class Fonts : uint8_t {
     Monocraft,
-    FontCount
+    FontsCount
 };
 enum class Sounds : uint8_t {
     Fart,
@@ -38,6 +38,7 @@ enum class Music : uint8_t {
     M2026_3,
     M2026_4,
     M2026_5,
+    M2026_6,
     MusicCount
 };
 enum class Textures : uint8_t {
@@ -45,7 +46,7 @@ enum class Textures : uint8_t {
     TexturesCount
 };
 inline constexpr struct {
-    const std::array<const char*, static_cast<size_t>(GameAssets::Fonts::FontCount)> Fonts = {
+    const std::array<const char*, static_cast<size_t>(GameAssets::Fonts::FontsCount)> Fonts = {
         "monocraft.ttf"
     };
     // AudioManager loads all sounds at startup but only loads music when requested.
@@ -68,7 +69,8 @@ inline constexpr struct {
         "2026_2.ogg",
         "2026_3.ogg",
         "2026_4.ogg",
-        "2026_5.ogg"
+        "2026_5.ogg",
+        "2026_6.ogg"
     };
     const std::array<const char*, static_cast<size_t>(GameAssets::Textures::TexturesCount)>
         Textures = {"test.png"};
@@ -81,36 +83,64 @@ inline struct {
 } Paths;
 } // namespace GameAssets
 
+struct SDL_Texture_Deleter {
+    // Overloading the functrion call operator by using "operator()"
+    // Doing things this way prevents unique_ptr from carrying an extra ptr for the delete func
+    void operator()(SDL_Texture* t) const {
+        if (t) {
+            SDL_DestroyTexture(t);
+        }
+    }
+};
+struct TTF_Font_Deleter {
+    void operator()(TTF_Font* f) const {
+        if (f) {
+            TTF_CloseFont(f);
+        }
+    }
+};
+struct TTF_TextEngine_Deleter {
+    void operator()(TTF_TextEngine* t) const {
+        if (t) {
+            TTF_DestroyRendererTextEngine(t);
+            SDL_Log("Destroyed SDL3_ttf text engine");
+        }
+    }
+};
+using UniqueTexture = std::unique_ptr<SDL_Texture, SDL_Texture_Deleter>;
+using UniqueFont = std::unique_ptr<TTF_Font, TTF_Font_Deleter>;
+using UniqueTextEngine = std::unique_ptr<TTF_TextEngine, TTF_TextEngine_Deleter>;
+
 struct CachedFont {
     GameAssets::Fonts fontId;
     float ptSize;
     TTF_FontStyleFlags style;
-    TTF_Font* font;
+    UniqueFont font;
 };
 
 class AssetManager {
   private:
     const std::filesystem::path basePath;
-    std::vector<std::byte> loadFileToBuffer(const std::filesystem::path relativeFilePath);
-    std::array<std::vector<std::byte>, static_cast<size_t>(GameAssets::Fonts::FontCount)> fontData;
+    std::array<std::vector<std::byte>, static_cast<size_t>(GameAssets::Fonts::FontsCount)> fontData;
     std::vector<CachedFont> fontCache;
-    std::array<SDL_Texture*, static_cast<size_t>(GameAssets::Textures::TexturesCount)> textureCache;
-    TTF_Font* getFont(GameAssets::Fonts font, float ptSize, TTF_FontStyleFlags style);
-    TTF_TextEngine* textEngine;
+    std::array<UniqueTexture, static_cast<size_t>(GameAssets::Textures::TexturesCount)>
+        textureCache;
+    UniqueTextEngine textEngine;
     SDL_Renderer* renderer;
+
+    std::vector<std::byte> loadFileToBuffer(const std::filesystem::path& relativeFilePath);
+    TTF_Font* getFont(GameAssets::Fonts font, float ptSize, TTF_FontStyleFlags style);
+    void missingFileFatalError(const std::string& message);
 
   public:
     AssetManager(SDL_Renderer* renderer);
-    ~AssetManager();
-
-    void closeAll();
 
     // Disable copying to protect the stability of memory buffers
     AssetManager(const AssetManager&) = delete;
     AssetManager& operator=(const AssetManager&) = delete;
 
     // Render text at a high resolution then scale down so that it still looks good while zoomed in
-    float textResolutionScaleFactor = 50.f;
+    const float TextResolutionScaleFactor = 50.f;
     TTF_TextEngine* getTextEngine() const;
     TTF_Text* getText(
         std::string text,
@@ -127,6 +157,4 @@ class AssetManager {
     MIX_Audio* getMusic(GameAssets::Music musicId, MIX_Mixer* mixerDevice);
 
     SDL_Texture* getTexture(GameAssets::Textures textureId);
-
-    void missingFileFatalError(const std::string& message);
 };

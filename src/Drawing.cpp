@@ -195,5 +195,5 @@ void Drawing::texture(
 
 double Drawing::b2RotToSdlAngle(b2Rot rotation) {
     float radians = b2Rot_GetAngle(rotation);
-    return -static_cast<double>(radians) * (180.0 / 3.14159265358979323846);
+    return -static_cast<double>(radians) * (180.0 / SDL_PI_D);
 }

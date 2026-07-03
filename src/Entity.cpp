@@ -82,12 +82,11 @@ void Entity::draw(
 }
 
 void Entity::teleport(b2Vec2 location) {
-    b2Body_SetLinearVelocity(
-        bodyId, b2Vec2{0.f, -0.01f}
-    ); // y not set to 0.f since that results in floating entity until its interacted with.
+    b2Body_SetLinearVelocity(bodyId, b2Vec2{0.f, 0.f});
     b2Body_SetAngularVelocity(bodyId, 0.f);
     // b2Rot_identity is default rotation
     b2Body_SetTransform(bodyId, location, b2Rot_identity);
+    b2Body_SetAwake(bodyId, true);
     previousPosition = location;
     previousAngle = b2Rot_GetAngle(b2Rot_identity);
 }

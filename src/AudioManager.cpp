@@ -9,7 +9,7 @@ AudioManager::AudioManager(AssetManager& assetManager) : assets{&assetManager} {
         );
         return;
     }
-    mixerDevice = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, nullptr);
+    mixerDevice = UniqueMixer(MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, nullptr));
     if (!mixerDevice) {
         SDL_LogError(
             SDL_LOG_CATEGORY_AUDIO, "Unable to create SDL3 mixer device: %s", SDL_GetError()
@@ -18,56 +18,33 @@ AudioManager::AudioManager(AssetManager& assetManager) : assets{&assetManager} {
     }
     SDL_Log("Created SDL3 mixer device");
     for (size_t i = 0; i < SoundTrackCount; i++) {
-        soundTracks[i] = MIX_CreateTrack(mixerDevice);
-        MIX_TagTrack(soundTracks[i], SoundTag);
+        MIX_Track* rawTrack = MIX_CreateTrack(mixerDevice.get());
+        if (!rawTrack) {
+            SDL_LogError(
+                SDL_LOG_CATEGORY_AUDIO, "Failed to create sound track %zu: %s", i, SDL_GetError()
+            );
+            continue;
+        }
+        soundTracks[i] = UniqueTrack(rawTrack);
+        MIX_TagTrack(soundTracks[i].get(), SoundTag);
     }
-    musicTrack = MIX_CreateTrack(mixerDevice);
-    MIX_TagTrack(musicTrack, MusicTag);
+    musicTrack = UniqueTrack(MIX_CreateTrack(mixerDevice.get()));
+    if (musicTrack) {
+        MIX_TagTrack(musicTrack.get(), MusicTag);
+    }
     SDL_Log("Created SDL3 mixer audio tracks");
-    loadedSounds.fill(nullptr);
     for (size_t i = 0; i < static_cast<size_t>(GameAssets::Sounds::SoundsCount); i++) {
-        loadedSounds[i] = assets->getSound(static_cast<GameAssets::Sounds>(i), mixerDevice);
+        loadedSounds[i] =
+            UniqueAudio(assets->getSound(static_cast<GameAssets::Sounds>(i), mixerDevice.get()));
     }
     volumeMultipliers.fill(1.f);
-}
-
-AudioManager::~AudioManager() {
-    if (musicTrack) {
-        MIX_SetTrackAudio(musicTrack, nullptr);
-        MIX_DestroyTrack(musicTrack);
-        musicTrack = nullptr;
-        SDL_Log("Destroyed SDL3 Mixer music track");
-    }
-    for (size_t i = 0; i < SoundTrackCount; i++) {
-        if (soundTracks[i]) {
-            MIX_SetTrackAudio(soundTracks[i], nullptr);
-            MIX_DestroyTrack(soundTracks[i]);
-            soundTracks[i] = nullptr;
-            SDL_Log("Destroyed SDL3 Mixer sound track at index %zu", i);
-        }
-    }
-    for (size_t i = 0; i < static_cast<size_t>(GameAssets::Sounds::SoundsCount); i++) {
-        if (loadedSounds[i]) {
-            MIX_DestroyAudio(loadedSounds[i]);
-            loadedSounds[i] = nullptr;
-        }
-    }
-    if (currentMusic) {
-        MIX_DestroyAudio(currentMusic);
-        currentMusic = nullptr;
-    }
-    if (mixerDevice) {
-        MIX_DestroyMixer(mixerDevice);
-        mixerDevice = nullptr;
-        SDL_Log("Destroyed SDL3 mixer device");
-    }
 }
 
 bool AudioManager::playSound(GameAssets::Sounds soundId, unsigned int volume, float pitch) {
     assert(
         soundId >= static_cast<GameAssets::Sounds>(0) && soundId < GameAssets::Sounds::SoundsCount
     );
-    MIX_Audio* sound = loadedSounds[static_cast<size_t>(soundId)];
+    MIX_Audio* sound = loadedSounds[static_cast<size_t>(soundId)].get();
     if (!sound) {
         SDL_LogWarn(
             SDL_LOG_CATEGORY_AUDIO,
@@ -78,17 +55,17 @@ bool AudioManager::playSound(GameAssets::Sounds soundId, unsigned int volume, fl
     }
     MIX_Track* freeTrack = nullptr;
     for (size_t i = 0; i < SoundTrackCount; i++) {
-        if (!MIX_TrackPlaying(soundTracks[i])) {
-            freeTrack = soundTracks[i];
+        if (!MIX_TrackPlaying(soundTracks[i].get())) {
+            freeTrack = soundTracks[i].get();
             break;
         }
     }
     if (!freeTrack) {
-        freeTrack = soundTracks[0];
+        freeTrack = soundTracks[0].get();
     }
     MIX_SetTrackFrequencyRatio(freeTrack, pitch);
     MIX_SetTagGain(
-        mixerDevice,
+        mixerDevice.get(),
         SoundTag,
         static_cast<float>(volume) / 100.f *
             volumeMultipliers[static_cast<size_t>(AudioCategory::Sounds)]
@@ -111,11 +88,7 @@ bool AudioManager::playMusic(
         clearCurrentMusic();
         return false;
     }
-    MIX_PauseTrack(musicTrack);
-    if (currentMusic) {
-        MIX_DestroyAudio(currentMusic);
-        currentMusic = nullptr;
-    }
+    clearCurrentMusic();
     if (!assets) {
         SDL_LogError(
             SDL_LOG_CATEGORY_AUDIO,
@@ -125,25 +98,25 @@ bool AudioManager::playMusic(
         clearCurrentMusic();
         return false;
     }
-    currentMusic = assets->getMusic(musicId, mixerDevice);
+    currentMusic = UniqueAudio(assets->getMusic(musicId, mixerDevice.get()));
     if (!currentMusic) {
         clearCurrentMusic();
         return false;
     }
-    MIX_SetTrackFrequencyRatio(musicTrack, pitch);
+    MIX_SetTrackFrequencyRatio(musicTrack.get(), pitch);
     MIX_SetTagGain(
-        mixerDevice,
+        mixerDevice.get(),
         MusicTag,
         volume / 100.f * volumeMultipliers[static_cast<size_t>(AudioCategory::Music)]
     );
     currentMusicVolume = volume / 100.f;
-    MIX_SetTrackAudio(musicTrack, currentMusic);
+    MIX_SetTrackAudio(musicTrack.get(), currentMusic.get());
     SDL_PropertiesID properties = SDL_CreateProperties();
     if (loop) {
         // -1 loops infinitely, any positive integer would loop that amount of times.
         SDL_SetNumberProperty(properties, MIX_PROP_PLAY_LOOPS_NUMBER, -1);
     }
-    MIX_PlayTrack(musicTrack, properties);
+    MIX_PlayTrack(musicTrack.get(), properties);
     SDL_DestroyProperties(properties);
     currentMusicName = GameAssets::FileNames.Music[static_cast<size_t>(musicId)];
     return true;
@@ -156,26 +129,23 @@ void AudioManager::setVolume(AudioCategory category, unsigned int volume) {
     float volumeFloat = volume / 100.f;
     volumeMultipliers[static_cast<size_t>(category)] = volumeFloat;
     if (category == AudioCategory::Master) {
-        MIX_SetMixerGain(mixerDevice, volumeFloat);
+        MIX_SetMixerGain(mixerDevice.get(), volumeFloat);
     } else if (category == AudioCategory::Music) {
-        MIX_SetTrackGain(musicTrack, volumeFloat * currentMusicVolume);
+        MIX_SetTrackGain(musicTrack.get(), volumeFloat * currentMusicVolume);
     }
 }
 
 void AudioManager::setMusicPitch(float pitch) {
-    MIX_SetTrackFrequencyRatio(musicTrack, pitch);
+    MIX_SetTrackFrequencyRatio(musicTrack.get(), pitch);
 }
 
 void AudioManager::clearCurrentMusic() {
     if (!musicTrack) {
         return;
     }
-    MIX_PauseTrack(musicTrack);
-    if (currentMusic) {
-        MIX_DestroyAudio(currentMusic);
-        currentMusic = nullptr;
-    }
-    MIX_SetTrackAudio(musicTrack, nullptr);
+    MIX_PauseTrack(musicTrack.get());
+    MIX_SetTrackAudio(musicTrack.get(), nullptr);
+    currentMusic = nullptr;
     currentMusicName = "";
 }
 
@@ -193,11 +163,11 @@ const char* AudioManager::getCurrentMusicName() const {
 }
 
 float AudioManager::getMusicPitch() const {
-    return MIX_GetTrackFrequencyRatio(musicTrack);
+    return MIX_GetTrackFrequencyRatio(musicTrack.get());
 }
 
 bool AudioManager::isMusicLooping() const {
-    return MIX_GetTrackLoops(musicTrack) == -1 ? true : false;
+    return MIX_GetTrackLoops(musicTrack.get()) == -1 ? true : false;
 }
 
 bool AudioManager::isMusicPlaying() const {
@@ -207,28 +177,28 @@ bool AudioManager::isMusicPlaying() const {
     if (isMusicLooping()) {
         return true;
     }
-    Sint64 playbackFrames = MIX_GetTrackPlaybackPosition(musicTrack);
-    Sint64 playbackPositionMS = MIX_TrackFramesToMS(musicTrack, playbackFrames);
-    MIX_Audio* music = MIX_GetTrackAudio(musicTrack);
+    Sint64 playbackFrames = MIX_GetTrackPlaybackPosition(musicTrack.get());
+    Sint64 playbackPositionMS = MIX_TrackFramesToMS(musicTrack.get(), playbackFrames);
+    MIX_Audio* music = MIX_GetTrackAudio(musicTrack.get());
     Sint64 durationFrames = MIX_GetAudioDuration(music);
-    Sint64 musicLengthMS = MIX_TrackFramesToMS(musicTrack, durationFrames);
+    Sint64 musicLengthMS = MIX_TrackFramesToMS(musicTrack.get(), durationFrames);
     return playbackPositionMS != musicLengthMS;
 }
 
 Sint64 AudioManager::getMusicPlaybackPosition() const {
-    Sint64 sampleFrames = MIX_GetTrackPlaybackPosition(musicTrack);
-    return MIX_TrackFramesToMS(musicTrack, sampleFrames) / 1000;
+    Sint64 sampleFrames = MIX_GetTrackPlaybackPosition(musicTrack.get());
+    return MIX_TrackFramesToMS(musicTrack.get(), sampleFrames) / 1000;
 }
 
 Sint64 AudioManager::getMusicTimeRemaining() const {
-    Sint64 sampleFrames = MIX_GetTrackRemaining(musicTrack);
-    return MIX_TrackFramesToMS(musicTrack, sampleFrames) / 1000;
+    Sint64 sampleFrames = MIX_GetTrackRemaining(musicTrack.get());
+    return MIX_TrackFramesToMS(musicTrack.get(), sampleFrames) / 1000;
 }
 
 Sint64 AudioManager::getMusicLength() const {
-    MIX_Audio* music = MIX_GetTrackAudio(musicTrack);
+    MIX_Audio* music = MIX_GetTrackAudio(musicTrack.get());
     Sint64 sampleFrames = MIX_GetAudioDuration(music);
-    return MIX_TrackFramesToMS(musicTrack, sampleFrames) / 1000;
+    return MIX_TrackFramesToMS(musicTrack.get(), sampleFrames) / 1000;
 }
 
 std::string AudioManager::formattedMusicTime() const {

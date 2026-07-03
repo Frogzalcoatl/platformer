@@ -6,12 +6,11 @@
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_sdlrenderer3.h>
+#include <stdexcept>
 
 Platformer::Platformer()
     : window{"C++ Platformer", Colors.BackGround}, assets{window.getSdlRenderer()}, audio{assets},
       ui{assets} {
-    DiscordRpcManager::init();
-    DiscordRpcManager::setStatus("In Development", nullptr);
 }
 
 void Platformer::handleSdlEvent() {
@@ -110,11 +109,12 @@ void Platformer::handleGameEvent() {
     }
 }
 
-static bool playMusicFailed = false;
+static bool playMusicFailed = false; // Just for testing
 
 void Platformer::run() {
-    TTF_Text* text = assets.getText("Player", GameAssets::Fonts::Monocraft, 20.f); // Just to test
     running = true;
+    TTF_Text* text =
+        assets.getText("Player", GameAssets::Fonts::Monocraft, 20.f); // Just for testing
     while (running) {
         if (!audio.isMusicPlaying() && !playMusicFailed) {
             GameAssets::Music randomSong = static_cast<GameAssets::Music>(
@@ -145,7 +145,7 @@ void Platformer::run() {
                     textPos,
                     currentLevel->camera.getScaleFactor(),
                     currentLevel->camera.getOffsetPixels(),
-                    assets.textResolutionScaleFactor
+                    assets.TextResolutionScaleFactor
                 );
             }
         }
@@ -153,20 +153,4 @@ void Platformer::run() {
         window.render(frameStartNs);
         DiscordRpcManager::update();
     }
-}
-
-void Platformer::close() {
-    DiscordRpcManager::shutdown();
-    assets.closeAll();
-    window.cleanup();
-    ImGui_ImplSDLRenderer3_Shutdown();
-    SDL_Log("Shutdown ImGui SDL3 renderer implementation");
-    ImGui_ImplSDL3_Shutdown();
-    SDL_Log("Shutdown ImGui SDL3 implementation");
-    ImGui::DestroyContext();
-    SDL_Log("Destroyed ImGui context");
-    TTF_Quit();
-    SDL_Log("Quit SDL_ttf");
-    SDL_Quit();
-    SDL_Log("Quit SDL");
 }

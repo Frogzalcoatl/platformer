@@ -1,6 +1,7 @@
 #pragma once
 #include <SDL3/SDL.h>
 #include <box2d/box2d.h>
+#include <memory>
 #include <optional>
 #include <string>
 
@@ -8,6 +9,23 @@ struct WindowDimensions {
     int x;
     int y;
 };
+
+struct SDL_Window_Deleter {
+    void operator()(SDL_Window* w) const {
+        if (w) {
+            SDL_DestroyWindow(w);
+        }
+    }
+};
+struct SDL_Renderer_Deleter {
+    void operator()(SDL_Renderer* r) const {
+        if (r) {
+            SDL_DestroyRenderer(r);
+        }
+    }
+};
+using UniqueWindow = std::unique_ptr<SDL_Window, SDL_Window_Deleter>;
+using UniqueRenderer = std::unique_ptr<SDL_Renderer, SDL_Renderer_Deleter>;
 
 class WindowManager {
   private:
@@ -17,16 +35,13 @@ class WindowManager {
     Uint64 targetFrameTimeNs = 1000000000ULL / targetFps;
     bool vsync = false;
     bool fpsUnlimited = false;
-    SDL_Renderer* sdlRenderer;
-    SDL_Window* sdlWindow;
+    UniqueRenderer sdlRenderer;
+    UniqueWindow sdlWindow;
 
   public:
     SDL_Color backgroundColor;
 
     WindowManager(const char* windowName, SDL_Color backgroundColor);
-    ~WindowManager();
-
-    void cleanup();
 
     SDL_Window* getSdlWindow() const;
     SDL_Renderer* getSdlRenderer() const;

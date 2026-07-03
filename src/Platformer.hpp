@@ -25,5 +25,4 @@ class Platformer {
   public:
     Platformer();
     void run();
-    void close();
 };

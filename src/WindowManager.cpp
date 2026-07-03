@@ -8,8 +8,9 @@
 WindowManager::WindowManager(const char* windowName, SDL_Color backgroundColor)
     : backgroundColor(backgroundColor) {
     size = WindowDimensions{1280, 720};
-    sdlWindow =
-        SDL_CreateWindow(windowName, size.x, size.y, SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED);
+    sdlWindow = UniqueWindow(
+        SDL_CreateWindow(windowName, size.x, size.y, SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED)
+    );
     if (!sdlWindow) {
         SDL_LogError(
             SDL_LOG_CATEGORY_APPLICATION, "Unable to create SDL3 Window: %s", SDL_GetError()
@@ -17,7 +18,7 @@ WindowManager::WindowManager(const char* windowName, SDL_Color backgroundColor)
         return;
     }
     SDL_Log("Created SDL3 Window with name \"%s\"", windowName);
-    sdlRenderer = SDL_CreateRenderer(sdlWindow, nullptr);
+    sdlRenderer = UniqueRenderer(SDL_CreateRenderer(sdlWindow.get(), nullptr));
     if (!sdlRenderer) {
         SDL_LogError(SDL_LOG_CATEGORY_RENDER, "Unable to create SDL3 renderer: %s", SDL_GetError());
         return;
@@ -25,31 +26,14 @@ WindowManager::WindowManager(const char* windowName, SDL_Color backgroundColor)
     SDL_Log("Created SDL3 renderer");
     setVsync(vsync);
     setTargetFps(240);
-    ImGui_ImplSDL3_InitForSDLRenderer(sdlWindow, sdlRenderer);
-    ImGui_ImplSDLRenderer3_Init(sdlRenderer);
-}
-
-WindowManager::~WindowManager() {
-    cleanup();
-}
-
-void WindowManager::cleanup() {
-    if (sdlRenderer) {
-        SDL_DestroyRenderer(sdlRenderer);
-        sdlRenderer = nullptr;
-        SDL_Log("Destroyed SDL3 renderer");
-    }
-    if (sdlWindow) {
-        SDL_DestroyWindow(sdlWindow);
-        sdlWindow = nullptr;
-        SDL_Log("Destroyed SDL3 window");
-    }
+    ImGui_ImplSDL3_InitForSDLRenderer(sdlWindow.get(), sdlRenderer.get());
+    ImGui_ImplSDLRenderer3_Init(sdlRenderer.get());
 }
 
 void WindowManager::render(Uint64 frameStartNs) {
     ImGui::Render();
-    ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), sdlRenderer);
-    SDL_RenderPresent(sdlRenderer);
+    ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), sdlRenderer.get());
+    SDL_RenderPresent(sdlRenderer.get());
     if (fpsUnlimited || vsync) {
         return;
     }
@@ -65,17 +49,21 @@ void WindowManager::clearFrame() {
     ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();
     SDL_SetRenderDrawColor(
-        sdlRenderer, backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.a
+        sdlRenderer.get(),
+        backgroundColor.r,
+        backgroundColor.g,
+        backgroundColor.b,
+        backgroundColor.a
     );
-    SDL_RenderClear(sdlRenderer);
+    SDL_RenderClear(sdlRenderer.get());
 }
 
 SDL_Window* WindowManager::getSdlWindow() const {
-    return sdlWindow;
+    return sdlWindow.get();
 }
 
 SDL_Renderer* WindowManager::getSdlRenderer() const {
-    return sdlRenderer;
+    return sdlRenderer.get();
 };
 
 WindowDimensions WindowManager::getSize() const {
@@ -92,7 +80,7 @@ Uint64 WindowManager::getTargetFps() const {
 
 std::string WindowManager::targetFpsStr() const {
     if (vsync) {
-        SDL_DisplayID displayID = SDL_GetDisplayForWindow(sdlWindow);
+        SDL_DisplayID displayID = SDL_GetDisplayForWindow(sdlWindow.get());
         if (displayID == 0) {
             return "Unknown";
         }
@@ -119,7 +107,7 @@ void WindowManager::setVsync(bool value) {
         setFpsUnlimited(false);
     }
     int arg = value == true ? 1 : 0;
-    if (!SDL_SetRenderVSync(sdlRenderer, arg)) {
+    if (!SDL_SetRenderVSync(sdlRenderer.get(), arg)) {
         SDL_LogError(SDL_LOG_CATEGORY_RENDER, "Failed to toggle VSync: %s", SDL_GetError());
         return;
     }
@@ -145,7 +133,7 @@ bool WindowManager::getFpsUnlimited() const {
 
 void WindowManager::toggleFullscreen() {
     isFullscreen = !isFullscreen;
-    SDL_SetWindowFullscreen(sdlWindow, isFullscreen);
+    SDL_SetWindowFullscreen(sdlWindow.get(), isFullscreen);
 }
 
 void WindowManager::handleResize(int sizeX, int sizeY) {

@@ -2,6 +2,7 @@
 #include "AssetManager.hpp"
 #include <SDL3_mixer/SDL_mixer.h>
 #include <array>
+#include <memory>
 #include <string>
 
 inline constexpr size_t SoundTrackCount = 8;
@@ -13,24 +14,49 @@ enum class AudioCategory : uint8_t {
     AudioCategoryCount,
 };
 
+struct MIX_Mixer_Deleter {
+    void operator()(MIX_Mixer* m) const {
+        if (m) {
+            MIX_DestroyMixer(m);
+            SDL_Log("Destroyed SDL3 mixer device");
+        }
+    }
+};
+struct MIX_Track_Deleter {
+    void operator()(MIX_Track* t) const {
+        if (t) {
+            MIX_DestroyTrack(t);
+        }
+    }
+};
+struct MIX_Audio_Deleter {
+    void operator()(MIX_Audio* a) const {
+        if (a) {
+            MIX_DestroyAudio(a);
+        }
+    }
+};
+using UniqueMixer = std::unique_ptr<MIX_Mixer, MIX_Mixer_Deleter>;
+using UniqueTrack = std::unique_ptr<MIX_Track, MIX_Track_Deleter>;
+using UniqueAudio = std::unique_ptr<MIX_Audio, MIX_Audio_Deleter>;
+
 class AudioManager {
   private:
     AssetManager* assets;
-    MIX_Mixer* mixerDevice;
-    MIX_Track* soundTracks[SoundTrackCount];
-    MIX_Track* musicTrack;
+    UniqueMixer mixerDevice;
+    std::array<UniqueTrack, SoundTrackCount> soundTracks;
+    UniqueTrack musicTrack;
     const char* SoundTag = "Sounds";
     const char* MusicTag = "Music";
-    std::array<MIX_Audio*, static_cast<size_t>(GameAssets::Sounds::SoundsCount)> loadedSounds;
+    std::array<UniqueAudio, static_cast<size_t>(GameAssets::Sounds::SoundsCount)> loadedSounds;
     std::array<float, static_cast<size_t>(AudioCategory::AudioCategoryCount)> volumeMultipliers;
-    MIX_Audio* currentMusic = nullptr;
+    UniqueAudio currentMusic = nullptr;
     float currentMusicVolume =
         1.f; // Separate volume multiplier, based on volume passed into playMusic func
     const char* currentMusicName = "";
 
   public:
     AudioManager(AssetManager& assets);
-    ~AudioManager();
 
     bool playSound(GameAssets::Sounds soundId, unsigned int volume = 100, float pitch = 1.f);
     bool playMusic(

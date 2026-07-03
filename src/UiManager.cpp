@@ -79,7 +79,7 @@ void UiManager::runCancelEvent() {
     case UiState::Playing:
         currentState = UiState::Paused;
         break;
-    case UiState::Paused: {
+    case UiState::Paused:
         currentState = UiState::Playing;
         break;
     case UiState::PausedSettings:
@@ -87,7 +87,6 @@ void UiManager::runCancelEvent() {
         break;
     default:
         break;
-    }
     }
 }
 

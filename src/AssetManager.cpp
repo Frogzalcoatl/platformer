@@ -1,9 +1,10 @@
 #include "AssetManager.hpp"
 #include <cassert>
 #include <fstream>
+#include <stdexcept>
 
 std::vector<std::byte>
-AssetManager::loadFileToBuffer(const std::filesystem::path relativeFilePath) {
+AssetManager::loadFileToBuffer(const std::filesystem::path& relativeFilePath) {
     const std::filesystem::path fullPath = basePath / relativeFilePath;
     std::ifstream file(fullPath, std::ios::binary | std::ios::ate);
     if (!file.is_open()) {
@@ -13,6 +14,10 @@ AssetManager::loadFileToBuffer(const std::filesystem::path relativeFilePath) {
         return {};
     }
     const std::streamsize fileSize = file.tellg();
+    if (fileSize <= 0) {
+        missingFileFatalError("File is empty of invalid: " + fullPath.string());
+        return {};
+    }
     std::vector<std::byte> buffer(static_cast<size_t>(fileSize));
     file.seekg(0, std::ios::beg);
     // reinterpret_cast is simply to avoid compiler warnings, unlike with static_cast, the data is
@@ -21,7 +26,7 @@ AssetManager::loadFileToBuffer(const std::filesystem::path relativeFilePath) {
         missingFileFatalError("Unable to read " + fullPath.string());
         return {};
     }
-    SDL_Log("Read file %s", fullPath.string().c_str());
+    SDL_Log("Got raw data from file %s", fullPath.filename().string().c_str());
     return buffer;
 }
 
@@ -31,41 +36,19 @@ AssetManager::AssetManager(SDL_Renderer* renderer)
         missingFileFatalError("SDL3 renderer is null");
         return;
     }
-    textEngine = TTF_CreateRendererTextEngine(renderer);
+    textEngine = UniqueTextEngine(TTF_CreateRendererTextEngine(renderer));
     if (!textEngine) {
         std::string error = SDL_GetError();
         missingFileFatalError("Unable to create SDL3 text engine:\n" + error);
     }
-    textureCache.fill(nullptr);
-}
-
-AssetManager::~AssetManager() {
-    closeAll();
-}
-
-void AssetManager::closeAll() {
-    if (fontCache.size() > 0) {
-        clearFontCache();
-    }
-    for (auto& texture : textureCache) {
-        if (texture) {
-            SDL_DestroyTexture(texture);
-            texture = nullptr;
-        }
-    }
-    if (textEngine) {
-        TTF_DestroyRendererTextEngine(textEngine);
-        textEngine = nullptr;
-        SDL_Log("Destroyed SDL_ttf text engine");
-    }
 }
 
 TTF_TextEngine* AssetManager::getTextEngine() const {
-    return textEngine;
+    return textEngine.get();
 }
 
 TTF_Font* AssetManager::getFont(GameAssets::Fonts fontId, float ptSize, TTF_FontStyleFlags style) {
-    assert(fontId >= static_cast<GameAssets::Fonts>(0) && fontId < GameAssets::Fonts::FontCount);
+    assert(fontId < GameAssets::Fonts::FontsCount);
     if (ptSize <= 0) {
         ptSize = 12;
         SDL_LogWarn(
@@ -75,11 +58,12 @@ TTF_Font* AssetManager::getFont(GameAssets::Fonts fontId, float ptSize, TTF_Font
             GameAssets::FileNames.Fonts[static_cast<size_t>(fontId)]
         );
     }
-    ptSize *= textResolutionScaleFactor;
+    ptSize *= TextResolutionScaleFactor;
+    const float epsilon = 0.001f; // If difference is less than this value then its a match
     for (size_t i = 0; i < fontCache.size(); i++) {
-        if (fontCache[i].fontId == fontId && fontCache[i].ptSize == ptSize &&
+        if (fontCache[i].fontId == fontId && (fontCache[i].ptSize - ptSize) < epsilon &&
             fontCache[i].style == style) {
-            return fontCache[i].font;
+            return fontCache[i].font.get();
         }
     }
     auto& rawData = fontData[static_cast<size_t>(fontId)];
@@ -109,10 +93,12 @@ TTF_Font* AssetManager::getFont(GameAssets::Fonts fontId, float ptSize, TTF_Font
     TTF_SetFontStyle(newFont, style);
     CachedFont newCachedFont;
     newCachedFont.fontId = fontId;
-    newCachedFont.font = newFont;
+    newCachedFont.font = UniqueFont(newFont);
     newCachedFont.ptSize = ptSize;
     newCachedFont.style = style;
-    fontCache.push_back(newCachedFont);
+    fontCache.push_back(
+        std::move(newCachedFont)
+    ); // std::move is needed since UniqueFonts are not copyable
     SDL_Log(
         "Loaded SDL3 ttf from file \"%s\"", GameAssets::FileNames.Fonts[static_cast<size_t>(fontId)]
     );
@@ -134,13 +120,10 @@ TTF_Text* AssetManager::getText(
         missingFileFatalError(message);
         return nullptr;
     }
-    return TTF_CreateText(textEngine, font, text.c_str(), text.length());
+    return TTF_CreateText(textEngine.get(), font, text.c_str(), text.length());
 }
 
 void AssetManager::clearFontCache() {
-    for (const CachedFont& chachedFont : fontCache) {
-        TTF_CloseFont(chachedFont.font);
-    }
     fontCache.clear();
     SDL_Log("Cleared font cache");
 }
@@ -153,7 +136,7 @@ void AssetManager::clearFontData() {
 }
 
 std::string AssetManager::getFontPath(GameAssets::Fonts fontId) {
-    assert(fontId >= static_cast<GameAssets::Fonts>(0) && fontId < GameAssets::Fonts::FontCount);
+    assert(fontId >= static_cast<GameAssets::Fonts>(0) && fontId < GameAssets::Fonts::FontsCount);
     std::filesystem::path path = basePath / GameAssets::Paths.Fonts /
                                  GameAssets::FileNames.Fonts[static_cast<size_t>(fontId)];
     return path.string();
@@ -231,14 +214,16 @@ SDL_Texture* AssetManager::getTexture(GameAssets::Textures textureId) {
     }
     auto& texture = textureCache[static_cast<size_t>(textureId)];
     if (texture) {
-        return texture;
+        return texture.get();
     }
     std::filesystem::path relativePath =
         GameAssets::Paths.Textures / GameAssets::FileNames.Textures[static_cast<size_t>(textureId)];
     std::filesystem::path fullPath = basePath / relativePath;
-    texture = IMG_LoadTexture_IO(
-        renderer, SDL_IOFromFile(fullPath.string().c_str(), "r"), true
-    ); // "r" means open file for reading
+    texture.reset(
+        IMG_LoadTexture_IO(
+            renderer, SDL_IOFromFile(fullPath.string().c_str(), "r"), true
+        ) // "r" means open file for reading
+    );    // Transfers ownership to the new pointer
     if (!texture) {
         std::string message = "Unable to load SDL3 texture from file \"";
         message += GameAssets::FileNames.Textures[static_cast<size_t>(textureId)];
@@ -251,12 +236,11 @@ SDL_Texture* AssetManager::getTexture(GameAssets::Textures textureId) {
         "Loaded SDL3 texture from file \"%s\"",
         GameAssets::FileNames.Textures[static_cast<size_t>(textureId)]
     );
-    return texture;
+    return texture.get();
 }
 
 void AssetManager::missingFileFatalError(const std::string& message) {
     const char* title = "Missing File Error";
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s: %s", title, message.c_str());
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, title, message.c_str(), NULL);
-    exit(EXIT_FAILURE);
+    throw std::runtime_error(message);
 }
