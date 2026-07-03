@@ -127,4 +127,6 @@ class AssetManager {
     MIX_Audio* getMusic(GameAssets::Music musicId, MIX_Mixer* mixerDevice);
 
     SDL_Texture* getTexture(GameAssets::Textures textureId);
+
+    void missingFileFatalError(const std::string& message);
 };
