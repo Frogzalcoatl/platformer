@@ -61,7 +61,7 @@
       "cacheVariables": {
         "CMAKE_C_COMPILER": "gcc",
         "CMAKE_CXX_COMPILER": "g++",
-        "CMAKE_CONFIGURATION_TYPES": "Debug;Release"
+        "CMAKE_CONFIGURATION_TYPES": "Debug;Release;RelWithDebInfo"
       }
     },
     {
@@ -78,7 +78,7 @@
       "cacheVariables": {
         "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++",
-        "CMAKE_CONFIGURATION_TYPES": "Debug;Release"
+        "CMAKE_CONFIGURATION_TYPES": "Debug;Release;RelWithDebInfo"
       }
     },
     {
@@ -95,7 +95,7 @@
       "cacheVariables": {
         "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++",
-        "CMAKE_CONFIGURATION_TYPES": "Debug;Release"
+        "CMAKE_CONFIGURATION_TYPES": "Debug;Release;RelWithDebInfo"
       }
     },
     {
@@ -125,6 +125,12 @@
       "configuration": "Release"
     },
     {
+      "name": "msvc-relwithdebinfo",
+      "displayName": "MSVC RelWithDebInfo",
+      "configurePreset": "windows-msvc",
+      "configuration": "RelWithDebInfo"
+    },
+    {
       "name": "clang-vs-debug",
       "displayName": "Clang VS Debug",
       "configurePreset": "windows-clang-cl-vs",
@@ -135,6 +141,12 @@
       "displayName": "Clang VS Release",
       "configurePreset": "windows-clang-cl-vs",
       "configuration": "Release"
+    },
+    {
+      "name": "clang-vs-relwithdebinfo",
+      "displayName": "Clang VS RelWithDebInfo",
+      "configurePreset": "windows-clang-cl-vs",
+      "configuration": "RelWithDebInfo"
     },
     {
       "name": "linux-gcc-debug",
@@ -149,6 +161,12 @@
       "configuration": "Release"
     },
     {
+      "name": "linux-gcc-relwithdebinfo",
+      "displayName": "Linux GCC RelWithDebInfo",
+      "configurePreset": "linux-gcc",
+      "configuration": "RelWithDebInfo"
+    },
+    {
       "name": "linux-clang-debug",
       "displayName": "Linux Clang Debug",
       "configurePreset": "linux-clang",
@@ -159,6 +177,12 @@
       "displayName": "Linux Clang Release",
       "configurePreset": "linux-clang",
       "configuration": "Release"
+    },
+    {
+      "name": "linux-clang-relwithdebinfo",
+      "displayName": "Linux Clang RelWithDebInfo",
+      "configurePreset": "linux-clang",
+      "configuration": "RelWithDebInfo"
     },
     {
       "name": "macos-clang-debug",
@@ -173,6 +197,12 @@
       "configuration": "Release"
     },
     {
+      "name": "macos-clang-relwithdebinfo",
+      "displayName": "macOS Ninja RelWithDebInfo",
+      "configurePreset": "macos-clang",
+      "configuration": "RelWithDebInfo"
+    },
+    {
       "name": "xcode-debug",
       "displayName": "Xcode Debug",
       "configurePreset": "macos-xcode",
@@ -183,6 +213,12 @@
       "displayName": "Xcode Release",
       "configurePreset": "macos-xcode",
       "configuration": "Release"
+    },
+    {
+      "name": "xcode-relwithdebinfo",
+      "displayName": "Xcode RelWithDebInfo",
+      "configurePreset": "macos-xcode",
+      "configuration": "RelWithDebInfo"
     }
   ]
 }
