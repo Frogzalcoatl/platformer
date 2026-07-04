@@ -2,25 +2,12 @@
 #include <cassert>
 
 UiManager::UiManager(AssetManager& assets, UiState startingState) : currentState(startingState) {
-    ImGuiIO& io = ImGui::GetIO();
-    monocraftExtraSmall = io.Fonts->AddFontFromFileTTF(
-        assets.getFontPath(GameAssets::Fonts::Monocraft).c_str(), 12.f
-    );
-    monocraftSmall = io.Fonts->AddFontFromFileTTF(
-        assets.getFontPath(GameAssets::Fonts::Monocraft).c_str(), 18.f
-    );
-    monocraftMedium = io.Fonts->AddFontFromFileTTF(
-        assets.getFontPath(GameAssets::Fonts::Monocraft).c_str(), 24.f
-    );
-    monocraftLarge = io.Fonts->AddFontFromFileTTF(
-        assets.getFontPath(GameAssets::Fonts::Monocraft).c_str(), 36.f
-    );
-    monocraftExtraLarge = io.Fonts->AddFontFromFileTTF(
-        assets.getFontPath(GameAssets::Fonts::Monocraft).c_str(), 72.f
-    );
-    monocraftTitle = io.Fonts->AddFontFromFileTTF(
-        assets.getFontPath(GameAssets::Fonts::Monocraft).c_str(), 128.f
-    );
+    monocraftExtraSmall = assets.getImGuiFont(GameAssets::Fonts::Monocraft, 12.f);
+    monocraftSmall = assets.getImGuiFont(GameAssets::Fonts::Monocraft, 18.f);
+    monocraftMedium = assets.getImGuiFont(GameAssets::Fonts::Monocraft, 24.f);
+    monocraftLarge = assets.getImGuiFont(GameAssets::Fonts::Monocraft, 36.f);
+    monocraftExtraLarge = assets.getImGuiFont(GameAssets::Fonts::Monocraft, 72.f);
+    monocraftTitle = assets.getImGuiFont(GameAssets::Fonts::Monocraft, 128.f);
 }
 
 void UiManager::setState(UiState state) {

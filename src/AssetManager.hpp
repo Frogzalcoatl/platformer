@@ -1,16 +1,15 @@
 #pragma once
+#include "VirtualFileSystem.hpp"
 #include <SDL3_image/SDL_image.h>
 #include <SDL3_mixer/SDL_mixer.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <array>
 #include <box2d/box2d.h>
 #include <filesystem>
+#include <imgui.h>
 #include <memory>
 #include <variant>
 #include <vector>
-
-// std::string_view is a efficient read-only version of std::string
-inline constexpr std::string_view AssetsFolderName = "assets";
 
 namespace GameAssets {
 enum class Fonts : uint8_t {
@@ -76,10 +75,10 @@ inline constexpr struct {
         Textures = {"test.png"};
 } FileNames;
 inline struct {
-    std::filesystem::path Fonts = std::filesystem::path(AssetsFolderName) / "fonts";
-    std::filesystem::path Sounds = std::filesystem::path(AssetsFolderName) / "sounds";
-    std::filesystem::path Music = std::filesystem::path(AssetsFolderName) / "music";
-    std::filesystem::path Textures = std::filesystem::path(AssetsFolderName) / "textures";
+    std::filesystem::path Fonts = "fonts";
+    std::filesystem::path Sounds = "sounds";
+    std::filesystem::path Music = "music";
+    std::filesystem::path Textures = "textures";
 } Paths;
 } // namespace GameAssets
 
@@ -128,7 +127,8 @@ struct CachedFont {
 
 class AssetManager {
   private:
-    const std::filesystem::path basePath;
+    VirtualFileSystem vfs;
+
     std::array<std::vector<std::byte>, static_cast<size_t>(GameAssets::Fonts::FontsCount)> fontData;
     std::vector<CachedFont> fontCache;
     std::array<UniqueTexture, static_cast<size_t>(GameAssets::Textures::TexturesCount)>
@@ -136,9 +136,7 @@ class AssetManager {
     UniqueTextEngine textEngine;
     SDL_Renderer* renderer;
 
-    std::vector<std::byte> loadFileToBuffer(const std::filesystem::path& relativeFilePath);
     TTF_Font* getFont(GameAssets::Fonts font, float ptSize, TTF_FontStyleFlags style);
-    void missingFileFatalError(const std::string& message);
 
   public:
     AssetManager(SDL_Renderer* renderer);
@@ -156,10 +154,10 @@ class AssetManager {
         float ptSize,
         TTF_FontStyleFlags style = TTF_STYLE_NORMAL
     );
+    ImFont* getImGuiFont(GameAssets::Fonts fontId, float ptSize);
     // Cache includes styling, data is the raw bytes that are referenced to generate styled fonts
     void clearFontCache();
     void clearFontData();
-    std::string getFontPath(GameAssets::Fonts fontId);
 
     MIX_Audio* getSound(GameAssets::Sounds soundId, MIX_Mixer* mixerDevice);
     MIX_Audio* getMusic(GameAssets::Music musicId, MIX_Mixer* mixerDevice);

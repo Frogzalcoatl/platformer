@@ -1,5 +1,13 @@
 cmake_minimum_required(VERSION 3.26)
+
 project(MyPlatformer CXX C)
+
+set(ASSETS_FOLDER_NAME "assets")
+set(DAT_FILE_NAME "${PROJECT_NAME}.dat")
+
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg.json" VCPKG_JSON_DATA)
+string(JSON GAME_VERSION GET "${VCPKG_JSON_DATA}" "version")
+message(STATUS "Configuring ${PROJECT_NAME} - Version: ${GAME_VERSION}")
 
 # Static lib setup
 cmake_policy(SET CMP0091 NEW)
@@ -78,6 +86,14 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE src)
 
+add_subdirectory(libs/vfs)
+
+target_compile_definitions(VirtualFileSystem PUBLIC 
+    GameVersion="${GAME_VERSION}"
+    AssetsFolderName="${ASSETS_FOLDER_NAME}"
+    DatFileName="${DAT_FILE_NAME}"
+)
+
 target_link_libraries(${PROJECT_NAME} PRIVATE
     SDL3::SDL3
     SDL3_image::SDL3_image
@@ -86,6 +102,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     box2d::box2d
     imgui::imgui
     discord-rpc::discord-rpc
+    VirtualFileSystem
 )
 
 if(MSVC)
@@ -107,4 +124,13 @@ add_custom_target(copy_assets
             "${CMAKE_CURRENT_SOURCE_DIR}/assets"
             "$<TARGET_FILE_DIR:${PROJECT_NAME}>/assets"
     COMMENT "Copying modified assets to the build directory next to the executable"
+)
+
+add_custom_target(pack_assets
+    COMMAND $<TARGET_FILE:Packer> 
+            "${CMAKE_CURRENT_SOURCE_DIR}/${ASSETS_FOLDER_NAME}" 
+            "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${DAT_FILE_NAME}" 
+            "${GAME_VERSION}"
+    DEPENDS Packer
+    COMMENT "Packing assets into a single .dat archive next to the game executable"
 )
