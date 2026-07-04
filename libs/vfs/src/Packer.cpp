@@ -58,7 +58,8 @@ int main(int argc, char* argv[]) {
     VFS_Header header;
     header.magic = PackMagic;
     std::memset(header.version, 0, sizeof(header.version));
-    std::strncpy(header.version, versionArg.c_str(), sizeof(header.version) - 1);
+    size_t copyLength = std::min(versionArg.size(), sizeof(header.version) - 1);
+    std::copy_n(versionArg.begin(), copyLength, header.version);
     header.fileCount = static_cast<uint32_t>(fileCount);
     header._pad = 0;
     outputFile.write(reinterpret_cast<const char*>(&header), sizeof(VFS_Header));
