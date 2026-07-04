@@ -7,7 +7,7 @@
 
 WindowManager::WindowManager(const char* windowName, SDL_Color backgroundColor)
     : backgroundColor(backgroundColor) {
-    size = WindowDimensions{1280, 720};
+    size = WindowVec2{1280, 720};
     sdlWindow = UniqueWindow(
         SDL_CreateWindow(windowName, size.x, size.y, SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED)
     );
@@ -66,7 +66,7 @@ SDL_Renderer* WindowManager::getSdlRenderer() const {
     return sdlRenderer.get();
 };
 
-WindowDimensions WindowManager::getSize() const {
+WindowVec2 WindowManager::getSize() const {
     return size;
 }
 
@@ -139,4 +139,13 @@ void WindowManager::toggleFullscreen() {
 void WindowManager::handleResize(int sizeX, int sizeY) {
     size.x = sizeX;
     size.y = sizeY;
+}
+
+void WindowManager::handleMouseMotionEvent(const SDL_MouseMotionEvent& event) {
+    mousePos.x = event.x;
+    mousePos.y = event.y;
+}
+
+WindowVec2 WindowManager::getMousePos() const {
+    return mousePos;
 }

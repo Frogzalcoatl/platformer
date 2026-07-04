@@ -25,22 +25,15 @@ class UiManager {
     ImGuiSliderFlags sliderFlags = ImGuiSliderFlags_NoInput;
     void drawDebug(WindowManager& window, Entity* player, Camera* camera, InputManager& input);
     void drawMainMenu();
-    void drawSettings(
-        WindowManager& window, AudioManager& audio, InputManager& input, bool& showFanTriangulation
-    );
+    void
+    drawSettings(WindowManager& window, AudioManager& audio, InputManager& input, Level* level);
     void drawPauseMenu();
     void drawLargeLogo();
 
   public:
     UiManager(AssetManager& assets, UiState startingState = UiState::MainMenu);
 
-    void render(
-        WindowManager& window,
-        AudioManager& audio,
-        InputManager& input,
-        Level* level,
-        bool& showFanTriangulation
-    );
+    void render(WindowManager& window, AudioManager& audio, InputManager& input, Level* level);
     void setState(UiState state);
     UiState getState() const;
     void runCancelEvent();

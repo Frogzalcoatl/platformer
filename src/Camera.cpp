@@ -2,7 +2,7 @@
 
 Camera::Camera(Entity* followEntity, WindowManager& window)
     : window(window), entityToFollow(followEntity) {
-    WindowDimensions windowSize = window.getSize();
+    WindowVec2 windowSize = window.getSize();
     handleWindowResize(windowSize.x, windowSize.y);
 }
 
@@ -26,7 +26,7 @@ void Camera::updateOffset(std::optional<b2Vec2> worldPosition) {
     }
     offsetPixels.x = static_cast<int>(SDL_roundf(offsetWorld.x * scaleFactor));
     offsetPixels.y = static_cast<int>(SDL_roundf(offsetWorld.y * scaleFactor));
-    WindowDimensions size = window.getSize();
+    WindowVec2 size = window.getSize();
     offsetPixels.x += size.x / 2;
     offsetPixels.y += size.y / 2;
 }
@@ -37,11 +37,11 @@ void Camera::handleWindowResize(int x, int y) {
 }
 
 b2Vec2 Camera::getSizeWorld() const {
-    WindowDimensions size = window.getSize();
+    WindowVec2 size = window.getSize();
     return b2Vec2{size.x / scaleFactor, size.y / scaleFactor};
 }
 
-WindowDimensions Camera::getOffsetPixels() const {
+WindowVec2 Camera::getOffsetPixels() const {
     return offsetPixels;
 }
 
@@ -58,14 +58,21 @@ void Camera::incrementScaleMultiplierBy(float amount) {
         return;
     }
     scaleMultiplier += amount;
-    WindowDimensions size = window.getSize();
+    WindowVec2 size = window.getSize();
     updateScaleFactor(size.x, size.y);
 }
 
 void Camera::resetScaleMultiplier() {
     scaleMultiplier = 1.f;
-    WindowDimensions size = window.getSize();
+    WindowVec2 size = window.getSize();
     updateScaleFactor(size.x, size.y);
+}
+
+b2Vec2 Camera::pixelPosToWorldPos(WindowVec2 pos) {
+    float safeScaleFactor = SDL_max(scaleFactor, 0.001f);
+    return b2Vec2{
+        (pos.x + offsetPixels.x) / safeScaleFactor, (-pos.y + offsetPixels.y) / safeScaleFactor
+    };
 }
 
 void Camera::run(float alpha) {

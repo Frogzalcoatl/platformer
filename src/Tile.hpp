@@ -16,5 +16,5 @@ class Tile {
 
   public:
     Tile(Vec2Int position, AssetManager& assets, GameAssets::Textures textureId);
-    void draw(WindowManager& window, float scaleFactor, WindowDimensions offsetPixels);
+    void draw(WindowManager& window, float scaleFactor, WindowVec2 offsetPixels);
 };

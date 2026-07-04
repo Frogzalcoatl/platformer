@@ -10,7 +10,7 @@ void polygon(
     WindowManager& window,
     b2Transform& transform,
     float scaleFactor,
-    WindowDimensions offsetPixels,
+    WindowVec2 offsetPixels,
     SDL_FColor color = colorToFColor(Colors.White)
 );
 void polygonBorders(
@@ -18,7 +18,7 @@ void polygonBorders(
     WindowManager& window,
     b2Transform& transform,
     float scaleFactor,
-    WindowDimensions offsetPixels,
+    WindowVec2 offsetPixels,
     SDL_FColor color = colorToFColor(Colors.Black)
 );
 void showFanTriangulation(
@@ -26,7 +26,7 @@ void showFanTriangulation(
     WindowManager& window,
     b2Transform& transform,
     float scaleFactor,
-    WindowDimensions offsetPixels,
+    WindowVec2 offsetPixels,
     SDL_FColor color = colorToFColor(Colors.Red)
 );
 void text(
@@ -34,7 +34,7 @@ void text(
     WindowManager& window,
     b2Vec2 worldPosition,
     float scaleFactor,
-    WindowDimensions offsetPixels,
+    WindowVec2 offsetPixels,
     float textResolutionScaleFactor,
     SDL_FColor textColor = colorToFColor(Colors.White),
     std::optional<SDL_FColor> backgroundColor = SDL_FColor{0.f, 0.f, 0.f, 0.5f}
@@ -45,7 +45,7 @@ void texture(
     b2Vec2 worldPosition,
     b2Vec2 worldSize,
     float scaleFactor,
-    WindowDimensions offsetPixels,
+    WindowVec2 offsetPixels,
     double sdlAngle = 0.0,
     SDL_FlipMode flip = SDL_FLIP_NONE
 );

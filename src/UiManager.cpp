@@ -24,11 +24,7 @@ UiState UiManager::getState() const {
 }
 
 void UiManager::render(
-    WindowManager& window,
-    AudioManager& audio,
-    InputManager& input,
-    Level* level,
-    bool& showFanTriangulation
+    WindowManager& window, AudioManager& audio, InputManager& input, Level* level
 ) {
     Entity* player = nullptr;
     Camera* camera = nullptr;
@@ -47,13 +43,13 @@ void UiManager::render(
         drawMainMenu();
     }; break;
     case UiState::Settings: {
-        drawSettings(window, audio, input, showFanTriangulation);
+        drawSettings(window, audio, input, level);
     }; break;
     case UiState::Paused: {
         drawPauseMenu();
     }; break;
     case UiState::PausedSettings: {
-        drawSettings(window, audio, input, showFanTriangulation);
+        drawSettings(window, audio, input, level);
     }; break;
     default:
         break;
@@ -141,7 +137,7 @@ void UiManager::drawDebug(
     ImGui::SetNextWindowPos(ImVec2{0.f, 0.f}, ImGuiCond_Always);
     if (ImGui::Begin("Debug Menu", nullptr, staticFlags | ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::Text("Window:");
-        WindowDimensions windowSize = window.getSize();
+        WindowVec2 windowSize = window.getSize();
         ImGui::Text(
             "Size: %d, %d\nFPS: %.1f/%s (%.3f ms/frame)",
             windowSize.x,
@@ -167,13 +163,16 @@ void UiManager::drawDebug(
         if (camera && camera->entityToFollow) {
             b2Vec2 safeAreaSize = camera->getSafeAreaSize();
             b2Vec2 safeAreaValue = camera->getEntitySafeAreaValue();
+            b2Vec2 mouseWorldPos = camera->pixelPosToWorldPos(window.getMousePos());
             ImGui::Text("\nCamera:");
             ImGui::Text(
-                "Safe Area Size: %.2f, %.2f\nPlayer Ratio from Center: %.2f, %.2f",
+                "Safe Area Size: %.2f, %.2f\nPlayer Ratio from Center: %.2f, %.2f\nMouse World Position: %.2f, %.2f",
                 safeAreaSize.x,
                 safeAreaSize.y,
                 safeAreaValue.x,
-                safeAreaValue.y
+                safeAreaValue.y,
+                mouseWorldPos.x,
+                mouseWorldPos.y
             );
             ImGui::Dummy(ImVec2{1.f, 1.f});
         }
@@ -236,7 +235,7 @@ void UiManager::drawMainMenu() {
 }
 
 void UiManager::drawSettings(
-    WindowManager& window, AudioManager& audio, InputManager& input, bool& showFanTriangulation
+    WindowManager& window, AudioManager& audio, InputManager& input, Level* level
 ) {
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImVec2 workPos = viewport->WorkPos;
@@ -294,8 +293,10 @@ void UiManager::drawSettings(
                     window.setTargetFps(tempFps);
                 }
             }
-            ImGui::Dummy(verticalSpacingDummy);
-            ImGui::Checkbox("Show Triangles", &showFanTriangulation);
+            if (level) {
+                ImGui::Dummy(verticalSpacingDummy);
+                ImGui::Checkbox("Show Hitboxes", &level->showHitBoxes);
+            }
             ImGui::PopFont();
             ImGui::EndTabItem();
         }

@@ -18,6 +18,8 @@ class Level {
   public:
     Camera camera;
     const char* levelName;
+    bool showFanTriangulation = false;
+    bool showHitBoxes = false;
     Level(const char* levelName, WindowManager& window);
     ~Level();
     float update(); // Returns alpha

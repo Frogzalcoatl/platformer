@@ -42,6 +42,11 @@ enum class Music : uint8_t {
 };
 enum class Textures : uint8_t {
     Test,
+    Grass,
+    Dirt,
+    Stone,
+    Player,
+    Log,
     TexturesCount
 };
 inline constexpr struct {
@@ -72,7 +77,7 @@ inline constexpr struct {
         "2026_6.ogg"
     };
     const std::array<const char*, static_cast<size_t>(GameAssets::Textures::TexturesCount)>
-        Textures = {"test.png"};
+        Textures = {"test.png", "grass.png", "dirt.png", "stone.png", "player.png", "log.png"};
 } FileNames;
 inline struct {
     std::filesystem::path Fonts = "fonts";

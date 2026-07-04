@@ -1,11 +1,10 @@
 #pragma once
 #include <SDL3/SDL.h>
-#include <box2d/box2d.h>
 #include <memory>
 #include <optional>
 #include <string>
 
-struct WindowDimensions {
+struct WindowVec2 {
     int x;
     int y;
 };
@@ -29,7 +28,7 @@ using UniqueRenderer = std::unique_ptr<SDL_Renderer, SDL_Renderer_Deleter>;
 
 class WindowManager {
   private:
-    WindowDimensions size;
+    WindowVec2 size;
     bool isFullscreen = false;
     Uint64 targetFps = 240;
     Uint64 targetFrameTimeNs = 1000000000ULL / targetFps;
@@ -37,6 +36,7 @@ class WindowManager {
     bool fpsUnlimited = false;
     UniqueRenderer sdlRenderer;
     UniqueWindow sdlWindow;
+    WindowVec2 mousePos;
 
   public:
     SDL_Color backgroundColor;
@@ -45,7 +45,7 @@ class WindowManager {
 
     SDL_Window* getSdlWindow() const;
     SDL_Renderer* getSdlRenderer() const;
-    WindowDimensions getSize() const;
+    WindowVec2 getSize() const;
     bool getIsFullscreen() const;
     Uint64 getTargetFps() const;
     std::string targetFpsStr() const;
@@ -58,4 +58,6 @@ class WindowManager {
     void clearFrame();
     void toggleFullscreen();
     void handleResize(int sizeX, int sizeY);
+    void handleMouseMotionEvent(const SDL_MouseMotionEvent& event);
+    WindowVec2 getMousePos() const;
 };

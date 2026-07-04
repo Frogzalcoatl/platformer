@@ -9,7 +9,7 @@
 #include <stdexcept>
 
 Platformer::Platformer()
-    : window{"C++ Platformer", Colors.BackGround}, assets{window.getSdlRenderer()}, audio{assets},
+    : window{"C++ Platformer", Colors.Background}, assets{window.getSdlRenderer()}, audio{assets},
       ui{assets} {
     audio.setVolume(AudioCategory::Music, 50);
     assets.initSDLGameControllerDB();
@@ -28,6 +28,9 @@ void Platformer::handleSdlEvent() {
             if (currentLevel) {
                 currentLevel->camera.handleWindowResize(event.window.data1, event.window.data2);
             }
+        }; break;
+        case SDL_EVENT_MOUSE_MOTION: {
+            window.handleMouseMotionEvent(event.motion);
         }; break;
         case SDL_EVENT_KEY_DOWN:
         case SDL_EVENT_KEY_UP:
@@ -100,6 +103,10 @@ void Platformer::handleGameEvent() {
                         }
                     }
                     break;
+                case InputVerb::ShowHitboxes:
+                    if (currentLevel) {
+                        currentLevel->showHitBoxes = !currentLevel->showHitBoxes;
+                    }
                 default:
                     break;
                 }
@@ -112,8 +119,10 @@ void Platformer::handleGameEvent() {
         } else if (const auto* setLevelName = std::get_if<GameEventTypes::SetLevelName>(&event)) {
             if (setLevelName->level == LevelName::Template) {
                 currentLevel = getTemplateLevel(assets, window);
+                window.backgroundColor = Colors.SkyBlue;
             } else if (setLevelName->level == LevelName::None) {
                 currentLevel = nullptr;
+                window.backgroundColor = Colors.Background;
             }
         }
     }
@@ -144,7 +153,7 @@ void Platformer::run() {
             if (currentState == UiState::Playing) {
                 alpha = currentLevel->update();
             }
-            currentLevel->draw(window, alpha, showFanTriangulation);
+            currentLevel->draw(window, alpha);
             if (currentLevel->camera.entityToFollow) {
                 b2Vec2 textPos =
                     currentLevel->camera.entityToFollow->getInterpolatedPosition(alpha);
@@ -159,7 +168,7 @@ void Platformer::run() {
                 );
             }
         }
-        ui.render(window, audio, input, currentLevel.get(), showFanTriangulation);
+        ui.render(window, audio, input, currentLevel.get());
         window.render(frameStartNs);
         DiscordRpcManager::update();
     }

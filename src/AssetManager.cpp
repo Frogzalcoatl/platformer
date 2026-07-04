@@ -205,6 +205,7 @@ SDL_Texture* AssetManager::getTexture(GameAssets::Textures textureId) {
         "Loaded SDL3 texture from file \"%s\"",
         GameAssets::FileNames.Textures[static_cast<size_t>(textureId)]
     );
+    SDL_SetTextureScaleMode(texture.get(), SDL_SCALEMODE_PIXELART);
     return texture.get();
 }
 

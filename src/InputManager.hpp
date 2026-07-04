@@ -23,6 +23,7 @@ enum class InputVerb : uint8_t {
     ZoomOut,
     ZoomReset,
     ToggleDebug,
+    ShowHitboxes,
     VerbCount
 };
 
@@ -135,7 +136,8 @@ class InputManager {
         {InputVerb::Jump, SDL_SCANCODE_UP},
         {InputVerb::Sprint, SDL_SCANCODE_SPACE},
         {InputVerb::Sprint, SDL_SCANCODE_LSHIFT},
-        {InputVerb::ToggleDebug, SDL_SCANCODE_F3}
+        {InputVerb::ToggleDebug, SDL_SCANCODE_F3},
+        {InputVerb::ShowHitboxes, SDL_SCANCODE_F1}
     };
     const std::vector<DefaultButtonBinding> defaultButtonBindings = {
         {InputVerb::Up, SDL_GAMEPAD_BUTTON_DPAD_UP},

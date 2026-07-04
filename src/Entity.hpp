@@ -16,20 +16,29 @@ enum class EntityMovement : uint8_t {
 
 class Entity {
   private:
-    SDL_FColor color;
     b2BodyId bodyId;
     b2Polygon polygon;
     b2Vec2 previousPosition;
     float previousAngle;
+    SDL_Texture* texture;
+    std::optional<b2Vec2> textureSize;
 
   public:
-    Entity(b2WorldId world, b2Polygon polygon, b2Vec2 position, SDL_Color color, bool isStatic);
     Entity(
         b2WorldId world,
         b2Polygon polygon,
         b2Vec2 position,
-        SDL_Color color,
         bool isStatic,
+        SDL_Texture* texture,
+        std::optional<b2Vec2> textureSize = std::nullopt
+    );
+    Entity(
+        b2WorldId world,
+        b2Polygon polygon,
+        b2Vec2 position,
+        bool isStatic,
+        SDL_Texture* texture,
+        std::optional<b2Vec2> textureSize,
         b2BodyDef bodyDef,
         b2ShapeDef shapeDef
     );
@@ -39,16 +48,15 @@ class Entity {
 
     b2BodyId getBodyId() const;
     b2Polygon getPolygon() const;
-    SDL_Color getColor() const;
     b2Vec2 getPosition() const;
     b2Vec2 getInterpolatedPosition(float alpha) const;
     b2Rot getInterpolatedRotation(float alpha) const;
-    void setColor(SDL_Color color);
 
     void savePreviousState();
 
-    void draw(
-        WindowManager& window, float alpha, float scaleFactor, WindowDimensions offsetPixels
+    void draw(WindowManager& window, float alpha, float scaleFactor, WindowVec2 offsetPixels) const;
+    void drawHitbox(
+        WindowManager& window, float alpha, float scaleFactor, WindowVec2 offsetPixels
     ) const;
     void teleport(b2Vec2 location);
 };

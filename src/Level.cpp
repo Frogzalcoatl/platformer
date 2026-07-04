@@ -43,6 +43,11 @@ float Level::update() {
 
 void Level::draw(WindowManager& window, float alpha, bool showFanTriangulation) {
     camera.run(alpha);
+    for (const auto& tile : tiles) {
+        if (tile) {
+            tile->draw(window, camera.getScaleFactor(), camera.getOffsetPixels());
+        }
+    }
     for (const auto& entity : entities) {
         if (entity) {
             entity->draw(window, alpha, camera.getScaleFactor(), camera.getOffsetPixels());
@@ -58,11 +63,11 @@ void Level::draw(WindowManager& window, float alpha, bool showFanTriangulation) 
                     camera.getOffsetPixels()
                 );
             }
-        }
-    }
-    for (const auto& tile : tiles) {
-        if (tile) {
-            tile->draw(window, camera.getScaleFactor(), camera.getOffsetPixels());
+            if (showHitBoxes) {
+                entity->drawHitbox(
+                    window, alpha, camera.getScaleFactor(), camera.getOffsetPixels()
+                );
+            }
         }
     }
 }
@@ -112,38 +117,54 @@ b2WorldId Level::getWorldId() const {
 std::unique_ptr<Level> getTemplateLevel(AssetManager& assets, WindowManager& window) {
     auto level = std::make_unique<Level>("Template", window);
     b2BodyDef playerBodyDef = b2DefaultBodyDef();
-    playerBodyDef.fixedRotation = false;
+    playerBodyDef.fixedRotation = true;
     b2ShapeDef playerShapeDef = b2DefaultShapeDef();
-    playerShapeDef.density = 1.f;
     b2WorldId world = level->getWorldId();
     auto playerEntity = std::make_unique<Entity>(
         world,
-        b2MakeBox(0.5f, 0.5f),
-        b2Vec2{0.f, 4.f},
-        hexToColor(0xBA988AFF),
+        b2MakeBox(0.5f, 1.f),
+        b2Vec2{10.f, 4.f},
         false,
+        assets.getTexture(GameAssets::Textures::Player),
+        b2Vec2{1.f, 2.f},
         playerBodyDef,
         playerShapeDef
     );
-    level->camera.minViewableY = 0.f;
     level->camera.entityToFollow = playerEntity.get();
     auto controller = std::make_unique<EntityController>(*playerEntity);
-    controller->spawnPoint = b2Vec2{0.f, 4.f};
+    controller->spawnPoint = b2Vec2{4.f, 4.f};
     level->addPlayer(std::move(controller));
     level->addEntity(std::move(playerEntity));
+    const int GroundWidth = 50;
+    const int GroundHeight = 2;
     level->addEntity(
         std::make_unique<Entity>(
-            world, b2MakeBox(50.f, 1.5f), b2Vec2{0.f, 0.f}, Colors.GrassGreen, true
+            world,
+            b2MakeBox(static_cast<float>(GroundWidth) / 2.f, static_cast<float>(GroundHeight)),
+            b2Vec2{static_cast<float>(GroundWidth) / 2.f, 0.f},
+            true,
+            nullptr
+        )
+    );
+    const int WallHeight = 20;
+    const int WallPosLeft = 0;
+    const int WallPosRight = GroundWidth;
+    level->addEntity(
+        std::make_unique<Entity>(
+            world,
+            b2MakeBox(0.5f, static_cast<float>(WallHeight) / 2.f),
+            b2Vec2{WallPosLeft + 0.5f, static_cast<float>(WallHeight) / 2.f},
+            true,
+            nullptr
         )
     );
     level->addEntity(
         std::make_unique<Entity>(
-            world, b2MakeBox(0.5f, 10.f), b2Vec2{-18.f, 11.5f}, Colors.Gray, true
-        )
-    );
-    level->addEntity(
-        std::make_unique<Entity>(
-            world, b2MakeBox(0.5f, 10.f), b2Vec2{18.f, 11.5f}, Colors.Gray, true
+            world,
+            b2MakeBox(0.5f, static_cast<float>(WallHeight) / 2.f),
+            b2Vec2{WallPosRight + 0.5f, static_cast<float>(WallHeight) / 2.f},
+            true,
+            nullptr
         )
     );
     b2BodyDef dynamicBodyDef = b2DefaultBodyDef();
@@ -152,9 +173,10 @@ std::unique_ptr<Level> getTemplateLevel(AssetManager& assets, WindowManager& win
         std::make_unique<Entity>(
             world,
             b2MakeBox(0.5f, 2.f),
-            b2Vec2{10.f, 3.f},
-            Colors.Brown,
+            b2Vec2{28.f, 4.f},
             false,
+            assets.getTexture(GameAssets::Textures::Log),
+            b2Vec2{1.f, 4.f},
             dynamicBodyDef,
             b2DefaultShapeDef()
         )
@@ -163,13 +185,37 @@ std::unique_ptr<Level> getTemplateLevel(AssetManager& assets, WindowManager& win
         std::make_unique<Entity>(
             world,
             b2MakeBox(0.5f, 1.f),
-            b2Vec2{-10.f, 3.f},
-            Colors.Brown,
+            b2Vec2{8.f, 3.f},
             false,
+            assets.getTexture(GameAssets::Textures::Log),
+            b2Vec2{1.f, 2.f},
             dynamicBodyDef,
             b2DefaultShapeDef()
         )
     );
-    level->addTile(std::make_unique<Tile>(Vec2Int{0, 10}, assets, GameAssets::Textures::Test));
+    for (int i = 1; i < GroundWidth; i++) {
+        level->addTile(
+            std::make_unique<Tile>(
+                Vec2Int{static_cast<int>(i), 1}, assets, GameAssets::Textures::Grass
+            )
+        );
+        level->addTile(
+            std::make_unique<Tile>(
+                Vec2Int{static_cast<int>(i), 0}, assets, GameAssets::Textures::Dirt
+            )
+        );
+    }
+    for (int i = 0; i < WallHeight; i++) {
+        level->addTile(
+            std::make_unique<Tile>(
+                Vec2Int{WallPosLeft, static_cast<int>(i)}, assets, GameAssets::Textures::Stone
+            )
+        );
+        level->addTile(
+            std::make_unique<Tile>(
+                Vec2Int{WallPosRight, static_cast<int>(i)}, assets, GameAssets::Textures::Stone
+            )
+        );
+    }
     return level;
 }

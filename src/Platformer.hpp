@@ -17,7 +17,6 @@ class Platformer {
     InputManager input;
     UiManager ui;
     std::unique_ptr<Level> currentLevel;
-    bool showFanTriangulation = false;
 
     void handleSdlEvent();
     void handleGameEvent();

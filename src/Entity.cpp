@@ -3,25 +3,41 @@
 #include "Drawing.hpp"
 #include <cmath>
 
-Entity::Entity(b2WorldId world, b2Polygon polygon, b2Vec2 position, SDL_Color color, bool isStatic)
-    : Entity(world, polygon, position, color, isStatic, b2DefaultBodyDef(), b2DefaultShapeDef()) {
+Entity::Entity(
+    b2WorldId world,
+    b2Polygon polygon,
+    b2Vec2 position,
+    bool isStatic,
+    SDL_Texture* texture,
+    std::optional<b2Vec2> textureSize
+)
+    : Entity(
+          world,
+          polygon,
+          position,
+          isStatic,
+          texture,
+          textureSize,
+          b2DefaultBodyDef(),
+          b2DefaultShapeDef()
+      ) {
 }
 
 Entity::Entity(
     b2WorldId world,
     b2Polygon polygon,
     b2Vec2 position,
-    SDL_Color color,
     bool isStatic,
+    SDL_Texture* texture,
+    std::optional<b2Vec2> textureSize,
     b2BodyDef bodyDef,
     b2ShapeDef shapeDef
 )
-    : polygon(polygon), isStatic(isStatic) {
+    : polygon(polygon), texture(texture), textureSize(textureSize), isStatic(isStatic) {
     bodyDef.position = position;
     if (!isStatic) {
         bodyDef.type = b2_dynamicBody;
     }
-    setColor(color);
     bodyId = b2CreateBody(world, &bodyDef);
     b2CreatePolygonShape(bodyId, &shapeDef, &polygon);
     previousPosition = position;
@@ -38,14 +54,6 @@ b2BodyId Entity::getBodyId() const {
 
 b2Polygon Entity::getPolygon() const {
     return polygon;
-}
-
-void Entity::setColor(SDL_Color c) {
-    color = colorToFColor(c);
-}
-
-SDL_Color Entity::getColor() const {
-    return fColorToColor(color);
 }
 
 b2Vec2 Entity::getPosition() const {
@@ -73,12 +81,32 @@ void Entity::savePreviousState() {
 }
 
 void Entity::draw(
-    WindowManager& window, float alpha, float scaleFactor, WindowDimensions offsetPixels
+    WindowManager& window, float alpha, float scaleFactor, WindowVec2 offsetPixels
+) const {
+    if (texture) {
+        b2Vec2 pos = getInterpolatedPosition(alpha);
+        b2Rot rot = getInterpolatedRotation(alpha);
+        Drawing::texture(
+            texture,
+            window,
+            pos,
+            textureSize.value_or(b2Vec2{1.f, 1.f}),
+            scaleFactor,
+            offsetPixels,
+            Drawing::b2RotToSdlAngle(rot)
+        );
+    }
+}
+
+void Entity::drawHitbox(
+    WindowManager& window, float alpha, float scaleFactor, WindowVec2 offsetPixels
 ) const {
     b2Transform transform;
     transform.p = getInterpolatedPosition(alpha);
     transform.q = getInterpolatedRotation(alpha);
-    Drawing::polygon(polygon, window, transform, scaleFactor, offsetPixels, color);
+    Drawing::polygonBorders(
+        polygon, window, transform, scaleFactor, offsetPixels, colorToFColor(Colors.Red)
+    );
 }
 
 void Entity::teleport(b2Vec2 location) {

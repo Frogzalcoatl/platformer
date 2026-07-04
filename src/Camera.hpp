@@ -9,7 +9,7 @@ class Camera {
     b2Vec2 entitySafeAreaVal = {0.f, 0.f};
     b2Vec2 safeAreaSize = {0.f, 0.f};
     WindowManager& window;
-    WindowDimensions offsetPixels;
+    WindowVec2 offsetPixels;
     b2Vec2 offsetWorld = {0.f, 0.f};
     float scaleFactor = 1.f;
     float scaleMultiplier = 1.f;
@@ -23,7 +23,7 @@ class Camera {
     void run(float alpha);
     void handleWindowResize(int x, int y);
     b2Vec2 getSizeWorld() const;
-    WindowDimensions getOffsetPixels() const;
+    WindowVec2 getOffsetPixels() const;
     b2Vec2 getOffsetWorld() const;
     float getScaleFactor() const;
     b2Vec2 getEntitySafeAreaValue() const;
@@ -32,10 +32,11 @@ class Camera {
     void centerOnEntity(float alpha);
     void incrementScaleMultiplierBy(float amount);
     void resetScaleMultiplier();
+    b2Vec2 pixelPosToWorldPos(WindowVec2 pos);
     b2Vec2 safeArea = {0.15f, 0.15f};
     Entity* entityToFollow;
-    std::optional<float> minViewableY;
+    std::optional<float> minViewableY = 0.f;
     std::optional<float> maxViewableY;
-    std::optional<float> minViewableX;
+    std::optional<float> minViewableX = 0.f;
     std::optional<float> maxViewableX;
 };
