@@ -35,6 +35,9 @@ void UiManager::render(
         }
         camera = &level->camera;
     }
+    if (showDebug) {
+        drawDebug(window, player, camera, input);
+    }
     switch (currentState) {
     case UiState::MainMenu: {
         drawMainMenu();
@@ -50,9 +53,6 @@ void UiManager::render(
     }; break;
     default:
         break;
-    }
-    if (showDebug) {
-        drawDebug(window, player, camera, input);
     }
 }
 
@@ -79,47 +79,49 @@ void UiManager::drawDebug(
     WindowManager& window, Entity* player, Camera* camera, InputManager& input
 ) {
     ImGui::PushFont(monocraftSmall);
-    ImGui::Begin("Debug Menu");
-    ImGui::Text("Window:");
-    WindowDimensions windowSize = window.getSize();
-    ImGui::Text(
-        "Size: %d, %d\nFPS: %.1f/%s (%.3f ms/frame)",
-        windowSize.x,
-        windowSize.y,
-        ImGui::GetIO().Framerate,
-        window.targetFpsStr().c_str(),
-        1000.0f / ImGui::GetIO().Framerate
-    );
-    ImGui::Dummy(ImVec2{1.f, 1.f});
-    if (player) {
-        b2Vec2 position = b2Body_GetPosition(player->getBodyId());
-        b2Vec2 velocity = b2Body_GetLinearVelocity(player->getBodyId());
-        ImGui::Text("\nPlayer:");
+    ImGui::SetNextWindowPos(ImVec2{0.f, 0.f}, ImGuiCond_Always);
+    if (ImGui::Begin("Debug Menu", nullptr, staticFlags | ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("Window:");
+        WindowDimensions windowSize = window.getSize();
         ImGui::Text(
-            "Position: %.2f, %.2f\nVelocity: %.2f, %.2f",
-            position.x,
-            position.y,
-            velocity.x,
-            velocity.y
+            "Size: %d, %d\nFPS: %.1f/%s (%.3f ms/frame)",
+            windowSize.x,
+            windowSize.y,
+            ImGui::GetIO().Framerate,
+            window.targetFpsStr().c_str(),
+            1000.0f / ImGui::GetIO().Framerate
         );
         ImGui::Dummy(ImVec2{1.f, 1.f});
+        if (player) {
+            b2Vec2 position = b2Body_GetPosition(player->getBodyId());
+            b2Vec2 velocity = b2Body_GetLinearVelocity(player->getBodyId());
+            ImGui::Text("\nPlayer:");
+            ImGui::Text(
+                "Position: %.2f, %.2f\nVelocity: %.2f, %.2f",
+                position.x,
+                position.y,
+                velocity.x,
+                velocity.y
+            );
+            ImGui::Dummy(ImVec2{1.f, 1.f});
+        }
+        if (camera && camera->entityToFollow) {
+            b2Vec2 safeAreaSize = camera->getSafeAreaSize();
+            b2Vec2 safeAreaValue = camera->getEntitySafeAreaValue();
+            ImGui::Text("\nCamera:");
+            ImGui::Text(
+                "Safe Area Size: %.2f, %.2f\nPlayer Ratio from Center: %.2f, %.2f",
+                safeAreaSize.x,
+                safeAreaSize.y,
+                safeAreaValue.x,
+                safeAreaValue.y
+            );
+            ImGui::Dummy(ImVec2{1.f, 1.f});
+        }
+        size_t controllersConnected = input.getGamepadCount();
+        ImGui::Text("\nControllers Connected: %zu", controllersConnected);
+        ImGui::PopFont();
     }
-    if (camera && camera->entityToFollow) {
-        b2Vec2 safeAreaSize = camera->getSafeAreaSize();
-        b2Vec2 safeAreaValue = camera->getEntitySafeAreaValue();
-        ImGui::Text("\nCamera:");
-        ImGui::Text(
-            "Safe Area Size: %.2f, %.2f\nPlayer Ratio from Center: %.2f, %.2f",
-            safeAreaSize.x,
-            safeAreaSize.y,
-            safeAreaValue.x,
-            safeAreaValue.y
-        );
-        ImGui::Dummy(ImVec2{1.f, 1.f});
-    }
-    size_t controllersConnected = input.getGamepadCount();
-    ImGui::Text("\nControllers Connected: %zu", controllersConnected);
-    ImGui::PopFont();
     ImGui::End();
 }
 

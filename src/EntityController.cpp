@@ -92,7 +92,7 @@ void EntityController::handleInput(GameEventTypes::Input event, Camera* camera) 
             }
         } else if (event.verb == InputVerb::Jump) {
             float pitch = SDL_randf() * (1.25f - 1.f) + 1.f;
-            GameEvents::Push(GameEventTypes::PlaySound{GameAssets::Sounds::Jump, 50, pitch});
+            GameEvents::Push(GameEventTypes::PlaySound{GameAssets::Sounds::Jump, 100, pitch});
             jump();
         }
     }

@@ -34,6 +34,8 @@ int main(int argc, char* argv[]) {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     SDL_Log("Created ImGui Context");
+    ImGuiIO& io = ImGui::GetIO();
+    io.IniFilename = nullptr;
     DiscordRpcManager::init();
     DiscordRpcManager::setStatus("In Development", nullptr);
     int returnVal = 0;

@@ -11,6 +11,7 @@
 Platformer::Platformer()
     : window{"C++ Platformer", Colors.BackGround}, assets{window.getSdlRenderer()}, audio{assets},
       ui{assets} {
+    audio.setVolume(AudioCategory::Music, 50);
 }
 
 void Platformer::handleSdlEvent() {
@@ -40,9 +41,8 @@ void Platformer::handleSdlEvent() {
         case SDL_EVENT_GAMEPAD_ADDED:
         case SDL_EVENT_GAMEPAD_REMOVED: {
             input.handleGamepadDeviceEvent(event.gdevice);
-        }
+        }; break;
         };
-        break;
     }
 }
 
@@ -126,7 +126,7 @@ void Platformer::run() {
             GameAssets::Music randomSong = static_cast<GameAssets::Music>(
                 SDL_floorf(static_cast<float>(GameAssets::Music::MusicCount) * SDL_randf())
             );
-            if (!audio.playMusic(randomSong, 30, audio.getMusicPitch(), false)) {
+            if (!audio.playMusic(randomSong, 100, audio.getMusicPitch(), false)) {
                 playMusicFailed = true;
             }
         }
