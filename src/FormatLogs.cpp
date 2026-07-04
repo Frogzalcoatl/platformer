@@ -1,4 +1,5 @@
 #include "FormatLogs.hpp"
+#include <format>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -7,9 +8,7 @@ static std::string getTimeStamp() {
     SDL_Time ticks;
     SDL_DateTime dt;
     if (SDL_GetCurrentTime(&ticks) && SDL_TimeToDateTime(ticks, &dt, true)) {
-        char buf[16];
-        std::snprintf(buf, sizeof(buf), "%02d:%02d:%02d", dt.hour, dt.minute, dt.second);
-        return buf;
+        return std::format("{:02}:{:02}:{:02}", dt.hour, dt.minute, dt.second);
     } else {
         return "00:00:00";
     }

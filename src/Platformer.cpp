@@ -12,6 +12,7 @@ Platformer::Platformer()
     : window{"C++ Platformer", Colors.BackGround}, assets{window.getSdlRenderer()}, audio{assets},
       ui{assets} {
     audio.setVolume(AudioCategory::Music, 50);
+    assets.initSDLGameControllerDB();
 }
 
 void Platformer::handleSdlEvent() {

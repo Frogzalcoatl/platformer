@@ -3,7 +3,7 @@
 #include <string_view> // Required for std::string_view
 
 // WVFS backwards. (W Virtual File System) [hopefully itll be a W]
-#define PackMagic 'SFVW'
+#define PackMagic 0x53465657
 
 constexpr uint64_t stringHash(std::string_view str) {
     uint64_t hash = 14695981039346656037ULL;

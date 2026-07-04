@@ -4,7 +4,7 @@
 #include <stdexcept>
 
 AssetManager::AssetManager(SDL_Renderer* renderer)
-    : vfs{SDL_GetBasePath(), DatFileName}, renderer{renderer} {
+    : vfs{SDL_GetBasePath(), DatFileName, GameVersion, AssetsFolderName}, renderer{renderer} {
     if (!renderer) {
         throw std::runtime_error("SDL3 renderer for AssetManager is null");
         return;
@@ -112,19 +112,6 @@ ImFont* AssetManager::getImGuiFont(GameAssets::Fonts fontId, float ptSize) {
     return font;
 }
 
-void AssetManager::clearFontCache() {
-    fontCache.clear();
-    SDL_Log("Cleared font cache");
-}
-
-void AssetManager::clearFontData() {
-    clearFontCache();
-    for (auto& data : fontData) {
-        data.clear();
-    }
-    SDL_Log("Cleared raw font data");
-}
-
 MIX_Audio* AssetManager::getSound(GameAssets::Sounds soundId, MIX_Mixer* mixerDevice) {
     assert(soundId < GameAssets::Sounds::SoundsCount);
     const std::string fileName = GameAssets::FileNames.Sounds[static_cast<size_t>(soundId)];
@@ -219,4 +206,31 @@ SDL_Texture* AssetManager::getTexture(GameAssets::Textures textureId) {
         GameAssets::FileNames.Textures[static_cast<size_t>(textureId)]
     );
     return texture.get();
+}
+
+int AssetManager::addGameControllerMappings(const std::string& fileName) {
+    std::filesystem::path path = GameAssets::Paths.Gamepads / fileName;
+    std::vector<std::byte> controllerData = vfs.readFile(path.generic_string());
+    if (controllerData.empty()) {
+        std::string error = "Unable to init game controller database from file \"";
+        error += fileName;
+        error += "\"";
+        throw std::runtime_error(error);
+    }
+    SDL_IOStream* io = SDL_IOFromConstMem(controllerData.data(), controllerData.size());
+    if (!io) {
+        std::string error = "Unable to create SDL3 IO for file \"";
+        error += fileName;
+        error += "\"";
+        throw std::runtime_error(error);
+    }
+    int result = SDL_AddGamepadMappingsFromIO(io, true);
+    SDL_Log("Added %d gampad mapping(s) from file \"%s\"", result, fileName.c_str());
+    return result;
+}
+
+int AssetManager::initSDLGameControllerDB() {
+    int result = addGameControllerMappings("gamecontrollerdb.txt");
+    result += addGameControllerMappings("personalcontrollerdb.txt");
+    return result;
 }

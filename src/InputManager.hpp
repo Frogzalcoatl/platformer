@@ -89,9 +89,6 @@ class InputManager {
         gamepadsVerbsPressed = {};
     std::array<int, static_cast<size_t>(InputVerb::VerbCount)> keyboardVerbsPressed = {};
 
-    int openMappingsFromPath(std::filesystem::path& path);
-    bool addGamepadMappingsFromFiles();
-
     // bool isImGuiCapturingKeyboard = false;
 
   public:

@@ -38,7 +38,6 @@ std::string inputVerbToString(InputVerb verb) {
 }
 
 InputManager::InputManager() {
-    addGamepadMappingsFromFiles();
     for (int i = 0; i < static_cast<int>(InputVerb::VerbCount); i++) {
         gamepadBindings[i].fill(SDL_GAMEPAD_BUTTON_INVALID); // Invalid represents empty.
     }
@@ -50,33 +49,6 @@ InputManager::InputManager() {
     for (const auto& binding : defaultButtonBindings) {
         bindGamepadButtonToVerb(binding.verb, binding.button, std::nullopt);
     }
-}
-
-int InputManager::openMappingsFromPath(std::filesystem::path& path) {
-    std::string pathString = path.string();
-    const char* fullPath = pathString.c_str();
-    int mappingsAdded = SDL_AddGamepadMappingsFromFile(fullPath);
-    if (mappingsAdded == -1) {
-        mappingsAdded = 0;
-    }
-    SDL_Log("Added %d gamepad mapping(s) from %s", mappingsAdded, fullPath);
-    return mappingsAdded;
-}
-
-bool InputManager::addGamepadMappingsFromFiles() {
-    const char* rawPath = SDL_GetBasePath();
-    if (!rawPath) {
-        return false;
-    }
-    std::filesystem::path basePath(rawPath);
-    std::filesystem::path communityResourcePath =
-        basePath / "assets" / "gamepads" / "gamecontrollerdb.txt";
-    std::filesystem::path personalPath =
-        basePath / "assets" / "gamepads" / "personalcontrollerdb.txt";
-    int mappingsAdded = 0;
-    mappingsAdded += openMappingsFromPath(communityResourcePath);
-    mappingsAdded += openMappingsFromPath(personalPath);
-    return mappingsAdded > 0;
 }
 
 void InputManager::bindScancodeToVerb(

@@ -5,10 +5,13 @@
 #include <string>
 
 VirtualFileSystem::VirtualFileSystem(
-    const std::filesystem::path& basePath, const std::filesystem::path& datFileName
+    const std::filesystem::path& basePath,
+    const std::filesystem::path& datFileName,
+    std::string_view expectedVersion,
+    std::string_view assetsFolderName
 )
-    : basePath(basePath) {
-    std::filesystem::path assetsPath = std::filesystem::path(basePath) / AssetsFolderName;
+    : basePath(basePath), assetsFolderName(assetsFolderName) {
+    std::filesystem::path assetsPath = std::filesystem::path(basePath) / assetsFolderName;
     packFilePath = std::filesystem::path(basePath) / datFileName;
     if (std::filesystem::exists(assetsPath) && std::filesystem::is_directory(assetsPath)) {
         useFolder = true;
@@ -34,14 +37,19 @@ VirtualFileSystem::VirtualFileSystem(
         }
         throw std::runtime_error("Invalid dat file magic\n" + datFileName.string());
     }
-    if (std::string_view(header.version) != GameVersion) {
+    std::string_view headerVersion(header.version, sizeof(header.version));
+    size_t nullPos = headerVersion.find('\0');
+    if (nullPos != std::string_view::npos) {
+        headerVersion = headerVersion.substr(0, nullPos);
+    }
+    if (std::string_view(headerVersion) != expectedVersion) {
         if (useFolder) {
             return;
         }
         std::string error = "Invalid dat file version:\nExpected \"";
-        error += GameVersion;
+        error += expectedVersion;
         error += "\"\nFound \"";
-        error += header.version;
+        error += headerVersion;
         error += "\"";
         throw std::runtime_error(error);
     }
@@ -60,7 +68,7 @@ VirtualFileSystem::VirtualFileSystem(
 
 std::vector<std::byte> VirtualFileSystem::readFile(std::string_view relativeFilePath) {
     if (useFolder) {
-        std::filesystem::path fullFilePath = basePath / AssetsFolderName / relativeFilePath;
+        std::filesystem::path fullFilePath = basePath / assetsFolderName / relativeFilePath;
         if (std::filesystem::exists(fullFilePath) &&
             std::filesystem::is_regular_file(fullFilePath)) {
             // std::ios::ate starts the stream pointer at the end position to immedietely get total

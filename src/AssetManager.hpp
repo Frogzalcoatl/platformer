@@ -79,6 +79,7 @@ inline struct {
     std::filesystem::path Sounds = "sounds";
     std::filesystem::path Music = "music";
     std::filesystem::path Textures = "textures";
+    std::filesystem::path Gamepads = "gamepads";
 } Paths;
 } // namespace GameAssets
 
@@ -137,6 +138,9 @@ class AssetManager {
     SDL_Renderer* renderer;
 
     TTF_Font* getFont(GameAssets::Fonts font, float ptSize, TTF_FontStyleFlags style);
+    int addGameControllerMappings(
+        const std::string& fileName
+    ); // Returns number of controller mappings added
 
   public:
     AssetManager(SDL_Renderer* renderer);
@@ -155,12 +159,11 @@ class AssetManager {
         TTF_FontStyleFlags style = TTF_STYLE_NORMAL
     );
     ImFont* getImGuiFont(GameAssets::Fonts fontId, float ptSize);
-    // Cache includes styling, data is the raw bytes that are referenced to generate styled fonts
-    void clearFontCache();
-    void clearFontData();
 
     MIX_Audio* getSound(GameAssets::Sounds soundId, MIX_Mixer* mixerDevice);
     MIX_Audio* getMusic(GameAssets::Music musicId, MIX_Mixer* mixerDevice);
 
     SDL_Texture* getTexture(GameAssets::Textures textureId);
+
+    int initSDLGameControllerDB(); // Returns number of controller mappings added
 };

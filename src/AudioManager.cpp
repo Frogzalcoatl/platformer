@@ -219,15 +219,7 @@ std::string AudioManager::formattedMusicTime() const {
     Sint64 posSeconds = getMusicPlaybackPosition();
     Sint64 posMinutes = posSeconds / 60;
     posSeconds %= 60;
-    char buf[16];
-    std::snprintf(
-        buf,
-        sizeof(buf),
-        "%02lld:%02lld/%02lld:%02lld",
-        posMinutes,
-        posSeconds,
-        lengthMinutes,
-        lengthSeconds
+    return std::format(
+        "{:02}:{:02}/{:02}:{:02}", posMinutes, posSeconds, lengthMinutes, lengthSeconds
     );
-    return buf;
 }

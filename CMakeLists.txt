@@ -88,7 +88,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE src)
 
 add_subdirectory(libs/vfs)
 
-target_compile_definitions(VirtualFileSystem PUBLIC 
+target_compile_definitions(${PROJECT_NAME} PRIVATE 
     GameVersion="${GAME_VERSION}"
     AssetsFolderName="${ASSETS_FOLDER_NAME}"
     DatFileName="${DAT_FILE_NAME}"
