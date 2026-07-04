@@ -160,6 +160,8 @@ std::unique_ptr<Level> getTemplateLevel(AssetManager& assets, WindowManager& win
     b2BodyDef playerBodyDef = b2DefaultBodyDef();
     playerBodyDef.fixedRotation = true;
     b2ShapeDef playerShapeDef = b2DefaultShapeDef();
+    playerShapeDef.material.friction = 0.f;
+    playerShapeDef.density = 4.f;
     b2WorldId world = level->getWorldId();
     auto playerEntity = std::make_unique<Entity>(
         world,

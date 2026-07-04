@@ -14,7 +14,7 @@ class EntityController {
     EntityController(Entity& entity, std::optional<SDL_JoystickID> joystickId = std::nullopt);
     std::optional<SDL_JoystickID> joystickId;
     b2Vec2 spawnPoint = {0.f, 0.f};
-    float jumpForceNewtons = 40.f;
+    float jumpForceNewtons = 160.f;
     float horizontalSpeed = 10.f;
     float horizontalAcceleration = 0.1f;
     float downwardAcceleration = 2.5f;
