@@ -153,7 +153,7 @@ void Platformer::run() {
             if (currentState == UiState::Playing) {
                 alpha = currentLevel->update();
             }
-            currentLevel->draw(window, alpha);
+            currentLevel->draw(window, assets, alpha);
             if (currentLevel->camera.entityToFollow) {
                 b2Vec2 textPos =
                     currentLevel->camera.entityToFollow->getInterpolatedPosition(alpha);

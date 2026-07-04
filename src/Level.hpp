@@ -1,12 +1,18 @@
 #pragma once
 #include "EntityController.hpp"
-#include "Tile.hpp"
 #include <box2d/box2d.h>
+
+struct LevelDimensions {
+    size_t width;
+    size_t height;
+};
+
+using LevelTileVector = std::vector<std::vector<GameAssets::Textures>>;
 
 class Level {
   private:
     std::vector<std::unique_ptr<Entity>> entities;
-    std::vector<std::unique_ptr<Tile>> tiles;
+    LevelTileVector tiles;
     std::vector<std::unique_ptr<EntityController>> players;
     b2WorldId world;
 
@@ -15,21 +21,31 @@ class Level {
     float accumulator = 0.f;
     const float physicsStep = 1.0f / 60.0f;
 
+    void drawTile(
+        GameAssets::Textures textureId,
+        size_t x,
+        size_t y,
+        AssetManager& assets,
+        WindowManager& window,
+        float scaleFactor
+    );
+
   public:
     Camera camera;
     const char* levelName;
-    bool showFanTriangulation = false;
+    LevelDimensions size;
+    const bool showFanTriangulation = false;
     bool showHitBoxes = false;
-    Level(const char* levelName, WindowManager& window);
+    Level(const char* levelName, LevelDimensions size, WindowManager& window);
     ~Level();
     float update(); // Returns alpha
     void handleInput(GameEventTypes::Input event);
-    void draw(WindowManager& window, float alpha, bool showFanTriangulation = false);
+    void draw(WindowManager& window, AssetManager& assets, float alpha);
     void addEntity(std::unique_ptr<Entity> entity);
-    void addTile(std::unique_ptr<Tile> tile);
+    void addTile(GameAssets::Textures textureId, size_t x, size_t y);
     void addPlayer(std::unique_ptr<EntityController> player);
     const std::vector<std::unique_ptr<Entity>>& getEntities() const;
-    const std::vector<std::unique_ptr<Tile>>& getTiles() const;
+    const LevelTileVector& getTiles() const;
     const std::vector<std::unique_ptr<EntityController>>& getPlayers() const;
     b2WorldId getWorldId() const;
 };

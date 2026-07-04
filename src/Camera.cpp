@@ -71,7 +71,8 @@ void Camera::resetScaleMultiplier() {
 b2Vec2 Camera::pixelPosToWorldPos(WindowVec2 pos) {
     float safeScaleFactor = SDL_max(scaleFactor, 0.001f);
     return b2Vec2{
-        (pos.x + offsetPixels.x) / safeScaleFactor, (-pos.y + offsetPixels.y) / safeScaleFactor
+        (static_cast<float>(pos.x) - offsetPixels.x) / safeScaleFactor,
+        (static_cast<float>(offsetPixels.y) - pos.y) / safeScaleFactor
     };
 }
 

@@ -77,7 +77,6 @@ set(SOURCES
     src/Level.cpp
     src/Main.cpp
     src/Platformer.cpp
-    src/Tile.cpp
     src/UiManager.cpp
     src/WindowManager.cpp
 )

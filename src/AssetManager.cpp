@@ -174,6 +174,9 @@ MIX_Audio* AssetManager::getMusic(GameAssets::Music musicId, MIX_Mixer* mixerDev
 
 SDL_Texture* AssetManager::getTexture(GameAssets::Textures textureId) {
     assert(textureId < GameAssets::Textures::TexturesCount);
+    if (textureId == GameAssets::Textures::None) {
+        return nullptr;
+    }
     const std::string fileName = GameAssets::FileNames.Textures[static_cast<size_t>(textureId)];
     if (!renderer) {
         std::string error = "Unable to load SDL3 texture from file \"";

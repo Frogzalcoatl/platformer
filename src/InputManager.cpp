@@ -32,6 +32,8 @@ std::string inputVerbToString(InputVerb verb) {
         return "Zoom Reset";
     case InputVerb::ToggleDebug:
         return "Toggle Debug";
+    case InputVerb::ShowHitboxes:
+        return "Show Hitboxes";
     default:
         return "";
     }

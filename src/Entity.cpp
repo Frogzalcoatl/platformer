@@ -105,7 +105,7 @@ void Entity::drawHitbox(
     transform.p = getInterpolatedPosition(alpha);
     transform.q = getInterpolatedRotation(alpha);
     Drawing::polygonBorders(
-        polygon, window, transform, scaleFactor, offsetPixels, colorToFColor(Colors.Red)
+        polygon, window, transform, scaleFactor, offsetPixels, colorToFColor(Colors.Yellow)
     );
 }
 
