@@ -65,6 +65,9 @@ void Platformer::handleGameEvent() {
             audio.setVolume(setVolume->category, setVolume->volume);
         } else if (const auto* inputEvent = std::get_if<GameEventTypes::Input>(&event)) {
             UiState uiState = ui.getState();
+            if (uiState != UiState::Playing) {
+                ui.passInputToImGui(*inputEvent);
+            }
             if (inputEvent->state == InputState::Pressed) {
                 switch (inputEvent->verb) {
                 case InputVerb::ToggleFullscreen:

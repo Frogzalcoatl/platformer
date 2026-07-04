@@ -8,6 +8,10 @@ UiManager::UiManager(AssetManager& assets, UiState startingState) : currentState
     monocraftLarge = assets.getImGuiFont(GameAssets::Fonts::Monocraft, 36.f);
     monocraftExtraLarge = assets.getImGuiFont(GameAssets::Fonts::Monocraft, 72.f);
     monocraftTitle = assets.getImGuiFont(GameAssets::Fonts::Monocraft, 128.f);
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+    io.BackendFlags |= ImGuiBackendFlags_HasGamepad;
 }
 
 void UiManager::setState(UiState state) {
@@ -72,6 +76,61 @@ void UiManager::runCancelEvent() {
         break;
     default:
         break;
+    }
+}
+
+void UiManager::passInputToImGui(const GameEventTypes::Input& event) {
+    ImGuiIO& io = ImGui::GetIO();
+    ImGuiKey imguiKey = ImGuiKey_None;
+    if (event.source == InputSource::KeyboardMouse) {
+        switch (event.verb) {
+        case InputVerb::Up:
+            imguiKey = ImGuiKey_UpArrow;
+            break;
+        case InputVerb::Down:
+            imguiKey = ImGuiKey_DownArrow;
+            break;
+        case InputVerb::Left:
+            imguiKey = ImGuiKey_LeftArrow;
+            break;
+        case InputVerb::Right:
+            imguiKey = ImGuiKey_RightArrow;
+            break;
+        case InputVerb::Confirm:
+            imguiKey = ImGuiKey_Enter;
+            break;
+        case InputVerb::Cancel:
+            imguiKey = ImGuiKey_Escape;
+            break;
+        default:
+            break;
+        }
+    } else if (event.source == InputSource::Controller) {
+        switch (event.verb) {
+        case InputVerb::Up:
+            imguiKey = ImGuiKey_GamepadDpadUp;
+            break;
+        case InputVerb::Down:
+            imguiKey = ImGuiKey_GamepadDpadDown;
+            break;
+        case InputVerb::Left:
+            imguiKey = ImGuiKey_GamepadDpadLeft;
+            break;
+        case InputVerb::Right:
+            imguiKey = ImGuiKey_GamepadDpadRight;
+            break;
+        case InputVerb::Confirm:
+            imguiKey = ImGuiKey_GamepadFaceDown;
+            break;
+        case InputVerb::Cancel:
+            imguiKey = ImGuiKey_GamepadFaceRight;
+            break;
+        default:
+            break;
+        }
+    }
+    if (imguiKey != ImGuiKey_None) {
+        io.AddKeyEvent(imguiKey, event.state == InputState::Pressed);
     }
 }
 
@@ -230,7 +289,7 @@ void UiManager::drawSettings(
             ImGui::Dummy(verticalSpacingDummy);
             if (!vsync && !fpsUnlimited) {
                 static int tempFps = window.getTargetFps();
-                ImGui::SliderInt("Target FPS", &tempFps, 10, 300);
+                ImGui::SliderInt("Target FPS", &tempFps, 10, 300, "%d", sliderFlags);
                 if (ImGui::IsItemDeactivatedAfterEdit()) {
                     window.setTargetFps(tempFps);
                 }
@@ -257,7 +316,7 @@ void UiManager::drawSettings(
             ImGui::SameLine();
             ImGui::Dummy(horizontalSpacingDummy);
             ImGui::SameLine();
-            if (ImGui::SliderInt("Master", &masterVolume, 0, MaxVolume)) {
+            if (ImGui::SliderInt("Master", &masterVolume, 0, MaxVolume, "%d", sliderFlags)) {
                 audio.setVolume(AudioCategory::Master, masterVolume);
             }
             ImGui::Dummy(verticalSpacingDummy);
@@ -267,7 +326,7 @@ void UiManager::drawSettings(
             ImGui::SameLine();
             ImGui::Dummy(horizontalSpacingDummy);
             ImGui::SameLine();
-            if (ImGui::SliderInt("Sounds", &soundVolume, 0, MaxVolume)) {
+            if (ImGui::SliderInt("Sounds", &soundVolume, 0, MaxVolume, "%d", sliderFlags)) {
                 audio.setVolume(AudioCategory::Sounds, soundVolume);
             }
             ImGui::Dummy(verticalSpacingDummy);
@@ -277,7 +336,7 @@ void UiManager::drawSettings(
             ImGui::SameLine();
             ImGui::Dummy(horizontalSpacingDummy);
             ImGui::SameLine();
-            if (ImGui::SliderInt("Music", &musicVolume, 0, MaxVolume)) {
+            if (ImGui::SliderInt("Music", &musicVolume, 0, MaxVolume, "%d", sliderFlags)) {
                 audio.setVolume(AudioCategory::Music, musicVolume);
             }
             ImGui::Dummy(verticalSpacingDummy);
@@ -287,7 +346,7 @@ void UiManager::drawSettings(
             ImGui::SameLine();
             ImGui::Dummy(horizontalSpacingDummy);
             ImGui::SameLine();
-            if (ImGui::SliderFloat("Music Pitch", &pitch, 0.25f, 2.f, "%.2f")) {
+            if (ImGui::SliderFloat("Music Pitch", &pitch, 0.25f, 2.f, "%.2f", sliderFlags)) {
                 audio.setMusicPitch(pitch);
             }
             ImGui::Dummy(verticalSpacingDummy);

@@ -22,6 +22,7 @@ class UiManager {
 
     ImGuiWindowFlags staticFlags =
         ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings;
+    ImGuiSliderFlags sliderFlags = ImGuiSliderFlags_NoInput;
     void drawDebug(WindowManager& window, Entity* player, Camera* camera, InputManager& input);
     void drawMainMenu();
     void drawSettings(
@@ -40,11 +41,10 @@ class UiManager {
         Level* level,
         bool& showFanTriangulation
     );
-
     void setState(UiState state);
     UiState getState() const;
-
     void runCancelEvent();
+    void passInputToImGui(const GameEventTypes::Input& event);
 
     bool showDebug = false;
 };

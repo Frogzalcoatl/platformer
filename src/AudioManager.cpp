@@ -133,6 +133,9 @@ void AudioManager::setVolume(AudioCategory category, unsigned int volume) {
 }
 
 void AudioManager::setMusicPitch(float pitch) {
+    if (pitch < 0.01f) {
+        pitch = 0.01f;
+    }
     MIX_SetTrackFrequencyRatio(musicTrack.get(), pitch);
 }
 
