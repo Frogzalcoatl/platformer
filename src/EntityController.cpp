@@ -1,5 +1,6 @@
 #include "EntityController.hpp"
 #include "Camera.hpp"
+#include "Drawing.hpp"
 #include "Entity.hpp"
 #include "Events.hpp"
 #include <cassert>
@@ -19,8 +20,13 @@ static std::optional<EntityMovement> inputVerbToDirection(InputVerb verb) {
     }
 }
 
-EntityController::EntityController(Entity& entity, std::optional<SDL_JoystickID> joystickId)
+EntityController::EntityController(
+    Entity& entity, AssetManager& assets, std::optional<SDL_JoystickID> joystickId
+)
     : entity(&entity), joystickId(joystickId) {
+    std::string nametagStr = "Player ";
+    nametagStr += std::to_string(joystickId.value_or(1));
+    nametag = assets.getText(nametagStr, GameAssets::Fonts::Monocraft, 20.f);
 }
 
 void EntityController::setEntity(Entity& entity) {
@@ -113,4 +119,21 @@ void EntityController::resetMovement() {
         movement[i] = false;
     }
     isSprinting = false;
+}
+
+void EntityController::drawNameTag(
+    WindowManager& window,
+    AssetManager& assets,
+    float scaleFactor,
+    WindowVec2 offsetPixels,
+    float alpha
+) {
+    if (!entity) {
+        return;
+    }
+    b2Vec2 pos = entity->getInterpolatedPosition(alpha);
+    pos.y += 2.f;
+    Drawing::text(
+        nametag.get(), window, pos, scaleFactor, offsetPixels, assets.TextResolutionScaleFactor
+    );
 }

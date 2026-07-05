@@ -16,20 +16,22 @@ std::string inputVerbToString(InputVerb verb) {
         return "Jump";
     case InputVerb::Sprint:
         return "Sprint";
+    case InputVerb::Respawn:
+        return "Respawn";
     case InputVerb::Confirm:
         return "Confirm";
     case InputVerb::Cancel:
         return "Cancel";
-    case InputVerb::Respawn:
-        return "Respawn";
-    case InputVerb::ToggleFullscreen:
-        return "Toggle Fullscreen";
+    case InputVerb::Pause:
+        return "Pause Game";
     case InputVerb::ZoomIn:
         return "Zoom In";
     case InputVerb::ZoomOut:
         return "Zoom Out";
     case InputVerb::ZoomReset:
         return "Zoom Reset";
+    case InputVerb::ToggleFullscreen:
+        return "Toggle Fullscreen";
     case InputVerb::ToggleDebug:
         return "Toggle Debug";
     case InputVerb::ShowHitboxes:
@@ -333,4 +335,12 @@ std::vector<GameEventTypes::Input> InputManager::getInputEventsFromSDLEvent(SDL_
 
 const GamepadBindings& InputManager::getGamepadBindings() const {
     return gamepadBindings;
+}
+
+std::vector<SDL_JoystickID> InputManager::getActiveGamepads() const {
+    std::vector<SDL_JoystickID> gamepads;
+    for (const auto& gamepad : gamepadsVerbsPressed) {
+        gamepads.push_back(gamepad.first);
+    }
+    return gamepads;
 }

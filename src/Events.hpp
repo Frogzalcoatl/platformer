@@ -42,6 +42,7 @@ struct SetUiState {
 struct SetLevelName {
     LevelName level;
 };
+struct UpdateCurrentPlayers {};
 } // namespace GameEventTypes
 
 using GameEvent = std::variant<
@@ -51,7 +52,8 @@ using GameEvent = std::variant<
     GameEventTypes::SetVolume,
     GameEventTypes::Input,
     GameEventTypes::SetUiState,
-    GameEventTypes::SetLevelName>;
+    GameEventTypes::SetLevelName,
+    GameEventTypes::UpdateCurrentPlayers>;
 
 namespace GameEvents {
 bool Poll(GameEvent& event);

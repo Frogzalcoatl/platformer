@@ -1,5 +1,6 @@
 #include "Level.hpp"
 #include "Drawing.hpp"
+#include <algorithm>
 
 Level::Level(const char* levelName, LevelDimensions size, WindowManager& window)
     : camera(nullptr, window), levelName(levelName), size(size) {
@@ -47,33 +48,34 @@ float Level::update() {
 
 void Level::draw(WindowManager& window, AssetManager& assets, float alpha) {
     camera.run(alpha);
+    const float scaleFactor = camera.getScaleFactor();
+    const WindowVec2 offsetPixels = camera.getOffsetPixels();
     for (size_t x = 0; x < tiles.size(); x++) {
         for (size_t y = 0; y < tiles[x].size(); y++) {
             if (tiles[x][y] != GameAssets::Textures::None) {
-                drawTile(tiles[x][y], x, y, assets, window, camera.getScaleFactor());
+                drawTile(tiles[x][y], x, y, assets, window, scaleFactor);
             }
         }
     }
     for (const auto& entity : entities) {
         if (entity) {
-            entity->draw(window, alpha, camera.getScaleFactor(), camera.getOffsetPixels());
+            entity->draw(window, alpha, scaleFactor, offsetPixels);
             if (showFanTriangulation) {
                 b2Transform transform;
                 transform.p = entity->getInterpolatedPosition(alpha);
                 transform.q = entity->getInterpolatedRotation(alpha);
                 Drawing::showFanTriangulation(
-                    entity->getPolygon(),
-                    window,
-                    transform,
-                    camera.getScaleFactor(),
-                    camera.getOffsetPixels()
+                    entity->getPolygon(), window, transform, scaleFactor, offsetPixels
                 );
             }
             if (showHitBoxes) {
-                entity->drawHitbox(
-                    window, alpha, camera.getScaleFactor(), camera.getOffsetPixels()
-                );
+                entity->drawHitbox(window, alpha, scaleFactor, offsetPixels);
             }
+        }
+    }
+    for (const auto& player : players) {
+        if (player) {
+            player->drawNameTag(window, assets, scaleFactor, offsetPixels, alpha);
         }
     }
 }
@@ -94,7 +96,19 @@ void Level::handleInput(GameEventTypes::Input event) {
     playerForInput->handleInput(event, &camera);
 }
 
-void Level::addEntity(std::unique_ptr<Entity> entity) {
+void Level::addEntity(
+    b2WorldId world,
+    b2Polygon polygon,
+    b2Vec2 position,
+    bool isStatic,
+    SDL_Texture* texture,
+    std::optional<b2Vec2> textureSize,
+    b2BodyDef bodyDef,
+    b2ShapeDef shapeDef
+) {
+    auto entity = std::make_unique<Entity>(
+        world, polygon, position, isStatic, texture, textureSize, bodyDef, shapeDef
+    );
     entities.push_back(std::move(entity));
 }
 
@@ -137,8 +151,86 @@ void Level::drawTile(
     );
 }
 
-void Level::addPlayer(std::unique_ptr<EntityController> player) {
-    players.push_back(std::move(player));
+void Level::addPlayer(AssetManager& assets, std::optional<SDL_JoystickID> joystickId) {
+    if (!joystickId.has_value()) {
+        for (const auto& player : players) {
+            if (!player) {
+                continue;
+            }
+            if (player.get()->joystickId == joystickId) {
+                SDL_LogWarn(
+                    SDL_LOG_CATEGORY_APPLICATION, "Unable to add second player with no joystick id"
+                );
+                return;
+            }
+        }
+    }
+    b2BodyDef playerBodyDef = b2DefaultBodyDef();
+    playerBodyDef.fixedRotation = true;
+    b2ShapeDef playerShapeDef = b2DefaultShapeDef();
+    playerShapeDef.material.friction = 0.f;
+    playerShapeDef.density = 4.f;
+    auto playerEntity = std::make_unique<Entity>(
+        world,
+        b2MakeBox(0.5f, 1.f),
+        b2Vec2{10.f, 4.f},
+        false,
+        assets.getTexture(GameAssets::Textures::Player),
+        b2Vec2{1.f, 2.f},
+        playerBodyDef,
+        playerShapeDef
+    );
+    if (!joystickId.has_value()) {
+        camera.entityToFollow = playerEntity.get();
+    }
+    auto controller = std::make_unique<EntityController>(*playerEntity, assets, joystickId);
+    controller->spawnPoint = b2Vec2{4.f, 4.f};
+    controller->joystickId = joystickId;
+    players.push_back(std::move(controller));
+    entities.push_back(std::move(playerEntity));
+    SDL_Log(
+        "Spawned new player with joystickId \"%s\"", std::to_string(joystickId.value_or(1)).c_str()
+    );
+}
+
+void Level::updatePlayers(const std::vector<SDL_JoystickID>& activeGamepads, AssetManager& assets) {
+    auto iterator = players.begin();
+    while (iterator != players.end()) {
+        if ((*iterator)->joystickId.has_value()) {
+            SDL_JoystickID currentId = (*iterator)->joystickId.value();
+            // if currentId is not in activeGamepads type shi
+            if (std::find(activeGamepads.begin(), activeGamepads.end(), currentId) ==
+                activeGamepads.end()) {
+                Entity* entityPtr = (*iterator)->getEntity();
+                if (camera.entityToFollow == entityPtr) {
+                    camera.entityToFollow = nullptr;
+                }
+                if (entityPtr) {
+                    auto entityIterator = std::find_if(
+                        entities.begin(), entities.end(), [entityPtr](const auto& entity) {
+                            return entity.get() == entityPtr;
+                        }
+                    );
+                    if (entityIterator != entities.end()) {
+                        entities.erase(entityIterator);
+                    }
+                }
+                iterator = players.erase(iterator);
+                SDL_Log("Removed player with joystickId %d", static_cast<int>(currentId));
+                continue;
+            }
+        }
+        iterator++;
+    }
+    for (const auto gamepadId : activeGamepads) {
+        bool alreadyExists =
+            std::any_of(players.begin(), players.end(), [gamepadId](const auto& controller) {
+                return controller->joystickId == gamepadId;
+            });
+        if (!alreadyExists) {
+            addPlayer(assets, gamepadId);
+        }
+    }
 }
 
 const std::vector<std::unique_ptr<Entity>>& Level::getEntities() const {
@@ -157,84 +249,56 @@ b2WorldId Level::getWorldId() const {
 
 std::unique_ptr<Level> getTemplateLevel(AssetManager& assets, WindowManager& window) {
     auto level = std::make_unique<Level>("Template", LevelDimensions{100, 40}, window);
-    b2BodyDef playerBodyDef = b2DefaultBodyDef();
-    playerBodyDef.fixedRotation = true;
-    b2ShapeDef playerShapeDef = b2DefaultShapeDef();
-    playerShapeDef.material.friction = 0.f;
-    playerShapeDef.density = 4.f;
     b2WorldId world = level->getWorldId();
-    auto playerEntity = std::make_unique<Entity>(
-        world,
-        b2MakeBox(0.5f, 1.f),
-        b2Vec2{10.f, 4.f},
-        false,
-        assets.getTexture(GameAssets::Textures::Player),
-        b2Vec2{1.f, 2.f},
-        playerBodyDef,
-        playerShapeDef
-    );
-    level->camera.entityToFollow = playerEntity.get();
-    auto controller = std::make_unique<EntityController>(*playerEntity);
-    controller->spawnPoint = b2Vec2{4.f, 4.f};
-    level->addPlayer(std::move(controller));
-    level->addEntity(std::move(playerEntity));
     const int GroundWidth = 50;
     const int GroundHeight = 2;
+    level->addPlayer(assets, std::nullopt);
     level->addEntity(
-        std::make_unique<Entity>(
-            world,
-            b2MakeBox(static_cast<float>(GroundWidth) / 2.f, static_cast<float>(GroundHeight)),
-            b2Vec2{static_cast<float>(GroundWidth) / 2.f, 0.f},
-            true,
-            nullptr
-        )
+        world,
+        b2MakeBox(static_cast<float>(GroundWidth) / 2.f, static_cast<float>(GroundHeight)),
+        b2Vec2{static_cast<float>(GroundWidth) / 2.f, 0.f},
+        true,
+        nullptr,
+        std::nullopt
     );
     const int WallHeight = 20;
     const int WallPosLeft = 0;
     const int WallPosRight = GroundWidth;
     level->addEntity(
-        std::make_unique<Entity>(
-            world,
-            b2MakeBox(0.5f, static_cast<float>(WallHeight) / 2.f),
-            b2Vec2{WallPosLeft + 0.5f, static_cast<float>(WallHeight) / 2.f},
-            true,
-            nullptr
-        )
+        world,
+        b2MakeBox(0.5f, static_cast<float>(WallHeight) / 2.f),
+        b2Vec2{WallPosLeft + 0.5f, static_cast<float>(WallHeight) / 2.f},
+        true,
+        nullptr,
+        std::nullopt
     );
     level->addEntity(
-        std::make_unique<Entity>(
-            world,
-            b2MakeBox(0.5f, static_cast<float>(WallHeight) / 2.f),
-            b2Vec2{WallPosRight + 0.5f, static_cast<float>(WallHeight) / 2.f},
-            true,
-            nullptr
-        )
+        world,
+        b2MakeBox(0.5f, static_cast<float>(WallHeight) / 2.f),
+        b2Vec2{WallPosRight + 0.5f, static_cast<float>(WallHeight) / 2.f},
+        true,
+        nullptr,
+        std::nullopt
     );
     b2BodyDef dynamicBodyDef = b2DefaultBodyDef();
     dynamicBodyDef.type = b2_dynamicBody;
     level->addEntity(
-        std::make_unique<Entity>(
-            world,
-            b2MakeBox(0.5f, 2.f),
-            b2Vec2{28.f, 4.f},
-            false,
-            assets.getTexture(GameAssets::Textures::Log),
-            b2Vec2{1.f, 4.f},
-            dynamicBodyDef,
-            b2DefaultShapeDef()
-        )
+        world,
+        b2MakeBox(0.5f, 2.f),
+        b2Vec2{28.f, 4.f},
+        false,
+        assets.getTexture(GameAssets::Textures::Log),
+        b2Vec2{1.f, 4.f},
+        dynamicBodyDef
     );
     level->addEntity(
-        std::make_unique<Entity>(
-            world,
-            b2MakeBox(0.5f, 1.f),
-            b2Vec2{8.f, 3.f},
-            false,
-            assets.getTexture(GameAssets::Textures::Log),
-            b2Vec2{1.f, 2.f},
-            dynamicBodyDef,
-            b2DefaultShapeDef()
-        )
+        world,
+        b2MakeBox(0.5f, 1.f),
+        b2Vec2{8.f, 3.f},
+        false,
+        assets.getTexture(GameAssets::Textures::Log),
+        b2Vec2{1.f, 2.f},
+        dynamicBodyDef
     );
     for (int i = 1; i < GroundWidth; i++) {
         level->addTile(GameAssets::Textures::Dirt, i, 0);

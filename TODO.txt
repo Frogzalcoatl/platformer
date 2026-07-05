@@ -2,3 +2,8 @@ Account for polygon radius
 
 Tiling manager
     I'm assuming I'd need to figure out some way to automatically load static entities on exposed solid tiles.
+
+
+Packer is not working when the directory hasnt been created yet. Fix.
+
+Determine why memory is higher than usual only when opening a level for the first time.

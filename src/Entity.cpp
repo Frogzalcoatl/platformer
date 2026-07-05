@@ -9,26 +9,6 @@ Entity::Entity(
     b2Vec2 position,
     bool isStatic,
     SDL_Texture* texture,
-    std::optional<b2Vec2> textureSize
-)
-    : Entity(
-          world,
-          polygon,
-          position,
-          isStatic,
-          texture,
-          textureSize,
-          b2DefaultBodyDef(),
-          b2DefaultShapeDef()
-      ) {
-}
-
-Entity::Entity(
-    b2WorldId world,
-    b2Polygon polygon,
-    b2Vec2 position,
-    bool isStatic,
-    SDL_Texture* texture,
     std::optional<b2Vec2> textureSize,
     b2BodyDef bodyDef,
     b2ShapeDef shapeDef

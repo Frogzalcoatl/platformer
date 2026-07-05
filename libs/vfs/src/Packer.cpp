@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
     }
     std::ofstream outputFile(outputFileName, std::ios::binary);
     if (!outputFile.is_open()) {
-        std::cout << "Error: Could not create output file" << outputFileName << std::endl;
+        std::cout << "Error: Could not create output file " << outputFileName << std::endl;
         return 1;
     }
     VFS_Header header;

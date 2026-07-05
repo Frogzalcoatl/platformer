@@ -1,2 +1,2 @@
-03000000790000000600000000000000,SaharsRetrolinkController,platform:Windows,a:b8,b:b6,start:b9,leftshoulder:b4,rightshoulder:b5,dpup:h0.1,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,rightx:a0,righty:a1,
-"03004f02790000000600000010010000,SaharsRetrolinkController,platform:Linux,a:b8,b:b6,start:b9,leftshoulder:b4,rightshoulder:b5,dpup:h0.1,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,rightx:a0,righty:a1,crc:024f,"
+03000000790000000600000000000000,Retrolink,platform:Windows,a:b2,b:b1,x:b3,y:b0,back:b8,guide:b9,start:b6,leftshoulder:b4,rightshoulder:b5,dpup:h0.1,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,rightx:a0,righty:a1,
+03000000790000000600000010010000,Retrolink,platform:Linux,a:b2,b:b1,x:b3,y:b0,back:b8,guide:b9,start:b6,leftshoulder:b4,rightshoulder:b5,dpup:h0.1,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,rightx:a0,righty:a1

@@ -8,10 +8,15 @@
 class EntityController {
   private:
     Entity* entity;
+    UniqueText nametag;
 
   public:
     EntityController() = default;
-    EntityController(Entity& entity, std::optional<SDL_JoystickID> joystickId = std::nullopt);
+    EntityController(
+        Entity& entity,
+        AssetManager& assets,
+        std::optional<SDL_JoystickID> joystickId = std::nullopt
+    );
     std::optional<SDL_JoystickID> joystickId;
     b2Vec2 spawnPoint = {0.f, 0.f};
     float jumpForceNewtons = 160.f;
@@ -29,4 +34,11 @@ class EntityController {
     void respawn();
     void handleInput(GameEventTypes::Input event, Camera* camera);
     void resetMovement();
+    void drawNameTag(
+        WindowManager& window,
+        AssetManager& assets,
+        float scaleFactor,
+        WindowVec2 offsetPixels,
+        float alpha
+    );
 };

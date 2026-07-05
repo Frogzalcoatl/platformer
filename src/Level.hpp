@@ -41,9 +41,19 @@ class Level {
     float update(); // Returns alpha
     void handleInput(GameEventTypes::Input event);
     void draw(WindowManager& window, AssetManager& assets, float alpha);
-    void addEntity(std::unique_ptr<Entity> entity);
+    void addEntity(
+        b2WorldId world,
+        b2Polygon polygon,
+        b2Vec2 position,
+        bool isStatic,
+        SDL_Texture* texture,
+        std::optional<b2Vec2> textureSize,
+        b2BodyDef bodyDef = b2DefaultBodyDef(),
+        b2ShapeDef shapeDef = b2DefaultShapeDef()
+    );
     void addTile(GameAssets::Textures textureId, size_t x, size_t y);
-    void addPlayer(std::unique_ptr<EntityController> player);
+    void addPlayer(AssetManager& assets, std::optional<SDL_JoystickID> joystickId);
+    void updatePlayers(const std::vector<SDL_JoystickID>& activeGamepads, AssetManager& assets);
     const std::vector<std::unique_ptr<Entity>>& getEntities() const;
     const LevelTileVector& getTiles() const;
     const std::vector<std::unique_ptr<EntityController>>& getPlayers() const;

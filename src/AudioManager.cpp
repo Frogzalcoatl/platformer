@@ -78,7 +78,7 @@ bool AudioManager::playMusic(
     if (!musicTrack) {
         SDL_LogError(
             SDL_LOG_CATEGORY_AUDIO,
-            "Unable to player music %s due to null SDL3 mixer music track",
+            "Unable to play music %s due to null SDL3 mixer music track",
             GameAssets::FileNames.Music[static_cast<size_t>(musicId)]
         );
         clearCurrentMusic();

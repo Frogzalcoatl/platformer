@@ -12,6 +12,8 @@ UiManager::UiManager(AssetManager& assets, UiState startingState) : currentState
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
     io.BackendFlags |= ImGuiBackendFlags_HasGamepad;
+    io.ConfigNavSwapGamepadButtons = true; // Matches my controller. Will enable/disable this based
+                                           // on controlelr type properly in the future
 }
 
 void UiManager::setState(UiState state) {
@@ -91,35 +93,6 @@ void UiManager::passInputToImGui(const GameEventTypes::Input& event) {
             break;
         case InputVerb::Right:
             imguiKey = ImGuiKey_RightArrow;
-            break;
-        case InputVerb::Confirm:
-            imguiKey = ImGuiKey_Enter;
-            break;
-        case InputVerb::Cancel:
-            imguiKey = ImGuiKey_Escape;
-            break;
-        default:
-            break;
-        }
-    } else if (event.source == InputSource::Controller) {
-        switch (event.verb) {
-        case InputVerb::Up:
-            imguiKey = ImGuiKey_GamepadDpadUp;
-            break;
-        case InputVerb::Down:
-            imguiKey = ImGuiKey_GamepadDpadDown;
-            break;
-        case InputVerb::Left:
-            imguiKey = ImGuiKey_GamepadDpadLeft;
-            break;
-        case InputVerb::Right:
-            imguiKey = ImGuiKey_GamepadDpadRight;
-            break;
-        case InputVerb::Confirm:
-            imguiKey = ImGuiKey_GamepadFaceDown;
-            break;
-        case InputVerb::Cancel:
-            imguiKey = ImGuiKey_GamepadFaceRight;
             break;
         default:
             break;
@@ -219,6 +192,7 @@ void UiManager::drawMainMenu() {
             GameEvents::Push(GameEventTypes::SetLevelName{LevelName::Template});
             currentState = UiState::Playing;
         }
+        ImGui::SetItemDefaultFocus();
         ImGui::Dummy(ImVec2(0, verticalSpacing));
         ImGui::SetCursorPosX(cursorX);
         if (ImGui::Button("Settings", ImVec2{buttonWidth, buttonHeight})) {
@@ -231,6 +205,7 @@ void UiManager::drawMainMenu() {
         }
         ImGui::PopFont();
     }
+    ImGui::SetWindowFocus("Main Menu");
     ImGui::End();
 }
 
@@ -255,7 +230,11 @@ void UiManager::drawSettings(
         ImGui::SameLine();
         ImGui::PushFont(monocraftLarge);
         ImGui::BeginTabBar("SettingsTabBar");
-        if (ImGui::BeginTabItem("Display")) {
+        ImGuiTabItemFlags displayTabFlags = ImGuiTabItemFlags_None;
+        if (ImGui::IsWindowAppearing()) {
+            displayTabFlags |= ImGuiTabItemFlags_SetSelected;
+        }
+        if (ImGui::BeginTabItem("Display", nullptr, displayTabFlags)) {
             ImGui::Text("Display");
             ImGui::PushFont(monocraftMedium);
             ImGui::Dummy(verticalSpacingDummy);
@@ -347,7 +326,7 @@ void UiManager::drawSettings(
             ImGui::SameLine();
             ImGui::Dummy(horizontalSpacingDummy);
             ImGui::SameLine();
-            if (ImGui::SliderFloat("Music Pitch", &pitch, 0.25f, 2.f, "%.2f", sliderFlags)) {
+            if (ImGui::SliderFloat("Music Pitch", &pitch, 0.5f, 1.5f, "%.2f", sliderFlags)) {
                 audio.setMusicPitch(pitch);
             }
             ImGui::Dummy(verticalSpacingDummy);
@@ -419,6 +398,7 @@ void UiManager::drawPauseMenu() {
         if (ImGui::Button("Resume", ImVec2{buttonWidth, buttonHeight})) {
             currentState = UiState::Playing;
         }
+        ImGui::SetItemDefaultFocus();
         ImGui::Dummy(ImVec2(0, verticalSpacing));
         ImGui::SetCursorPosX(cursorX);
         if (ImGui::Button("Settings", ImVec2{buttonWidth, buttonHeight})) {

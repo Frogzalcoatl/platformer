@@ -11,7 +11,7 @@
 Platformer::Platformer()
     : window{"C++ Platformer", Colors.Background}, assets{window.getSdlRenderer()}, audio{assets},
       ui{assets} {
-    audio.setVolume(AudioCategory::Music, 50);
+    audio.setVolume(AudioCategory::Music, 30);
     assets.initSDLGameControllerDB();
 }
 
@@ -45,6 +45,7 @@ void Platformer::handleSdlEvent() {
         case SDL_EVENT_GAMEPAD_ADDED:
         case SDL_EVENT_GAMEPAD_REMOVED: {
             input.handleGamepadDeviceEvent(event.gdevice);
+            GameEvents::Push(GameEventTypes::UpdateCurrentPlayers{});
         }; break;
         };
     }
@@ -52,6 +53,7 @@ void Platformer::handleSdlEvent() {
 
 void Platformer::handleGameEvent() {
     GameEvent event;
+    bool stateChangedThisFrame = false;
     while (GameEvents::Poll(event)) {
         if (std::holds_alternative<GameEventTypes::CloseWindow>(event)) {
             running = false;
@@ -68,9 +70,6 @@ void Platformer::handleGameEvent() {
             audio.setVolume(setVolume->category, setVolume->volume);
         } else if (const auto* inputEvent = std::get_if<GameEventTypes::Input>(&event)) {
             UiState uiState = ui.getState();
-            if (uiState != UiState::Playing) {
-                ui.passInputToImGui(*inputEvent);
-            }
             if (inputEvent->state == InputState::Pressed) {
                 switch (inputEvent->verb) {
                 case InputVerb::ToggleFullscreen:
@@ -95,7 +94,17 @@ void Platformer::handleGameEvent() {
                     ui.showDebug = !ui.showDebug;
                     break;
                 case InputVerb::Cancel:
+                    if (uiState != UiState::Playing && !stateChangedThisFrame) {
+                        ui.runCancelEvent();
+                        stateChangedThisFrame = true;
+                    }
+                    break;
+                case InputVerb::Pause:
+                    if (ImGui::IsAnyItemActive() || stateChangedThisFrame) {
+                        break;
+                    }
                     ui.runCancelEvent();
+                    stateChangedThisFrame = true;
                     if (currentLevel) {
                         const auto& players = currentLevel.get()->getPlayers();
                         for (const auto& player : players) {
@@ -114,15 +123,21 @@ void Platformer::handleGameEvent() {
             if (currentLevel && uiState == UiState::Playing) {
                 currentLevel->handleInput(*inputEvent);
             }
+            ui.passInputToImGui(*inputEvent);
         } else if (const auto* setUiState = std::get_if<GameEventTypes::SetUiState>(&event)) {
             ui.setState(setUiState->state);
         } else if (const auto* setLevelName = std::get_if<GameEventTypes::SetLevelName>(&event)) {
             if (setLevelName->level == LevelName::Template) {
                 currentLevel = getTemplateLevel(assets, window);
+                GameEvents::Push(GameEventTypes::UpdateCurrentPlayers{});
                 window.backgroundColor = Colors.SkyBlue;
             } else if (setLevelName->level == LevelName::None) {
                 currentLevel = nullptr;
                 window.backgroundColor = Colors.Background;
+            }
+        } else if (std::holds_alternative<GameEventTypes::UpdateCurrentPlayers>(event)) {
+            if (currentLevel) {
+                currentLevel->updatePlayers(input.getActiveGamepads(), assets);
             }
         }
     }
@@ -132,8 +147,6 @@ static bool playMusicFailed = false; // Just for testing
 
 void Platformer::run() {
     running = true;
-    UniqueText text =
-        assets.getText("Player", GameAssets::Fonts::Monocraft, 20.f); // Just for testing
     while (running) {
         if (!audio.isMusicPlaying() && !playMusicFailed) {
             GameAssets::Music randomSong = static_cast<GameAssets::Music>(
@@ -154,19 +167,6 @@ void Platformer::run() {
                 alpha = currentLevel->update();
             }
             currentLevel->draw(window, assets, alpha);
-            if (currentLevel->camera.entityToFollow) {
-                b2Vec2 textPos =
-                    currentLevel->camera.entityToFollow->getInterpolatedPosition(alpha);
-                textPos.y += 2.f;
-                Drawing::text(
-                    text.get(),
-                    window,
-                    textPos,
-                    currentLevel->camera.getScaleFactor(),
-                    currentLevel->camera.getOffsetPixels(),
-                    assets.TextResolutionScaleFactor
-                );
-            }
         }
         ui.render(window, audio, input, currentLevel.get());
         window.render(frameStartNs);

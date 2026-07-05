@@ -55,8 +55,8 @@ int main(int argc, char* argv[]) {
     ImGui::DestroyContext();
     SDL_Log("Destroyed ImGui context");
     TTF_Quit();
-    SDL_Log("Quit SDL_ttf");
+    SDL_Log("Quit SDL3_ttf");
     SDL_Quit();
-    SDL_Log("Quit SDL");
+    SDL_Log("Quit SDL3");
     return returnVal;
 }
