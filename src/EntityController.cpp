@@ -128,7 +128,7 @@ void EntityController::drawNameTag(
     WindowVec2 offsetPixels,
     float alpha
 ) {
-    if (!entity) {
+    if (!entity || !nametag) {
         return;
     }
     b2Vec2 pos = entity->getInterpolatedPosition(alpha);

@@ -94,11 +94,11 @@ void Platformer::handleGameEvent() {
                     ui.showDebug = !ui.showDebug;
                     break;
                 case InputVerb::Cancel:
-                    if (uiState != UiState::Playing && !stateChangedThisFrame) {
-                        ui.runCancelEvent();
-                        stateChangedThisFrame = true;
+                    if (uiState == UiState::Playing) {
+                        break;
                     }
-                    break;
+                    // Purposely continuing into pause, cancel and pause are nearly identical
+                    // Only difference is cancel cannot be used to pause the game
                 case InputVerb::Pause:
                     if (ImGui::IsAnyItemActive() || stateChangedThisFrame) {
                         break;

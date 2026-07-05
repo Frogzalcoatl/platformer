@@ -125,11 +125,12 @@ void Level::addEntity(
     bool isStatic,
     b2BodyDef bodyDef,
     b2ShapeDef shapeDef,
+    SDL_FColor hitboxColor,
     SDL_Texture* texture,
     std::optional<b2Vec2> textureSize
 ) {
     auto entity = std::make_unique<Entity>(
-        world, polygon, position, isStatic, bodyDef, shapeDef, texture, textureSize
+        world, polygon, position, isStatic, bodyDef, shapeDef, hitboxColor, texture, textureSize
     );
     entities.push_back(std::move(entity));
 }
@@ -159,7 +160,8 @@ void Level::addPlayer(AssetManager& assets, std::optional<SDL_JoystickID> joysti
             }
             if (player.get()->joystickId == joystickId) {
                 SDL_LogWarn(
-                    SDL_LOG_CATEGORY_APPLICATION, "Unable to add second player with no joystick id"
+                    SDL_LOG_CATEGORY_APPLICATION,
+                    "Adding a second player with no joystick id is not allowed"
                 );
                 return;
             }
@@ -177,6 +179,7 @@ void Level::addPlayer(AssetManager& assets, std::optional<SDL_JoystickID> joysti
         false,
         playerBodyDef,
         playerShapeDef,
+        colorToFColor(Colors.Yellow),
         assets.getTexture(GameAssets::Textures::Player),
         b2Vec2{1.f, 2.f}
     );
@@ -283,6 +286,7 @@ std::unique_ptr<Level> getTemplateLevel(AssetManager& assets, WindowManager& win
         false,
         dynamicBodyDef,
         b2DefaultShapeDef(),
+        colorToFColor(Colors.Yellow),
         assets.getTexture(GameAssets::Textures::Log),
         b2Vec2{1.f, 4.f}
     );
@@ -293,6 +297,7 @@ std::unique_ptr<Level> getTemplateLevel(AssetManager& assets, WindowManager& win
         false,
         dynamicBodyDef,
         b2DefaultShapeDef(),
+        colorToFColor(Colors.Yellow),
         assets.getTexture(GameAssets::Textures::Log),
         b2Vec2{1.f, 2.f}
     );

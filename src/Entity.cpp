@@ -10,10 +10,12 @@ Entity::Entity(
     bool isStatic,
     b2BodyDef bodyDef,
     b2ShapeDef shapeDef,
+    SDL_FColor hitboxColor,
     SDL_Texture* texture,
     std::optional<b2Vec2> textureSize
 )
-    : polygon(polygon), texture(texture), textureSize(textureSize), isStatic(isStatic) {
+    : polygon(polygon), texture(texture), textureSize(textureSize), isStatic(isStatic),
+      hitboxColor(hitboxColor) {
     bodyDef.position = position;
     if (!isStatic) {
         bodyDef.type = b2_dynamicBody;
@@ -28,11 +30,11 @@ Entity::~Entity() {
     b2DestroyBody(bodyId);
 }
 
-b2BodyId Entity::getBodyId() const {
+const b2BodyId& Entity::getBodyId() const {
     return bodyId;
 }
 
-b2Polygon Entity::getPolygon() const {
+const b2Polygon& Entity::getPolygon() const {
     return polygon;
 }
 
@@ -84,9 +86,7 @@ void Entity::drawHitbox(
     b2Transform transform;
     transform.p = getInterpolatedPosition(alpha);
     transform.q = getInterpolatedRotation(alpha);
-    Drawing::polygonBorders(
-        polygon, window, transform, scaleFactor, offsetPixels, colorToFColor(Colors.Yellow)
-    );
+    Drawing::polygonBorders(polygon, window, transform, scaleFactor, offsetPixels, hitboxColor);
 }
 
 void Entity::teleport(b2Vec2 location) {

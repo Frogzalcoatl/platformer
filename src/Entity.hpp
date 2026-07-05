@@ -1,4 +1,5 @@
 #pragma once
+#include "Colors.hpp"
 #include "WindowManager.hpp"
 #include <SDL3/SDL.h>
 #include <array>
@@ -31,15 +32,17 @@ class Entity {
         bool isStatic,
         b2BodyDef bodyDef = b2DefaultBodyDef(),
         b2ShapeDef shapeDef = b2DefaultShapeDef(),
+        SDL_FColor hitboxColor = colorToFColor(Colors.Yellow),
         SDL_Texture* texture = nullptr,
         std::optional<b2Vec2> textureSize = std::nullopt
     );
     ~Entity();
 
     const bool isStatic;
+    SDL_FColor hitboxColor;
 
-    b2BodyId getBodyId() const;
-    b2Polygon getPolygon() const;
+    const b2BodyId& getBodyId() const;
+    const b2Polygon& getPolygon() const;
     b2Vec2 getPosition() const;
     b2Vec2 getInterpolatedPosition(float alpha) const;
     b2Rot getInterpolatedRotation(float alpha) const;
