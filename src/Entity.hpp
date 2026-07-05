@@ -29,10 +29,10 @@ class Entity {
         b2Polygon polygon,
         b2Vec2 position,
         bool isStatic,
-        SDL_Texture* texture,
-        std::optional<b2Vec2> textureSize,
         b2BodyDef bodyDef = b2DefaultBodyDef(),
-        b2ShapeDef shapeDef = b2DefaultShapeDef()
+        b2ShapeDef shapeDef = b2DefaultShapeDef(),
+        SDL_Texture* texture = nullptr,
+        std::optional<b2Vec2> textureSize = std::nullopt
     );
     ~Entity();
 

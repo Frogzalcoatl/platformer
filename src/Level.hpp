@@ -46,10 +46,10 @@ class Level {
         b2Polygon polygon,
         b2Vec2 position,
         bool isStatic,
-        SDL_Texture* texture,
-        std::optional<b2Vec2> textureSize,
         b2BodyDef bodyDef = b2DefaultBodyDef(),
-        b2ShapeDef shapeDef = b2DefaultShapeDef()
+        b2ShapeDef shapeDef = b2DefaultShapeDef(),
+        SDL_Texture* texture = nullptr,
+        std::optional<b2Vec2> textureSize = std::nullopt
     );
     void addTile(GameAssets::Textures textureId, size_t x, size_t y);
     void addPlayer(AssetManager& assets, std::optional<SDL_JoystickID> joystickId);

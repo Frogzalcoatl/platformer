@@ -8,10 +8,10 @@ Entity::Entity(
     b2Polygon polygon,
     b2Vec2 position,
     bool isStatic,
-    SDL_Texture* texture,
-    std::optional<b2Vec2> textureSize,
     b2BodyDef bodyDef,
-    b2ShapeDef shapeDef
+    b2ShapeDef shapeDef,
+    SDL_Texture* texture,
+    std::optional<b2Vec2> textureSize
 )
     : polygon(polygon), texture(texture), textureSize(textureSize), isStatic(isStatic) {
     bodyDef.position = position;

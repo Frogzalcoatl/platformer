@@ -80,6 +80,28 @@ void Level::draw(WindowManager& window, AssetManager& assets, float alpha) {
     }
 }
 
+void Level::drawTile(
+    GameAssets::Textures textureId,
+    size_t x,
+    size_t y,
+    AssetManager& assets,
+    WindowManager& window,
+    float scaleFactor
+) {
+    SDL_Texture* texture = assets.getTexture(textureId);
+    if (!texture) {
+        return;
+    }
+    Drawing::texture(
+        texture,
+        window,
+        b2Vec2{static_cast<float>(x + 0.5f), static_cast<float>(y + 0.5f)},
+        b2Vec2{1.f, 1.f},
+        scaleFactor,
+        camera.getOffsetPixels()
+    );
+}
+
 void Level::handleInput(GameEventTypes::Input event) {
     EntityController* playerForInput = nullptr;
     for (auto& player : players) {
@@ -101,13 +123,13 @@ void Level::addEntity(
     b2Polygon polygon,
     b2Vec2 position,
     bool isStatic,
-    SDL_Texture* texture,
-    std::optional<b2Vec2> textureSize,
     b2BodyDef bodyDef,
-    b2ShapeDef shapeDef
+    b2ShapeDef shapeDef,
+    SDL_Texture* texture,
+    std::optional<b2Vec2> textureSize
 ) {
     auto entity = std::make_unique<Entity>(
-        world, polygon, position, isStatic, texture, textureSize, bodyDef, shapeDef
+        world, polygon, position, isStatic, bodyDef, shapeDef, texture, textureSize
     );
     entities.push_back(std::move(entity));
 }
@@ -127,28 +149,6 @@ void Level::addTile(GameAssets::Textures textureId, size_t x, size_t y) {
         return;
     }
     tiles[x][y] = textureId;
-}
-
-void Level::drawTile(
-    GameAssets::Textures textureId,
-    size_t x,
-    size_t y,
-    AssetManager& assets,
-    WindowManager& window,
-    float scaleFactor
-) {
-    SDL_Texture* texture = assets.getTexture(textureId);
-    if (!texture) {
-        return;
-    }
-    Drawing::texture(
-        texture,
-        window,
-        b2Vec2{static_cast<float>(x + 0.5f), static_cast<float>(y + 0.5f)},
-        b2Vec2{1.f, 1.f},
-        scaleFactor,
-        camera.getOffsetPixels()
-    );
 }
 
 void Level::addPlayer(AssetManager& assets, std::optional<SDL_JoystickID> joystickId) {
@@ -175,10 +175,10 @@ void Level::addPlayer(AssetManager& assets, std::optional<SDL_JoystickID> joysti
         b2MakeBox(0.5f, 1.f),
         b2Vec2{10.f, 4.f},
         false,
-        assets.getTexture(GameAssets::Textures::Player),
-        b2Vec2{1.f, 2.f},
         playerBodyDef,
-        playerShapeDef
+        playerShapeDef,
+        assets.getTexture(GameAssets::Textures::Player),
+        b2Vec2{1.f, 2.f}
     );
     if (!joystickId.has_value()) {
         camera.entityToFollow = playerEntity.get();
@@ -257,9 +257,7 @@ std::unique_ptr<Level> getTemplateLevel(AssetManager& assets, WindowManager& win
         world,
         b2MakeBox(static_cast<float>(GroundWidth) / 2.f, static_cast<float>(GroundHeight)),
         b2Vec2{static_cast<float>(GroundWidth) / 2.f, 0.f},
-        true,
-        nullptr,
-        std::nullopt
+        true
     );
     const int WallHeight = 20;
     const int WallPosLeft = 0;
@@ -268,17 +266,13 @@ std::unique_ptr<Level> getTemplateLevel(AssetManager& assets, WindowManager& win
         world,
         b2MakeBox(0.5f, static_cast<float>(WallHeight) / 2.f),
         b2Vec2{WallPosLeft + 0.5f, static_cast<float>(WallHeight) / 2.f},
-        true,
-        nullptr,
-        std::nullopt
+        true
     );
     level->addEntity(
         world,
         b2MakeBox(0.5f, static_cast<float>(WallHeight) / 2.f),
         b2Vec2{WallPosRight + 0.5f, static_cast<float>(WallHeight) / 2.f},
-        true,
-        nullptr,
-        std::nullopt
+        true
     );
     b2BodyDef dynamicBodyDef = b2DefaultBodyDef();
     dynamicBodyDef.type = b2_dynamicBody;
@@ -287,18 +281,20 @@ std::unique_ptr<Level> getTemplateLevel(AssetManager& assets, WindowManager& win
         b2MakeBox(0.5f, 2.f),
         b2Vec2{28.f, 4.f},
         false,
+        dynamicBodyDef,
+        b2DefaultShapeDef(),
         assets.getTexture(GameAssets::Textures::Log),
-        b2Vec2{1.f, 4.f},
-        dynamicBodyDef
+        b2Vec2{1.f, 4.f}
     );
     level->addEntity(
         world,
         b2MakeBox(0.5f, 1.f),
         b2Vec2{8.f, 3.f},
         false,
+        dynamicBodyDef,
+        b2DefaultShapeDef(),
         assets.getTexture(GameAssets::Textures::Log),
-        b2Vec2{1.f, 2.f},
-        dynamicBodyDef
+        b2Vec2{1.f, 2.f}
     );
     for (int i = 1; i < GroundWidth; i++) {
         level->addTile(GameAssets::Textures::Dirt, i, 0);
