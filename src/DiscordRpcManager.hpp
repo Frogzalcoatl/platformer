@@ -8,4 +8,4 @@ void init();
 void setStatus(const char* state, const char* details);
 void update();
 void shutdown();
-} // namespace DiscordRpcManager
+}

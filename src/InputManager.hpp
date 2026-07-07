@@ -71,7 +71,7 @@ struct Input {
     InputSource source;
     std::optional<SDL_JoystickID> joystickId = std::nullopt;
 };
-}; // namespace GameEventTypes
+};
 
 using ScancodeBindings = std::
     array<std::array<ScancodeInfo, MaxBindsPerVerb>, static_cast<size_t>(InputVerb::VerbCount)>;

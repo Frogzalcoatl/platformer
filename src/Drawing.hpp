@@ -64,4 +64,4 @@ b2Vec2 getTextWorldSize(TTF_Text* text, float textRenderScale, float textWorldSi
 bool shouldDrawObject(
     b2Vec2 objectPosBottomLeft, b2Vec2 objectSize, float minX, float maxX, float minY, float maxY
 );
-} // namespace Drawing
+}

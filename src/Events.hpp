@@ -43,7 +43,7 @@ struct SetLevelName {
     LevelName level;
 };
 struct UpdateCurrentPlayers {};
-} // namespace GameEventTypes
+}
 
 using GameEvent = std::variant<
     GameEventTypes::CloseWindow,
@@ -58,4 +58,4 @@ using GameEvent = std::variant<
 namespace GameEvents {
 bool Poll(GameEvent& event);
 void Push(GameEvent event);
-} // namespace GameEvents
+}

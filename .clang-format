@@ -12,3 +12,4 @@ BinPackArguments: false
 BinPackParameters: OnePerLine
 AllowShortFunctionsOnASingleLine: None
 AllowShortEnumsOnASingleLine: false
+FixNamespaceComments: false
