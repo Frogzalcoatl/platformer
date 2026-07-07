@@ -21,12 +21,15 @@ void Camera::updateScaleFactor(int windowSizeX, int windowSizeY) {
 
 void Camera::updateOffset(b2Vec2 worldPosition) {
     b2Vec2 size = getSize();
-    offsetWorld = b2Vec2{worldPosition.x - size.x / 2.f, worldPosition.y - size.y / 2.f};
+    offsetWorld.x = worldPosition.x - size.x / 2.f;
+    offsetWorld.y = worldPosition.y - size.y / 2.f;
 }
 
 void Camera::handleWindowResize(int x, int y) {
     b2Vec2 oldSize = getSize();
-    b2Vec2 center = {offsetWorld.x + oldSize.x / 2.f, offsetWorld.y + oldSize.y / 2.f};
+    b2Vec2 center;
+    center.x = offsetWorld.x + oldSize.x / 2.f;
+    center.y = offsetWorld.y + oldSize.y / 2.f;
     updateScaleFactor(x, y);
     updateOffset(center);
 }

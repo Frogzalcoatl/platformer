@@ -11,12 +11,12 @@ class UiManager {
   private:
     UiState currentState = UiState::MainMenu;
 
-    ImFont* monocraftExtraSmall = nullptr;
-    ImFont* monocraftSmall = nullptr;
-    ImFont* monocraftMedium = nullptr;
-    ImFont* monocraftLarge = nullptr;
-    ImFont* monocraftExtraLarge = nullptr;
-    ImFont* monocraftTitle = nullptr;
+    ImFont* fontExtraSmall = nullptr;
+    ImFont* fontSmall = nullptr;
+    ImFont* fontMedium = nullptr;
+    ImFont* fontLarge = nullptr;
+    ImFont* fontExtraLarge = nullptr;
+    ImFont* fontTitle = nullptr;
 
     const int MaxVolume = 100;
 

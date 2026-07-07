@@ -37,7 +37,7 @@ class EntityController {
     void drawNameTag(
         WindowManager& window,
         AssetManager& assets,
-        float scaleFactor,
+        float cameraScale,
         WindowVec2 cameraOffsetPixels,
         float alpha
     );

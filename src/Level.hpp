@@ -47,7 +47,7 @@ class Level {
         size_t y,
         AssetManager& assets,
         WindowManager& window,
-        float scaleFactor
+        float cameraScale
     );
 
   public:

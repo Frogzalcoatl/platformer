@@ -2,12 +2,12 @@
 #include <cassert>
 
 UiManager::UiManager(AssetManager& assets, UiState startingState) : currentState(startingState) {
-    monocraftExtraSmall = assets.getImGuiFont(GameAssets::Fonts::Xsku, 12.f);
-    monocraftSmall = assets.getImGuiFont(GameAssets::Fonts::Xsku, 18.f);
-    monocraftMedium = assets.getImGuiFont(GameAssets::Fonts::Xsku, 24.f);
-    monocraftLarge = assets.getImGuiFont(GameAssets::Fonts::Xsku, 36.f);
-    monocraftExtraLarge = assets.getImGuiFont(GameAssets::Fonts::Xsku, 72.f);
-    monocraftTitle = assets.getImGuiFont(GameAssets::Fonts::Xsku, 128.f);
+    fontExtraSmall = assets.getImGuiFont(GameAssets::Fonts::Xsku, 12.f);
+    fontSmall = assets.getImGuiFont(GameAssets::Fonts::Xsku, 18.f);
+    fontMedium = assets.getImGuiFont(GameAssets::Fonts::Xsku, 24.f);
+    fontLarge = assets.getImGuiFont(GameAssets::Fonts::Xsku, 36.f);
+    fontExtraLarge = assets.getImGuiFont(GameAssets::Fonts::Xsku, 72.f);
+    fontTitle = assets.getImGuiFont(GameAssets::Fonts::Xsku, 128.f);
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
@@ -106,7 +106,7 @@ void UiManager::passInputToImGui(const GameEventTypes::Input& event) {
 void UiManager::drawDebug(
     WindowManager& window, Entity* player, Camera* camera, InputManager& input, Level* level
 ) {
-    ImGui::PushFont(monocraftSmall);
+    ImGui::PushFont(fontSmall);
     ImGui::SetNextWindowPos(ImVec2{0.f, 0.f}, ImGuiCond_Always);
     if (ImGui::Begin("Debug Menu", nullptr, staticFlags | ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::Text("Window:");
@@ -195,7 +195,7 @@ void UiManager::drawLargeLogo() {
     ImVec2 centerPos = ImVec2{workPos.x + workSize.x * 0.5f, workPos.y + workSize.y * 0.5f};
     ImGui::SetNextWindowPos(ImVec2{centerPos.x, 50.f}, ImGuiCond_Always, ImVec2{0.5, 0.f});
     if (ImGui::Begin("Main Menu Title", nullptr, staticFlags)) {
-        ImGui::PushFont(monocraftTitle);
+        ImGui::PushFont(fontTitle);
         ImGui::Text("Platformer");
         ImGui::PopFont();
     }
@@ -212,7 +212,7 @@ void UiManager::drawMainMenu() {
     ImGui::SetNextWindowPos(centerPos, ImGuiCond_Always, ImVec2{0.5, 0.5});
     ImGui::SetNextWindowSize(menuSize);
     if (ImGui::Begin("Main Menu", nullptr, staticFlags)) {
-        ImGui::PushFont(monocraftLarge);
+        ImGui::PushFont(fontLarge);
         float verticalSpacing = 15.f;
         float windowWidth = ImGui::GetWindowSize().x;
         float buttonWidth = 350.f;
@@ -253,14 +253,14 @@ void UiManager::drawSettings(
     const ImVec2 verticalSpacingDummy{0.f, 10.f};
     const ImVec2 horizontalSpacingDummy{10.f, 0.f};
     if (ImGui::Begin("Settings", nullptr, staticFlags)) {
-        ImGui::PushFont(monocraftLarge);
+        ImGui::PushFont(fontLarge);
         if (ImGui::Button("Back", ImVec2{100.f, 45.f})) {
             runCancelEvent();
         }
         ImGui::SameLine();
         ImGui::Dummy(horizontalSpacingDummy);
         ImGui::SameLine();
-        ImGui::PushFont(monocraftLarge);
+        ImGui::PushFont(fontLarge);
         ImGui::BeginTabBar("SettingsTabBar");
         ImGuiTabItemFlags displayTabFlags = ImGuiTabItemFlags_None;
         if (ImGui::IsWindowAppearing()) {
@@ -268,7 +268,7 @@ void UiManager::drawSettings(
         }
         if (ImGui::BeginTabItem("Display", nullptr, displayTabFlags)) {
             ImGui::Text("Display");
-            ImGui::PushFont(monocraftMedium);
+            ImGui::PushFont(fontMedium);
             ImGui::Dummy(verticalSpacingDummy);
             int framerate = static_cast<int>(ImGui::GetIO().Framerate);
             if (framerate >= 1000) {
@@ -312,10 +312,10 @@ void UiManager::drawSettings(
             ImGui::EndTabItem();
         }
         ImGui::PopFont();
-        ImGui::PushFont(monocraftLarge);
+        ImGui::PushFont(fontLarge);
         if (ImGui::BeginTabItem("Audio")) {
             ImGui::Text("Audio");
-            ImGui::PushFont(monocraftMedium);
+            ImGui::PushFont(fontMedium);
             int masterVolume = audio.getVolume(AudioCategory::Master);
             int soundVolume = audio.getVolume(AudioCategory::Sounds);
             int musicVolume = audio.getVolume(AudioCategory::Music);
@@ -376,7 +376,7 @@ void UiManager::drawSettings(
             ImGui::EndTabItem();
         }
         ImGui::PopFont();
-        ImGui::PushFont(monocraftLarge);
+        ImGui::PushFont(fontLarge);
         if (ImGui::BeginTabItem("Controls")) {
             ImGui::Text("Controls (Unfinished)");
             const ScancodeBindings& scancodeBidings = input.getScancodeBindings();
@@ -414,7 +414,7 @@ void UiManager::drawPauseMenu() {
     ImGui::SetNextWindowPos(menuPos, ImGuiCond_Always, ImVec2{0.5, 0.5});
     ImGui::SetNextWindowSize(menuSize);
     if (ImGui::Begin("Pause Menu", nullptr, staticFlags)) {
-        ImGui::PushFont(monocraftLarge);
+        ImGui::PushFont(fontLarge);
         float verticalSpacing = 15.f;
         float windowWidth = ImGui::GetWindowSize().x;
         float buttonWidth = 350.f;

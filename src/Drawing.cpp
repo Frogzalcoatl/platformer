@@ -67,7 +67,7 @@ void Drawing::polygonBorders(
     WindowManager& window,
     b2Transform& transform,
     float cameraScale,
-    WindowVec2 offsetPixels,
+    WindowVec2 cameraOffsetPixels,
     SDL_FColor color
 ) {
     assert(polygon.count >= 3);
@@ -76,7 +76,7 @@ void Drawing::polygonBorders(
         return;
     }
     std::vector<SDL_FPoint> points =
-        getPolygonPoints(polygon, transform, cameraScale, offsetPixels, window.getSize().y);
+        getPolygonPoints(polygon, transform, cameraScale, cameraOffsetPixels, window.getSize().y);
     SDL_SetRenderDrawColorFloat(renderer, color.r, color.g, color.b, color.a);
     points.push_back(points[0]);
     SDL_RenderLines(renderer, points.data(), static_cast<int>(points.size()));
@@ -87,7 +87,7 @@ void Drawing::showFanTriangulation(
     WindowManager& window,
     b2Transform& transform,
     float cameraScale,
-    WindowVec2 offsetPixels,
+    WindowVec2 cameraOffsetPixels,
     SDL_FColor color
 ) {
     assert(polygon.count >= 3);
@@ -96,7 +96,7 @@ void Drawing::showFanTriangulation(
         return;
     }
     std::vector<SDL_FPoint> points =
-        getPolygonPoints(polygon, transform, cameraScale, offsetPixels, window.getSize().y);
+        getPolygonPoints(polygon, transform, cameraScale, cameraOffsetPixels, window.getSize().y);
     SDL_SetRenderDrawColorFloat(renderer, color.r, color.g, color.b, color.a);
     std::vector<SDL_FPoint> perimeter;
     perimeter.reserve(polygon.count + 1);
@@ -192,7 +192,7 @@ void Drawing::texture(
     WindowManager& window,
     b2Vec2 worldPosition,
     b2Vec2 worldSize,
-    float scaleFactor,
+    float cameraScale,
     WindowVec2 cameraOffsetPixels,
     double sdlAngle,
     SDL_FlipMode flip
@@ -205,11 +205,11 @@ void Drawing::texture(
         return;
     }
     SDL_FRect rect;
-    rect.w = worldSize.x * scaleFactor;
-    rect.h = worldSize.y * scaleFactor;
-    rect.x = (worldPosition.x - worldSize.x / 2.f) * scaleFactor - cameraOffsetPixels.x;
+    rect.w = worldSize.x * cameraScale;
+    rect.h = worldSize.y * cameraScale;
+    rect.x = (worldPosition.x - worldSize.x / 2.f) * cameraScale - cameraOffsetPixels.x;
     rect.y = window.getSize().y -
-             ((worldPosition.y + worldSize.y / 2.f) * scaleFactor - cameraOffsetPixels.y);
+             ((worldPosition.y + worldSize.y / 2.f) * cameraScale - cameraOffsetPixels.y);
     SDL_RenderTextureRotated(renderer, texture, nullptr, &rect, sdlAngle, nullptr, flip);
 }
 

@@ -49,9 +49,11 @@ class Entity {
 
     void savePreviousState();
 
-    bool draw(WindowManager& window, float alpha, float scaleFactor, WindowVec2 offsetPixels) const;
+    bool draw(
+        WindowManager& window, float alpha, float cameraScale, WindowVec2 cameraOffsetPixels
+    ) const;
     void drawHitbox(
-        WindowManager& window, float alpha, float scaleFactor, WindowVec2 offsetPixels
+        WindowManager& window, float alpha, float cameraScale, WindowVec2 cameraOffsetPixels
     ) const;
     void teleport(b2Vec2 location);
 };

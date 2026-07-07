@@ -26,7 +26,6 @@ EntityController::EntityController(
     : entity(&entity), joystickId(joystickId) {
     std::string nametagStr = "Player ";
     nametagStr += std::to_string(joystickId.value_or(1));
-    (void)assets;
     nametag = assets.getText(nametagStr, GameAssets::Fonts::Xsku, 20.f);
 }
 
@@ -125,7 +124,7 @@ void EntityController::resetMovement() {
 void EntityController::drawNameTag(
     WindowManager& window,
     AssetManager& assets,
-    float scaleFactor,
+    float cameraScale,
     WindowVec2 cameraOffsetPixels,
     float alpha
 ) {
@@ -138,7 +137,7 @@ void EntityController::drawNameTag(
         nametag.get(),
         window,
         pos,
-        scaleFactor,
+        cameraScale,
         cameraOffsetPixels,
         assets.TextRenderScale,
         assets.TextWorldSizeMultiplier

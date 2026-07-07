@@ -13,7 +13,6 @@
 
 namespace GameAssets {
 enum class Fonts : uint8_t {
-    Monocraft,
     Xsku,
     FontsCount
 };
@@ -53,7 +52,7 @@ enum class Textures : uint8_t {
 };
 inline constexpr struct {
     const std::array<const char*, static_cast<size_t>(GameAssets::Fonts::FontsCount)> Fonts = {
-        "monocraft.ttf", "xsku.ttf"
+        "xsku.ttf"
     };
     // AudioManager loads all sounds at startup but only loads music when requested.
     // mp3 files not enabled

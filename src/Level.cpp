@@ -53,7 +53,7 @@ void Level::draw(WindowManager& window, AssetManager& assets, float alpha) {
     }
     const size_t worldHeight = tiles[0].size();
     const size_t worldWidth = tiles.size();
-    const float scaleFactor = camera.getScaleFactor();
+    const float cameraScale = camera.getScaleFactor();
     const WindowVec2 cameraOffsetPixels = camera.getOffsetPixels();
     const b2Vec2 cameraSizeWorld = camera.getSize();
     const b2Vec2 cameraOffsetWorld = camera.getOffsetWorld();
@@ -69,7 +69,7 @@ void Level::draw(WindowManager& window, AssetManager& assets, float alpha) {
     for (size_t x = minX; x <= maxX; x++) {
         for (size_t y = minY; y <= maxY; y++) {
             if (tiles[x][y] != GameAssets::Textures::None) {
-                drawTile(tiles[x][y], x, y, assets, window, scaleFactor);
+                drawTile(tiles[x][y], x, y, assets, window, cameraScale);
                 drawInfo.tiles++;
             }
         }
@@ -89,7 +89,7 @@ void Level::draw(WindowManager& window, AssetManager& assets, float alpha) {
         if (!Drawing::shouldDrawObject(entityAABB.lowerBound, entitySize, minX, maxX, minY, maxY)) {
             continue;
         }
-        if (entity->draw(window, alpha, scaleFactor, cameraOffsetPixels)) {
+        if (entity->draw(window, alpha, cameraScale, cameraOffsetPixels)) {
             didDrawEntity = true;
         }
         if (showFanTriangulation) {
@@ -97,12 +97,12 @@ void Level::draw(WindowManager& window, AssetManager& assets, float alpha) {
             transform.p = entity->getInterpolatedPosition(alpha);
             transform.q = entity->getInterpolatedRotation(alpha);
             Drawing::showFanTriangulation(
-                entity->getPolygon(), window, transform, scaleFactor, cameraOffsetPixels
+                entity->getPolygon(), window, transform, cameraScale, cameraOffsetPixels
             );
             didDrawEntity = true;
         }
         if (showHitBoxes) {
-            entity->drawHitbox(window, alpha, scaleFactor, cameraOffsetPixels);
+            entity->drawHitbox(window, alpha, cameraScale, cameraOffsetPixels);
             didDrawEntity = true;
         }
         if (didDrawEntity) {
@@ -121,7 +121,7 @@ void Level::draw(WindowManager& window, AssetManager& assets, float alpha) {
             nametagPosCenter.x - nametagSize.x / 2.f, nametagPosCenter.y - nametagSize.y / 2.f
         };
         if (Drawing::shouldDrawObject(nametagPosBottomLeft, nametagSize, minX, maxX, minY, maxY)) {
-            player->drawNameTag(window, assets, scaleFactor, cameraOffsetPixels, alpha);
+            player->drawNameTag(window, assets, cameraScale, cameraOffsetPixels, alpha);
             drawInfo.nametags++;
         }
     }
@@ -131,7 +131,7 @@ void Level::draw(WindowManager& window, AssetManager& assets, float alpha) {
             b2Vec2{0.f, 0.f},
             b2Vec2{static_cast<float>(bounds.width), static_cast<float>(bounds.height)},
             window,
-            scaleFactor,
+            cameraScale,
             cameraOffsetPixels,
             colorToFColor(Colors.Blue)
         );
@@ -144,7 +144,7 @@ void Level::drawTile(
     size_t y,
     AssetManager& assets,
     WindowManager& window,
-    float scaleFactor
+    float cameraScale
 ) {
     SDL_Texture* texture = assets.getTexture(textureId);
     if (!texture) {
@@ -155,7 +155,7 @@ void Level::drawTile(
         window,
         b2Vec2{static_cast<float>(x + 0.5f), static_cast<float>(y + 0.5f)},
         b2Vec2{1.f, 1.f},
-        scaleFactor,
+        cameraScale,
         camera.getOffsetPixels()
     );
 }

@@ -63,7 +63,7 @@ void Entity::savePreviousState() {
 }
 
 bool Entity::draw(
-    WindowManager& window, float alpha, float scaleFactor, WindowVec2 offsetPixels
+    WindowManager& window, float alpha, float cameraScale, WindowVec2 cameraOffsetPixels
 ) const {
     if (!texture) {
         return false;
@@ -75,20 +75,22 @@ bool Entity::draw(
         window,
         pos,
         textureSize.value_or(b2Vec2{1.f, 1.f}),
-        scaleFactor,
-        offsetPixels,
+        cameraScale,
+        cameraOffsetPixels,
         Drawing::b2RotToSdlAngle(rot)
     );
     return true;
 }
 
 void Entity::drawHitbox(
-    WindowManager& window, float alpha, float scaleFactor, WindowVec2 offsetPixels
+    WindowManager& window, float alpha, float cameraScale, WindowVec2 cameraOffsetPixels
 ) const {
     b2Transform transform;
     transform.p = getInterpolatedPosition(alpha);
     transform.q = getInterpolatedRotation(alpha);
-    Drawing::polygonBorders(polygon, window, transform, scaleFactor, offsetPixels, hitboxColor);
+    Drawing::polygonBorders(
+        polygon, window, transform, cameraScale, cameraOffsetPixels, hitboxColor
+    );
 }
 
 void Entity::teleport(b2Vec2 location) {
