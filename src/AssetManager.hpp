@@ -14,6 +14,7 @@
 namespace GameAssets {
 enum class Fonts : uint8_t {
     Monocraft,
+    Xsku,
     FontsCount
 };
 enum class Sounds : uint8_t {
@@ -52,7 +53,7 @@ enum class Textures : uint8_t {
 };
 inline constexpr struct {
     const std::array<const char*, static_cast<size_t>(GameAssets::Fonts::FontsCount)> Fonts = {
-        "monocraft.ttf"
+        "monocraft.ttf", "xsku.ttf"
     };
     // AudioManager loads all sounds at startup but only loads music when requested.
     // mp3 files not enabled
@@ -90,18 +91,30 @@ inline struct {
 } // namespace GameAssets
 
 struct SDL_Texture_Deleter {
-    // Overloading the functrion call operator by using "operator()"
+    const char* filename = nullptr;
+    SDL_Texture_Deleter() = default;
+    // Using explicit tells the compiler to not do automatic silent type conversions. Good practice
+    // here.
+    explicit SDL_Texture_Deleter(const char* name) : filename(name) {
+    }
+    // Overloading the function call operator by using "operator()"
     // Doing things this way prevents unique_ptr from carrying an extra ptr for the delete func
     void operator()(SDL_Texture* t) const {
         if (t) {
             SDL_DestroyTexture(t);
+            SDL_Log("Unloaded SDL3 texture from file \"%s\"", filename);
         }
     }
 };
 struct TTF_Font_Deleter {
+    const char* filename = nullptr;
+    TTF_Font_Deleter() = default;
+    explicit TTF_Font_Deleter(const char* name) : filename(name) {
+    }
     void operator()(TTF_Font* f) const {
         if (f) {
             TTF_CloseFont(f);
+            SDL_Log("Unloaded SDL3 ttf from file \"%s\"", filename);
         }
     }
 };
@@ -116,6 +129,7 @@ struct TTF_TextEngine_Deleter {
 struct TTF_Text_Deleter {
     void operator()(TTF_Text* t) const {
         if (t) {
+            SDL_Log("Destroyed TTF text \"%s\"", t->text);
             TTF_DestroyText(t);
         }
     }
@@ -132,16 +146,19 @@ struct CachedFont {
     UniqueFont font;
 };
 
+using FontDataArray =
+    std::array<std::vector<std::byte>, static_cast<size_t>(GameAssets::Fonts::FontsCount)>;
+using TextureCacheArray =
+    std::array<UniqueTexture, static_cast<size_t>(GameAssets::Textures::TexturesCount)>;
+
 class AssetManager {
   private:
     VirtualFileSystem vfs;
-
-    std::array<std::vector<std::byte>, static_cast<size_t>(GameAssets::Fonts::FontsCount)> fontData;
-    std::vector<CachedFont> fontCache;
-    std::array<UniqueTexture, static_cast<size_t>(GameAssets::Textures::TexturesCount)>
-        textureCache;
     UniqueTextEngine textEngine;
     SDL_Renderer* renderer;
+    FontDataArray fontData;
+    std::vector<CachedFont> fontCache;
+    TextureCacheArray textureCache;
 
     TTF_Font* getFont(GameAssets::Fonts font, float ptSize, TTF_FontStyleFlags style);
     int addGameControllerMappings(
@@ -155,8 +172,11 @@ class AssetManager {
     AssetManager(const AssetManager&) = delete;
     AssetManager& operator=(const AssetManager&) = delete;
 
-    // Render text at a high resolution then scale down so that it still looks good while zoomed in
-    const float TextResolutionScaleFactor = 50.f;
+    // Render text at a high resolution then scale down with multiplier so that it still looks good
+    // while zoomed in
+    const float TextRenderScale = 10.f;
+    const float TextWorldSizeMultiplier = 0.04f;
+
     TTF_TextEngine* getTextEngine() const;
     UniqueText getText(
         const std::string& text,

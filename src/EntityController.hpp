@@ -38,7 +38,13 @@ class EntityController {
         WindowManager& window,
         AssetManager& assets,
         float scaleFactor,
-        WindowVec2 offsetPixels,
+        WindowVec2 cameraOffsetPixels,
         float alpha
     );
+    b2Vec2 getNametagWorldSize(
+        // params are consts from AssetManager
+        float textRenderScale,
+        float textWorldSizeMultiplier
+    ) const;
+    b2Vec2 getNametagWorldPos(float alpha) const;
 };

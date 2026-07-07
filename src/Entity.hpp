@@ -49,7 +49,7 @@ class Entity {
 
     void savePreviousState();
 
-    void draw(WindowManager& window, float alpha, float scaleFactor, WindowVec2 offsetPixels) const;
+    bool draw(WindowManager& window, float alpha, float scaleFactor, WindowVec2 offsetPixels) const;
     void drawHitbox(
         WindowManager& window, float alpha, float scaleFactor, WindowVec2 offsetPixels
     ) const;

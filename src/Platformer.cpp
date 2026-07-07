@@ -26,7 +26,8 @@ void Platformer::handleSdlEvent() {
         case SDL_EVENT_WINDOW_RESIZED: {
             window.handleResize(event.window.data1, event.window.data2);
             if (currentLevel) {
-                currentLevel->camera.handleWindowResize(event.window.data1, event.window.data2);
+                Camera& camera = currentLevel->getCamera();
+                camera.handleWindowResize(event.window.data1, event.window.data2);
             }
         }; break;
         case SDL_EVENT_MOUSE_MOTION: {
@@ -77,17 +78,17 @@ void Platformer::handleGameEvent() {
                     break;
                 case InputVerb::ZoomIn:
                     if (currentLevel && uiState == UiState::Playing) {
-                        currentLevel->camera.incrementScaleMultiplierBy(0.05f);
+                        currentLevel->getCamera().incrementScaleMultiplierBy(0.05f);
                     }
                     break;
                 case InputVerb::ZoomOut:
                     if (currentLevel && uiState == UiState::Playing) {
-                        currentLevel->camera.incrementScaleMultiplierBy(-0.05f);
+                        currentLevel->getCamera().incrementScaleMultiplierBy(-0.05f);
                     }
                     break;
                 case InputVerb::ZoomReset:
                     if (currentLevel && uiState == UiState::Playing) {
-                        currentLevel->camera.resetScaleMultiplier();
+                        currentLevel->getCamera().resetScaleMultiplier();
                     }
                     break;
                 case InputVerb::ToggleDebug:
@@ -128,7 +129,7 @@ void Platformer::handleGameEvent() {
             ui.setState(setUiState->state);
         } else if (const auto* setLevelName = std::get_if<GameEventTypes::SetLevelName>(&event)) {
             if (setLevelName->level == LevelName::Template) {
-                currentLevel = getTemplateLevel(assets, window);
+                currentLevel = getTestLevel(assets, window);
                 GameEvents::Push(GameEventTypes::UpdateCurrentPlayers{});
                 window.backgroundColor = Colors.SkyBlue;
             } else if (setLevelName->level == LevelName::None) {

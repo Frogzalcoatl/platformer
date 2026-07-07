@@ -32,7 +32,7 @@ TTF_Font* AssetManager::getFont(GameAssets::Fonts fontId, float ptSize, TTF_Font
             fileName.c_str()
         );
     }
-    ptSize *= TextResolutionScaleFactor;
+    ptSize *= TextRenderScale;
     const float epsilon = 0.001f; // If difference is less than this value then its a match
     for (size_t i = 0; i < fontCache.size(); i++) {
         if (fontCache[i].fontId == fontId && std::abs(fontCache[i].ptSize - ptSize) < epsilon &&
@@ -66,7 +66,9 @@ TTF_Font* AssetManager::getFont(GameAssets::Fonts fontId, float ptSize, TTF_Font
     TTF_SetFontStyle(newFont, style);
     CachedFont newCachedFont;
     newCachedFont.fontId = fontId;
-    newCachedFont.font = UniqueFont(newFont);
+    newCachedFont.font = UniqueFont(
+        newFont, TTF_Font_Deleter(GameAssets::FileNames.Fonts[static_cast<size_t>(fontId)])
+    );
     newCachedFont.ptSize = ptSize;
     newCachedFont.style = style;
     fontCache.push_back(
@@ -84,12 +86,20 @@ UniqueText AssetManager::getText(
     }
     TTF_Font* font = getFont(fontId, ptSize, style);
     if (!font) {
-        std::string error = "Unable to get text for font \"";
+        std::string error = "Unable to get text \"";
+        error += text;
+        error += "\" using font \"";
         error += GameAssets::FileNames.Fonts[static_cast<size_t>(fontId)];
         error += "\"";
         throw std::runtime_error(error);
     }
-    return UniqueText(TTF_CreateText(textEngine.get(), font, text.c_str(), text.length()));
+    TTF_Text* ttfText = TTF_CreateText(textEngine.get(), font, text.c_str(), text.length());
+    if (!ttfText) {
+        std::string error = "Unable to get text \"" + text + "\": ";
+        error += SDL_GetError();
+        throw std::runtime_error(error);
+    }
+    return UniqueText(ttfText, TTF_Text_Deleter{});
 }
 
 ImFont* AssetManager::getImGuiFont(GameAssets::Fonts fontId, float ptSize) {
@@ -177,7 +187,7 @@ SDL_Texture* AssetManager::getTexture(GameAssets::Textures textureId) {
     if (textureId == GameAssets::Textures::None) {
         return nullptr;
     }
-    const std::string fileName = GameAssets::FileNames.Textures[static_cast<size_t>(textureId)];
+    const char* fileName = GameAssets::FileNames.Textures[static_cast<size_t>(textureId)];
     if (!renderer) {
         std::string error = "Unable to load SDL3 texture from file \"";
         error += fileName;
@@ -192,7 +202,10 @@ SDL_Texture* AssetManager::getTexture(GameAssets::Textures textureId) {
     std::filesystem::path relativePath = GameAssets::Paths.Textures / fileName;
     std::vector<std::byte> textureData = vfs.readFile(relativePath.generic_string());
     if (textureData.empty()) {
-        throw std::runtime_error("Unable to get SDL3 texture from file \"" + fileName + "\"");
+        std::string error = "Unable to get SDL3 texture from file \"";
+        error += fileName;
+        error += "\"";
+        throw std::runtime_error(error);
     }
     SDL_IOStream* io = SDL_IOFromConstMem(textureData.data(), textureData.size());
     if (!io) {
@@ -204,10 +217,9 @@ SDL_Texture* AssetManager::getTexture(GameAssets::Textures textureId) {
         return nullptr;
     }
     texture.reset(IMG_LoadTexture_IO(renderer, io, true)); // Transfers ownership to the new pointer
-    SDL_Log(
-        "Loaded SDL3 texture from file \"%s\"",
-        GameAssets::FileNames.Textures[static_cast<size_t>(textureId)]
-    );
+    SDL_Texture_Deleter& deleter = texture.get_deleter();
+    deleter.filename = fileName;
+    SDL_Log("Loaded SDL3 texture from file \"%s\"", fileName);
     SDL_SetTextureScaleMode(texture.get(), SDL_SCALEMODE_PIXELART);
     return texture.get();
 }

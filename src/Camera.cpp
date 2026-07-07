@@ -19,30 +19,28 @@ void Camera::updateScaleFactor(int windowSizeX, int windowSizeY) {
     scaleFactor = dividend / 20.f * scaleMultiplier;
 }
 
-void Camera::updateOffset(std::optional<b2Vec2> worldPosition) {
-    if (worldPosition.has_value()) {
-        offsetWorld = worldPosition.value();
-        offsetWorld.x = -offsetWorld.x;
-    }
-    offsetPixels.x = static_cast<int>(SDL_roundf(offsetWorld.x * scaleFactor));
-    offsetPixels.y = static_cast<int>(SDL_roundf(offsetWorld.y * scaleFactor));
-    WindowVec2 size = window.getSize();
-    offsetPixels.x += size.x / 2;
-    offsetPixels.y += size.y / 2;
+void Camera::updateOffset(b2Vec2 worldPosition) {
+    b2Vec2 size = getSize();
+    offsetWorld = b2Vec2{worldPosition.x - size.x / 2.f, worldPosition.y - size.y / 2.f};
 }
 
 void Camera::handleWindowResize(int x, int y) {
+    b2Vec2 oldSize = getSize();
+    b2Vec2 center = {offsetWorld.x + oldSize.x / 2.f, offsetWorld.y + oldSize.y / 2.f};
     updateScaleFactor(x, y);
-    updateOffset(std::nullopt);
+    updateOffset(center);
 }
 
-b2Vec2 Camera::getSizeWorld() const {
+b2Vec2 Camera::getSize() const {
     WindowVec2 size = window.getSize();
     return b2Vec2{size.x / scaleFactor, size.y / scaleFactor};
 }
 
 WindowVec2 Camera::getOffsetPixels() const {
-    return offsetPixels;
+    return {
+        static_cast<int>(SDL_roundf(offsetWorld.x * scaleFactor)),
+        static_cast<int>(SDL_roundf(offsetWorld.y * scaleFactor))
+    };
 }
 
 b2Vec2 Camera::getOffsetWorld() const {
@@ -69,10 +67,11 @@ void Camera::resetScaleMultiplier() {
 }
 
 b2Vec2 Camera::pixelPosToWorldPos(WindowVec2 pos) {
+    WindowVec2 size = window.getSize();
     float safeScaleFactor = SDL_max(scaleFactor, 0.001f);
     return b2Vec2{
-        (static_cast<float>(pos.x) - offsetPixels.x) / safeScaleFactor,
-        (static_cast<float>(offsetPixels.y) - pos.y) / safeScaleFactor
+        offsetWorld.x + static_cast<float>(pos.x) / safeScaleFactor,
+        offsetWorld.y + static_cast<float>(size.y - pos.y) / safeScaleFactor
     };
 }
 
@@ -80,10 +79,10 @@ void Camera::run(float alpha) {
     if (!entityToFollow) {
         return;
     }
-    const b2Vec2 currentOffsetWorld = getOffsetWorld();
-    const b2Vec2 camPos = {-currentOffsetWorld.x, currentOffsetWorld.y};
+    const b2Vec2 size = getSize();
+    const b2Vec2 camPos = {offsetWorld.x + size.x / 2.f, offsetWorld.y + size.y / 2.f};
     const b2Vec2 entityPos = entityToFollow->getInterpolatedPosition(alpha);
-    const b2Vec2 windowSizeWorld = getSizeWorld();
+    const b2Vec2 windowSizeWorld = size;
     const b2Vec2 entityOffset = {entityPos.x - camPos.x, entityPos.y - camPos.y};
     const float halfDeadZoneX = (windowSizeWorld.x * 0.5f) * safeArea.x;
     const float halfDeadZoneY = (windowSizeWorld.y * 0.5f) * safeArea.y;
@@ -108,7 +107,7 @@ void Camera::run(float alpha) {
 }
 
 void Camera::applyViewableLimits(b2Vec2& camPos) {
-    const b2Vec2 windowSizeWorld = getSizeWorld();
+    const b2Vec2 windowSizeWorld = getSize();
     if (minViewableX.has_value() && maxViewableX.has_value() &&
         (maxViewableX.value() - minViewableX.value() < windowSizeWorld.x)) {
         camPos.x = (minViewableX.value() + maxViewableX.value()) / 2.f;

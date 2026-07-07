@@ -2,12 +2,12 @@
 #include <cassert>
 
 UiManager::UiManager(AssetManager& assets, UiState startingState) : currentState(startingState) {
-    monocraftExtraSmall = assets.getImGuiFont(GameAssets::Fonts::Monocraft, 12.f);
-    monocraftSmall = assets.getImGuiFont(GameAssets::Fonts::Monocraft, 18.f);
-    monocraftMedium = assets.getImGuiFont(GameAssets::Fonts::Monocraft, 24.f);
-    monocraftLarge = assets.getImGuiFont(GameAssets::Fonts::Monocraft, 36.f);
-    monocraftExtraLarge = assets.getImGuiFont(GameAssets::Fonts::Monocraft, 72.f);
-    monocraftTitle = assets.getImGuiFont(GameAssets::Fonts::Monocraft, 128.f);
+    monocraftExtraSmall = assets.getImGuiFont(GameAssets::Fonts::Xsku, 12.f);
+    monocraftSmall = assets.getImGuiFont(GameAssets::Fonts::Xsku, 18.f);
+    monocraftMedium = assets.getImGuiFont(GameAssets::Fonts::Xsku, 24.f);
+    monocraftLarge = assets.getImGuiFont(GameAssets::Fonts::Xsku, 36.f);
+    monocraftExtraLarge = assets.getImGuiFont(GameAssets::Fonts::Xsku, 72.f);
+    monocraftTitle = assets.getImGuiFont(GameAssets::Fonts::Xsku, 128.f);
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
@@ -35,10 +35,10 @@ void UiManager::render(
         if (players.size() > 0) {
             player = players[0]->getEntity();
         }
-        camera = &level->camera;
+        camera = &level->getCamera();
     }
     if (showDebug) {
-        drawDebug(window, player, camera, input);
+        drawDebug(window, player, camera, input, level);
     }
     switch (currentState) {
     case UiState::MainMenu: {
@@ -104,7 +104,7 @@ void UiManager::passInputToImGui(const GameEventTypes::Input& event) {
 }
 
 void UiManager::drawDebug(
-    WindowManager& window, Entity* player, Camera* camera, InputManager& input
+    WindowManager& window, Entity* player, Camera* camera, InputManager& input, Level* level
 ) {
     ImGui::PushFont(monocraftSmall);
     ImGui::SetNextWindowPos(ImVec2{0.f, 0.f}, ImGuiCond_Always);
@@ -120,6 +120,29 @@ void UiManager::drawDebug(
             1000.0f / ImGui::GetIO().Framerate
         );
         ImGui::Dummy(ImVec2{1.f, 1.f});
+        if (level) {
+            std::string_view levelName = level->getName();
+            LevelDimensions levelSize = level->getSize();
+            LevelDrawInfo drawInfo = level->drawnLastFrame();
+            size_t tileCount = level->getTileCount();
+            size_t entitiesCount = level->getEntities().size();
+            size_t nametagsCount =
+                level->getPlayers().size(); // Assuming every player has a nametag
+            ImGui::Text("Level:");
+            ImGui::Text(
+                "Name: \"%s\"\nSize: (%zu, %zu)\nTiles Drawn: %zu/%zu\nEntities Drawn: %zu/%zu\nNametags Drawn: %zu/%zu",
+                levelName.data(),
+                levelSize.width,
+                levelSize.height,
+                drawInfo.tiles,
+                tileCount,
+                drawInfo.entities,
+                entitiesCount,
+                drawInfo.nametags,
+                nametagsCount
+            );
+            ImGui::Dummy(ImVec2{1.f, 1.f});
+        }
         if (player) {
             b2Vec2 position = b2Body_GetPosition(player->getBodyId());
             b2Vec2 velocity = b2Body_GetLinearVelocity(player->getBodyId());
@@ -134,12 +157,21 @@ void UiManager::drawDebug(
             ImGui::Dummy(ImVec2{1.f, 1.f});
         }
         if (camera && camera->entityToFollow) {
-            b2Vec2 safeAreaSize = camera->getSafeAreaSize();
-            b2Vec2 safeAreaValue = camera->getEntitySafeAreaValue();
-            b2Vec2 mouseWorldPos = camera->pixelPosToWorldPos(window.getMousePos());
+            const b2Vec2 offsetWorld = camera->getOffsetWorld();
+            const WindowVec2 offsetPixels = camera->getOffsetPixels();
+            const b2Vec2 size = camera->getSize();
+            const b2Vec2 safeAreaSize = camera->getSafeAreaSize();
+            const b2Vec2 safeAreaValue = camera->getEntitySafeAreaValue();
+            const b2Vec2 mouseWorldPos = camera->pixelPosToWorldPos(window.getMousePos());
             ImGui::Text("\nCamera:");
             ImGui::Text(
-                "Safe Area Size: %.2f, %.2f\nPlayer Ratio from Center: %.2f, %.2f\nMouse World Position: %.2f, %.2f",
+                "Offset Pixels: %d, %d\nOffset World: %.2f, %.2f\nSize World: %.2f, %.2f\nSafe Area Size World: %.2f, %.2f\nPlayer Ratio from Center: %.2f, %.2f\nMouse Position World: %.2f, %.2f",
+                offsetPixels.x,
+                offsetPixels.y,
+                offsetWorld.x,
+                offsetWorld.y,
+                size.x,
+                size.y,
                 safeAreaSize.x,
                 safeAreaSize.y,
                 safeAreaValue.x,
@@ -256,7 +288,7 @@ void UiManager::drawSettings(
             }
             ImGui::Dummy(verticalSpacingDummy);
             bool vsync = window.isVsyncEnabled();
-            if (ImGui::Checkbox("VSync (Idk if this is working)", &vsync)) {
+            if (ImGui::Checkbox("VSync", &vsync)) {
                 window.setVsync(vsync);
             }
             ImGui::Dummy(verticalSpacingDummy);

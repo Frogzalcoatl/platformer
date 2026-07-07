@@ -26,7 +26,8 @@ EntityController::EntityController(
     : entity(&entity), joystickId(joystickId) {
     std::string nametagStr = "Player ";
     nametagStr += std::to_string(joystickId.value_or(1));
-    nametag = assets.getText(nametagStr, GameAssets::Fonts::Monocraft, 20.f);
+    (void)assets;
+    nametag = assets.getText(nametagStr, GameAssets::Fonts::Xsku, 20.f);
 }
 
 void EntityController::setEntity(Entity& entity) {
@@ -125,7 +126,7 @@ void EntityController::drawNameTag(
     WindowManager& window,
     AssetManager& assets,
     float scaleFactor,
-    WindowVec2 offsetPixels,
+    WindowVec2 cameraOffsetPixels,
     float alpha
 ) {
     if (!entity || !nametag) {
@@ -134,6 +135,26 @@ void EntityController::drawNameTag(
     b2Vec2 pos = entity->getInterpolatedPosition(alpha);
     pos.y += 2.f;
     Drawing::text(
-        nametag.get(), window, pos, scaleFactor, offsetPixels, assets.TextResolutionScaleFactor
+        nametag.get(),
+        window,
+        pos,
+        scaleFactor,
+        cameraOffsetPixels,
+        assets.TextRenderScale,
+        assets.TextWorldSizeMultiplier
     );
+}
+
+b2Vec2
+EntityController::getNametagWorldSize(float textRenderScale, float textWorldSizeMultiplier) const {
+    return Drawing::getTextWorldSize(nametag.get(), textRenderScale, textWorldSizeMultiplier);
+}
+
+b2Vec2 EntityController::getNametagWorldPos(float alpha) const {
+    if (!nametag || !entity) {
+        return b2Vec2{0.f, 0.f};
+    }
+    b2Vec2 pos = entity->getInterpolatedPosition(alpha);
+    pos.y += 2.f;
+    return pos;
 }

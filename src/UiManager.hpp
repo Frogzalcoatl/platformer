@@ -23,7 +23,9 @@ class UiManager {
     ImGuiWindowFlags staticFlags =
         ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings;
     ImGuiSliderFlags sliderFlags = ImGuiSliderFlags_NoInput;
-    void drawDebug(WindowManager& window, Entity* player, Camera* camera, InputManager& input);
+    void drawDebug(
+        WindowManager& window, Entity* player, Camera* camera, InputManager& input, Level* level
+    );
     void drawMainMenu();
     void
     drawSettings(WindowManager& window, AudioManager& audio, InputManager& input, Level* level);

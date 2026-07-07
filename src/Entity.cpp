@@ -62,22 +62,24 @@ void Entity::savePreviousState() {
     previousAngle = b2Rot_GetAngle(b2Body_GetRotation(bodyId));
 }
 
-void Entity::draw(
+bool Entity::draw(
     WindowManager& window, float alpha, float scaleFactor, WindowVec2 offsetPixels
 ) const {
-    if (texture) {
-        b2Vec2 pos = getInterpolatedPosition(alpha);
-        b2Rot rot = getInterpolatedRotation(alpha);
-        Drawing::texture(
-            texture,
-            window,
-            pos,
-            textureSize.value_or(b2Vec2{1.f, 1.f}),
-            scaleFactor,
-            offsetPixels,
-            Drawing::b2RotToSdlAngle(rot)
-        );
+    if (!texture) {
+        return false;
     }
+    b2Vec2 pos = getInterpolatedPosition(alpha);
+    b2Rot rot = getInterpolatedRotation(alpha);
+    Drawing::texture(
+        texture,
+        window,
+        pos,
+        textureSize.value_or(b2Vec2{1.f, 1.f}),
+        scaleFactor,
+        offsetPixels,
+        Drawing::b2RotToSdlAngle(rot)
+    );
+    return true;
 }
 
 void Entity::drawHitbox(

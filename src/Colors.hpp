@@ -34,4 +34,5 @@ inline struct Colors {
     SDL_Color Black = {0, 0, 0, 255};
     SDL_Color Yellow = {255, 255, 0, 255};
     SDL_Color SkyBlue = hexToColor(0x82C8E5);
+    SDL_Color Blue = {0, 0, 255, 255};
 } Colors;

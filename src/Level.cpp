@@ -3,7 +3,7 @@
 #include <algorithm>
 
 Level::Level(const char* levelName, LevelDimensions size, WindowManager& window)
-    : camera(nullptr, window), levelName(levelName), size(size) {
+    : size(size), levelName(levelName), camera(nullptr, window) {
     b2WorldDef worldDef = b2DefaultWorldDef();
     worldDef.gravity = {0.0f, -60.f};
     world = b2CreateWorld(&worldDef);
@@ -48,35 +48,93 @@ float Level::update() {
 
 void Level::draw(WindowManager& window, AssetManager& assets, float alpha) {
     camera.run(alpha);
+    if (tiles.empty()) {
+        return;
+    }
+    const size_t worldHeight = tiles[0].size();
+    const size_t worldWidth = tiles.size();
     const float scaleFactor = camera.getScaleFactor();
-    const WindowVec2 offsetPixels = camera.getOffsetPixels();
-    for (size_t x = 0; x < tiles.size(); x++) {
-        for (size_t y = 0; y < tiles[x].size(); y++) {
+    const WindowVec2 cameraOffsetPixels = camera.getOffsetPixels();
+    const b2Vec2 cameraSizeWorld = camera.getSize();
+    const b2Vec2 cameraOffsetWorld = camera.getOffsetWorld();
+    const size_t minX = static_cast<size_t>(SDL_max(SDL_floorf(cameraOffsetWorld.x), 0.f));
+    const size_t maxX = static_cast<size_t>(
+        SDL_min(SDL_ceilf(cameraOffsetWorld.x + cameraSizeWorld.x), worldWidth - 1)
+    );
+    const size_t minY = static_cast<size_t>(SDL_max(SDL_floorf(cameraOffsetWorld.y), 0.f));
+    const size_t maxY = static_cast<size_t>(
+        SDL_min(SDL_ceilf(cameraOffsetWorld.y + cameraSizeWorld.y), worldHeight - 1)
+    );
+    drawInfo = LevelDrawInfo{};
+    for (size_t x = minX; x <= maxX; x++) {
+        for (size_t y = minY; y <= maxY; y++) {
             if (tiles[x][y] != GameAssets::Textures::None) {
                 drawTile(tiles[x][y], x, y, assets, window, scaleFactor);
+                drawInfo.tiles++;
             }
         }
     }
     for (const auto& entity : entities) {
-        if (entity) {
-            entity->draw(window, alpha, scaleFactor, offsetPixels);
-            if (showFanTriangulation) {
-                b2Transform transform;
-                transform.p = entity->getInterpolatedPosition(alpha);
-                transform.q = entity->getInterpolatedRotation(alpha);
-                Drawing::showFanTriangulation(
-                    entity->getPolygon(), window, transform, scaleFactor, offsetPixels
-                );
-            }
-            if (showHitBoxes) {
-                entity->drawHitbox(window, alpha, scaleFactor, offsetPixels);
-            }
+        bool didDrawEntity = false;
+        if (!entity) {
+            continue;
+        }
+        b2Transform transform;
+        transform.p = entity->getInterpolatedPosition(alpha);
+        transform.q = entity->getInterpolatedRotation(alpha);
+        b2AABB entityAABB = b2ComputePolygonAABB(&entity->getPolygon(), transform);
+        b2Vec2 entitySize;
+        entitySize.x = entityAABB.upperBound.x - entityAABB.lowerBound.x;
+        entitySize.y = entityAABB.upperBound.y - entityAABB.lowerBound.y;
+        if (!Drawing::shouldDrawObject(entityAABB.lowerBound, entitySize, minX, maxX, minY, maxY)) {
+            continue;
+        }
+        if (entity->draw(window, alpha, scaleFactor, cameraOffsetPixels)) {
+            didDrawEntity = true;
+        }
+        if (showFanTriangulation) {
+            b2Transform transform;
+            transform.p = entity->getInterpolatedPosition(alpha);
+            transform.q = entity->getInterpolatedRotation(alpha);
+            Drawing::showFanTriangulation(
+                entity->getPolygon(), window, transform, scaleFactor, cameraOffsetPixels
+            );
+            didDrawEntity = true;
+        }
+        if (showHitBoxes) {
+            entity->drawHitbox(window, alpha, scaleFactor, cameraOffsetPixels);
+            didDrawEntity = true;
+        }
+        if (didDrawEntity) {
+            drawInfo.entities++;
         }
     }
     for (const auto& player : players) {
-        if (player) {
-            player->drawNameTag(window, assets, scaleFactor, offsetPixels, alpha);
+        if (!player) {
+            continue;
         }
+        const b2Vec2 nametagPosCenter = player.get()->getNametagWorldPos(alpha);
+        const b2Vec2 nametagSize = player.get()->getNametagWorldSize(
+            assets.TextRenderScale, assets.TextWorldSizeMultiplier
+        );
+        b2Vec2 nametagPosBottomLeft = b2Vec2{
+            nametagPosCenter.x - nametagSize.x / 2.f, nametagPosCenter.y - nametagSize.y / 2.f
+        };
+        if (Drawing::shouldDrawObject(nametagPosBottomLeft, nametagSize, minX, maxX, minY, maxY)) {
+            player->drawNameTag(window, assets, scaleFactor, cameraOffsetPixels, alpha);
+            drawInfo.nametags++;
+        }
+    }
+    if (showLevelBounds) {
+        LevelDimensions bounds = getSize();
+        Drawing::rectangleBorders(
+            b2Vec2{0.f, 0.f},
+            b2Vec2{static_cast<float>(bounds.width), static_cast<float>(bounds.height)},
+            window,
+            scaleFactor,
+            cameraOffsetPixels,
+            colorToFColor(Colors.Blue)
+        );
     }
 }
 
@@ -133,6 +191,7 @@ void Level::addEntity(
         world, polygon, position, isStatic, bodyDef, shapeDef, hitboxColor, texture, textureSize
     );
     entities.push_back(std::move(entity));
+    b2World_Step(world, physicsStep, 4);
 }
 
 void Level::addTile(GameAssets::Textures textureId, size_t x, size_t y) {
@@ -150,6 +209,27 @@ void Level::addTile(GameAssets::Textures textureId, size_t x, size_t y) {
         return;
     }
     tiles[x][y] = textureId;
+    if (textureId != GameAssets::Textures::None) {
+        tileCount++;
+    }
+    if (textureId == GameAssets::Textures::None && tileCount > 0) {
+        tileCount--;
+    }
+}
+
+void Level::removeTile(size_t x, size_t y) {
+    if (x >= size.width || y >= size.height) {
+        SDL_LogError(
+            SDL_LOG_CATEGORY_APPLICATION,
+            "Unable to remove tile at position (%zu, %zu). Level size is (%zu, %zu)",
+            x,
+            y,
+            size.width,
+            size.height
+        );
+        return;
+    }
+    tiles[x][y] = GameAssets::Textures::None;
 }
 
 void Level::addPlayer(AssetManager& assets, std::optional<SDL_JoystickID> joystickId) {
@@ -191,6 +271,7 @@ void Level::addPlayer(AssetManager& assets, std::optional<SDL_JoystickID> joysti
     controller->joystickId = joystickId;
     players.push_back(std::move(controller));
     entities.push_back(std::move(playerEntity));
+    b2World_Step(world, physicsStep, 4);
     SDL_Log(
         "Spawned new player with joystickId \"%s\"", std::to_string(joystickId.value_or(1)).c_str()
     );
@@ -236,13 +317,13 @@ void Level::updatePlayers(const std::vector<SDL_JoystickID>& activeGamepads, Ass
     }
 }
 
-const std::vector<std::unique_ptr<Entity>>& Level::getEntities() const {
+const EntitiesVector& Level::getEntities() const {
     return entities;
 }
 const LevelTileVector& Level::getTiles() const {
     return tiles;
 }
-const std::vector<std::unique_ptr<EntityController>>& Level::getPlayers() const {
+const PlayersVector& Level::getPlayers() const {
     return players;
 }
 
@@ -250,21 +331,47 @@ b2WorldId Level::getWorldId() const {
     return world;
 }
 
-std::unique_ptr<Level> getTemplateLevel(AssetManager& assets, WindowManager& window) {
-    auto level = std::make_unique<Level>("Template", LevelDimensions{100, 40}, window);
+const LevelDrawInfo& Level::drawnLastFrame() const {
+    return drawInfo;
+}
+
+LevelDimensions Level::getSize() const {
+    size_t width = tiles.size();
+    size_t height = 0;
+    if (!tiles.empty()) {
+        height = tiles[0].size();
+    }
+    return LevelDimensions{width, height};
+}
+
+Camera& Level::getCamera() {
+    return camera;
+}
+
+std::string_view Level::getName() const {
+    return levelName;
+}
+
+size_t Level::getTileCount() const {
+    return tileCount;
+}
+
+std::unique_ptr<Level> getTestLevel(AssetManager& assets, WindowManager& window) {
+    auto level = std::make_unique<Level>("Test", LevelDimensions{100, 40}, window);
+    level->showLevelBounds = true;
     b2WorldId world = level->getWorldId();
     const int GroundWidth = 50;
     const int GroundHeight = 2;
-    level->addPlayer(assets, std::nullopt);
-    level->addEntity(
-        world,
-        b2MakeBox(static_cast<float>(GroundWidth) / 2.f, static_cast<float>(GroundHeight)),
-        b2Vec2{static_cast<float>(GroundWidth) / 2.f, 0.f},
-        true
-    );
     const int WallHeight = 20;
     const int WallPosLeft = 0;
     const int WallPosRight = GroundWidth;
+    level->addPlayer(assets, std::nullopt);
+    level->addEntity(
+        world,
+        b2MakeBox(static_cast<float>(GroundWidth) / 2.f, static_cast<float>(GroundHeight) / 2.f),
+        b2Vec2{static_cast<float>(GroundWidth) / 2.f, 1.f},
+        true
+    );
     level->addEntity(
         world,
         b2MakeBox(0.5f, static_cast<float>(WallHeight) / 2.f),
