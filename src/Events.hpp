@@ -2,6 +2,7 @@
 #include "AssetManager.hpp"
 #include "AudioManager.hpp"
 #include "InputManager.hpp"
+#include <string>
 #include <variant>
 
 enum class UiState : uint8_t {
@@ -22,12 +23,12 @@ enum class LevelName : uint8_t {
 namespace GameEventTypes {
 struct CloseWindow {};
 struct PlaySound {
-    GameAssets::Sounds soundId;
+    std::string_view relativePath;
     unsigned int volume = 100;
     float pitch = 1.f;
 };
 struct PlayMusic {
-    GameAssets::Music musicId;
+    std::string_view relativePath;
     unsigned int volume = 100;
     float pitch = 1.f;
     bool loop = false;

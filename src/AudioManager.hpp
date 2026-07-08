@@ -29,16 +29,8 @@ struct MIX_Track_Deleter {
         }
     }
 };
-struct MIX_Audio_Deleter {
-    void operator()(MIX_Audio* a) const {
-        if (a) {
-            MIX_DestroyAudio(a);
-        }
-    }
-};
 using UniqueMixer = std::unique_ptr<MIX_Mixer, MIX_Mixer_Deleter>;
 using UniqueTrack = std::unique_ptr<MIX_Track, MIX_Track_Deleter>;
-using UniqueAudio = std::unique_ptr<MIX_Audio, MIX_Audio_Deleter>;
 
 class AudioManager {
   private:
@@ -49,19 +41,21 @@ class AudioManager {
     std::array<const char*, static_cast<size_t>(AudioCategory::AudioCategoryCount)> TagNames = {
         "Master", "Sounds", "Music"
     };
-    std::array<UniqueAudio, static_cast<size_t>(GameAssets::Sounds::SoundsCount)> loadedSounds;
     std::array<float, static_cast<size_t>(AudioCategory::AudioCategoryCount)> tagGain;
     float currentMusicVolume =
         1.f; // Separate volume multiplier, based on volume passed into playMusic func
-    UniqueAudio currentMusic = nullptr;
-    const char* currentMusicName = "";
+    MIX_Audio* currentMusic = nullptr;
+    std::string currentMusicName = "";
 
   public:
     AudioManager(AssetManager& assets);
 
-    bool playSound(GameAssets::Sounds soundId, unsigned int volume = 100, float pitch = 1.f);
+    bool playSound(std::string_view relativePath, unsigned int volume = 100, float pitch = 1.f);
     bool playMusic(
-        GameAssets::Music musicId, unsigned int volume = 100, float pitch = 1.f, bool loop = false
+        std::string_view relativePath,
+        unsigned int volume = 100,
+        float pitch = 1.f,
+        bool loop = false
     );
     void setVolume(AudioCategory category, unsigned int volume);
     void setMusicPitch(float pitch);
@@ -69,7 +63,7 @@ class AudioManager {
     void pauseCategory(AudioCategory category);
     void unpauseCategory(AudioCategory category);
     unsigned int getVolume(AudioCategory category);
-    const char* getCurrentMusicName() const;
+    std::string getCurrentMusicName() const;
     float getMusicPitch() const;
     bool isMusicLooping() const;
     bool isMusicPlaying() const;

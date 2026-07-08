@@ -21,7 +21,10 @@ AudioManager::AudioManager(AssetManager& assetManager) : assets{&assetManager} {
         MIX_Track* rawTrack = MIX_CreateTrack(mixerDevice.get());
         if (!rawTrack) {
             SDL_LogError(
-                SDL_LOG_CATEGORY_AUDIO, "Failed to create sound track %zu: %s", i, SDL_GetError()
+                SDL_LOG_CATEGORY_AUDIO,
+                "Failed to create sound track index %zu: %s",
+                i,
+                SDL_GetError()
             );
             continue;
         }
@@ -33,21 +36,26 @@ AudioManager::AudioManager(AssetManager& assetManager) : assets{&assetManager} {
         MIX_TagTrack(musicTrack.get(), TagNames[static_cast<size_t>(AudioCategory::Music)]);
     }
     SDL_Log("Created SDL3 mixer audio tracks");
-    for (size_t i = 0; i < static_cast<size_t>(GameAssets::Sounds::SoundsCount); i++) {
-        loadedSounds[i] =
-            UniqueAudio(assets->getSound(static_cast<GameAssets::Sounds>(i), mixerDevice.get()));
-    }
     tagGain.fill(1.f);
 }
 
-bool AudioManager::playSound(GameAssets::Sounds soundId, unsigned int volume, float pitch) {
-    assert(soundId < GameAssets::Sounds::SoundsCount);
-    MIX_Audio* sound = loadedSounds[static_cast<size_t>(soundId)].get();
+bool AudioManager::playSound(std::string_view relativePath, unsigned int volume, float pitch) {
+    if (!assets) {
+        SDL_LogError(
+            SDL_LOG_CATEGORY_AUDIO,
+            "Unable to play music %.*s due to null SDL3 mixer music track",
+            static_cast<int>(relativePath.length()),
+            relativePath.data()
+        );
+        return false;
+    }
+    MIX_Audio* sound = assets->getAudio(relativePath, mixerDevice.get(), true);
     if (!sound) {
         SDL_LogWarn(
             SDL_LOG_CATEGORY_AUDIO,
-            "Ignoring attempt to play null sound \"%s\"",
-            GameAssets::FileNames.Sounds[static_cast<size_t>(soundId)]
+            "Ignoring attempt to play null sound \"%.*s\"",
+            static_cast<int>(relativePath.length()),
+            relativePath.data()
         );
         return false;
     }
@@ -72,14 +80,14 @@ bool AudioManager::playSound(GameAssets::Sounds soundId, unsigned int volume, fl
 }
 
 bool AudioManager::playMusic(
-    GameAssets::Music musicId, unsigned int volume, float pitch, bool loop
+    std::string_view relativePath, unsigned int volume, float pitch, bool loop
 ) {
-    assert(musicId < GameAssets::Music::MusicCount);
     if (!musicTrack) {
         SDL_LogError(
             SDL_LOG_CATEGORY_AUDIO,
-            "Unable to play music %s due to null SDL3 mixer music track",
-            GameAssets::FileNames.Music[static_cast<size_t>(musicId)]
+            "Unable to play music %.*s due to null SDL3 mixer music track",
+            static_cast<int>(relativePath.length()),
+            relativePath.data()
         );
         clearCurrentMusic();
         return false;
@@ -88,13 +96,14 @@ bool AudioManager::playMusic(
     if (!assets) {
         SDL_LogError(
             SDL_LOG_CATEGORY_AUDIO,
-            "Unable to play music %s due to null asset manager ptr",
-            GameAssets::FileNames.Music[static_cast<size_t>(musicId)]
+            "Unable to play music %.*s due to null asset manager ptr",
+            static_cast<int>(relativePath.length()),
+            relativePath.data()
         );
         clearCurrentMusic();
         return false;
     }
-    currentMusic = UniqueAudio(assets->getMusic(musicId, mixerDevice.get()));
+    currentMusic = assets->getAudio(relativePath, mixerDevice.get(), false);
     if (!currentMusic) {
         clearCurrentMusic();
         return false;
@@ -104,7 +113,7 @@ bool AudioManager::playMusic(
         musicTrack.get(), volume / 100.f * tagGain[static_cast<size_t>(AudioCategory::Music)]
     );
     currentMusicVolume = volume / 100.f;
-    MIX_SetTrackAudio(musicTrack.get(), currentMusic.get());
+    MIX_SetTrackAudio(musicTrack.get(), currentMusic);
     SDL_PropertiesID properties = SDL_CreateProperties();
     if (loop) {
         // -1 loops infinitely, any positive integer would loop that amount of times.
@@ -112,7 +121,8 @@ bool AudioManager::playMusic(
     }
     MIX_PlayTrack(musicTrack.get(), properties);
     SDL_DestroyProperties(properties);
-    currentMusicName = GameAssets::FileNames.Music[static_cast<size_t>(musicId)];
+    const std::string fileName = std::filesystem::path(relativePath).filename().string();
+    currentMusicName = fileName;
     return true;
 }
 
@@ -172,7 +182,7 @@ unsigned int AudioManager::getVolume(AudioCategory category) {
     return static_cast<unsigned int>(SDL_roundf(tagGain[static_cast<size_t>(category)] * 100));
 }
 
-const char* AudioManager::getCurrentMusicName() const {
+std::string AudioManager::getCurrentMusicName() const {
     return currentMusicName;
 }
 

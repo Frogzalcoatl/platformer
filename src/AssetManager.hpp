@@ -8,112 +8,35 @@
 #include <filesystem>
 #include <imgui.h>
 #include <memory>
+#include <unordered_map>
 #include <variant>
 #include <vector>
 
-namespace GameAssets {
-enum class Fonts : uint8_t {
-    Xsku,
-    FontsCount
-};
-enum class Sounds : uint8_t {
-    Fart,
-    Jump,
-    SoundsCount
-};
-enum class Music : uint8_t {
-    M2023_4,
-    M2023_11,
-    M2023_14,
-    M2023_23,
-    M2023_29,
-    M2023_35,
-    M2023_37,
-    M2024_3,
-    M2024_5,
-    M2024_7,
-    M2024_8,
-    M2026_2,
-    M2026_3,
-    M2026_4,
-    M2026_5,
-    M2026_6,
-    MusicCount
-};
-enum class Textures : uint8_t {
-    None,
-    Test,
-    Grass,
-    Dirt,
-    Stone,
-    Player,
-    Log,
-    TexturesCount
-};
-inline constexpr struct {
-    const std::array<const char*, static_cast<size_t>(GameAssets::Fonts::FontsCount)> Fonts = {
-        "xsku.ttf"
-    };
-    // AudioManager loads all sounds at startup but only loads music when requested.
-    // mp3 files not enabled
-    const std::array<const char*, static_cast<size_t>(GameAssets::Sounds::SoundsCount)> Sounds = {
-        "fart.wav", "jump.wav"
-    };
-    const std::array<const char*, static_cast<size_t>(GameAssets::Music::MusicCount)> Music = {
-        "2023_4 (unfinished).ogg",
-        "2023_11(3).ogg",
-        "2023_14.ogg",
-        "2023_23.ogg",
-        "2023_29.ogg",
-        "2023_35.ogg",
-        "2023_37.ogg",
-        "2024_3.ogg",
-        "2024_5.ogg",
-        "2024_7.ogg",
-        "2024_8.ogg",
-        "2026_2.ogg",
-        "2026_3.ogg",
-        "2026_4.ogg",
-        "2026_5.ogg",
-        "2026_6.ogg"
-    };
-    const std::array<const char*, static_cast<size_t>(GameAssets::Textures::TexturesCount)>
-        Textures = {"", "test.png", "grass.png", "dirt.png", "stone.png", "player.png", "log.png"};
-} FileNames;
-inline struct {
-    std::filesystem::path Fonts = "fonts";
-    std::filesystem::path Sounds = "sounds";
-    std::filesystem::path Music = "music";
-    std::filesystem::path Textures = "textures";
-    std::filesystem::path Gamepads = "gamepads";
-} Paths;
-} // namespace GameAssets
-
 struct SDL_Texture_Deleter {
-    const char* filename = nullptr;
+    std::string fileName;
     SDL_Texture_Deleter() = default;
     // Using explicit tells the compiler to not do automatic silent type conversions. Good practice
     // here.
-    explicit SDL_Texture_Deleter(const char* name) : filename(name) {
+    explicit SDL_Texture_Deleter(std::string fileName) : fileName(std::move(fileName)) {
     }
     // Overloading the function call operator by using "operator()"
     // Doing things this way prevents unique_ptr from carrying an extra ptr for the delete func
     void operator()(SDL_Texture* t) const {
         if (t) {
             SDL_DestroyTexture(t);
-            SDL_Log("Unloaded SDL3 texture from file \"%s\"", filename);
+            SDL_Log("Unloaded SDL3 texture from file \"%s\"", fileName.c_str());
         }
     }
 };
 struct TTF_Font_Deleter {
-    const char* filename = nullptr;
+    std::string fileName;
     TTF_Font_Deleter() = default;
-    explicit TTF_Font_Deleter(const char* name) : filename(name) {
+    explicit TTF_Font_Deleter(std::string fileName) : fileName(std::move(fileName)) {
     }
     void operator()(TTF_Font* f) const {
         if (f) {
             TTF_CloseFont(f);
-            SDL_Log("Unloaded SDL3 ttf from file \"%s\"", filename);
+            SDL_Log("Unloaded SDL3 ttf from file \"%s\"", fileName.c_str());
         }
     }
 };
@@ -133,35 +56,66 @@ struct TTF_Text_Deleter {
         }
     }
 };
+struct MIX_Audio_Deleter {
+    std::string fileName;
+    MIX_Audio_Deleter() = default;
+    explicit MIX_Audio_Deleter(std::string fileName) : fileName(std::move(fileName)) {
+    }
+    void operator()(MIX_Audio* a) const {
+        if (a) {
+            MIX_DestroyAudio(a);
+            SDL_Log("Destroyed MIX Audio from file \"%s\"", fileName.c_str());
+        }
+    }
+};
 using UniqueTexture = std::unique_ptr<SDL_Texture, SDL_Texture_Deleter>;
 using UniqueFont = std::unique_ptr<TTF_Font, TTF_Font_Deleter>;
 using UniqueTextEngine = std::unique_ptr<TTF_TextEngine, TTF_TextEngine_Deleter>;
 using UniqueText = std::unique_ptr<TTF_Text, TTF_Text_Deleter>;
+using UniqueAudio = std::unique_ptr<MIX_Audio, MIX_Audio_Deleter>;
 
 struct CachedFont {
-    GameAssets::Fonts fontId;
+    std::filesystem::path fontPath;
     float ptSize;
     TTF_FontStyleFlags style;
     UniqueFont font;
 };
 
-using FontDataArray =
-    std::array<std::vector<std::byte>, static_cast<size_t>(GameAssets::Fonts::FontsCount)>;
-using TextureCacheArray =
-    std::array<UniqueTexture, static_cast<size_t>(GameAssets::Textures::TexturesCount)>;
+// (Suggestion from ai)
+// Prevents C++ from allocating an extra std::string when performing a lookup
+struct StringHash {
+    using is_transparent = void; // Enables heterogeneous lookup
+    size_t operator()(std::string_view sv) const {
+        return std::hash<std::string_view>{}(sv);
+    }
+};
+
+using FontDataMap = std::unordered_map<
+    std::string,            // KeyType
+    std::vector<std::byte>, // ValueType
+    StringHash,             // HashFunction
+    std::equal_to<>         // KeyEqualityFunction
+    >;
+using FontCacheVector = std::vector<CachedFont>;
+using AudioCacheMap = std::unordered_map<std::string, UniqueAudio, StringHash, std::equal_to<>>;
+using TextureCacheMap = std::unordered_map<std::string, UniqueTexture, StringHash, std::equal_to<>>;
 
 class AssetManager {
   private:
     VirtualFileSystem vfs;
     UniqueTextEngine textEngine;
     SDL_Renderer* renderer;
-    FontDataArray fontData;
-    std::vector<CachedFont> fontCache;
-    TextureCacheArray textureCache;
+    FontDataMap fontData;
+    FontCacheVector fontCache;
+    AudioCacheMap audioCacheNonPredecoded;
+    AudioCacheMap audioCachePredecoded;
+    TextureCacheMap textureCache;
 
-    TTF_Font* getFont(GameAssets::Fonts font, float ptSize, TTF_FontStyleFlags style);
+    const std::string_view GamepadsFolderName = "gamepads";
+
+    TTF_Font* getSDLFont(std::string_view relativePathStr, float ptSize, TTF_FontStyleFlags style);
     int addGameControllerMappings(
-        const std::string& fileName
+        std::string_view fileName
     ); // Returns number of controller mappings added
 
   public:
@@ -177,18 +131,18 @@ class AssetManager {
     const float TextWorldSizeMultiplier = 0.04f;
 
     TTF_TextEngine* getTextEngine() const;
-    UniqueText getText(
-        const std::string& text,
-        GameAssets::Fonts fontId,
+    UniqueText getSDLText(
+        std::string_view text,
+        std::string_view relativePathStr,
         float ptSize,
         TTF_FontStyleFlags style = TTF_STYLE_NORMAL
     );
-    ImFont* getImGuiFont(GameAssets::Fonts fontId, float ptSize);
+    ImFont* getImGuiFont(std::string_view relativePathStr, float ptSize);
 
-    MIX_Audio* getSound(GameAssets::Sounds soundId, MIX_Mixer* mixerDevice);
-    MIX_Audio* getMusic(GameAssets::Music musicId, MIX_Mixer* mixerDevice);
+    // predecode should be set to false for longer audio files like music
+    MIX_Audio* getAudio(std::string_view relativePathStr, MIX_Mixer* mixerDevice, bool predecode);
 
-    SDL_Texture* getTexture(GameAssets::Textures textureId);
+    SDL_Texture* getTexture(std::string_view relativePathStr);
 
     int initSDLGameControllerDB(); // Returns number of controller mappings added
 };

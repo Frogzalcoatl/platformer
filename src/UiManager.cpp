@@ -1,13 +1,14 @@
 #include "UiManager.hpp"
+#include "AssetPaths.hpp"
 #include <cassert>
 
 UiManager::UiManager(AssetManager& assets, UiState startingState) : currentState(startingState) {
-    fontExtraSmall = assets.getImGuiFont(GameAssets::Fonts::Xsku, 12.f);
-    fontSmall = assets.getImGuiFont(GameAssets::Fonts::Xsku, 18.f);
-    fontMedium = assets.getImGuiFont(GameAssets::Fonts::Xsku, 24.f);
-    fontLarge = assets.getImGuiFont(GameAssets::Fonts::Xsku, 36.f);
-    fontExtraLarge = assets.getImGuiFont(GameAssets::Fonts::Xsku, 72.f);
-    fontTitle = assets.getImGuiFont(GameAssets::Fonts::Xsku, 128.f);
+    fontExtraSmall = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 12.f);
+    fontSmall = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 18.f);
+    fontMedium = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 24.f);
+    fontLarge = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 36.f);
+    fontExtraLarge = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 72.f);
+    fontTitle = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 128.f);
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
@@ -130,7 +131,10 @@ void UiManager::drawDebug(
                 level->getPlayers().size(); // Assuming every player has a nametag
             ImGui::Text("Level:");
             ImGui::Text(
-                "Name: \"%s\"\nSize: (%zu, %zu)\nTiles Drawn: %zu/%zu\nEntities Drawn: %zu/%zu\nNametags Drawn: %zu/%zu",
+                // %.*s tells the func to read exactly N characters, preventing it from running past
+                // the end of a string_view
+                "Name: \"%.*s\"\nSize: (%zu, %zu)\nTiles Drawn: %zu/%zu\nEntities Drawn: %zu/%zu\nNametags Drawn: %zu/%zu",
+                static_cast<int>(levelName.length()),
                 levelName.data(),
                 levelSize.width,
                 levelSize.height,
@@ -364,7 +368,7 @@ void UiManager::drawSettings(
             ImGui::Dummy(verticalSpacingDummy);
             ImGui::Text(
                 "Current Music: %s %s",
-                audio.getCurrentMusicName(),
+                audio.getCurrentMusicName().c_str(),
                 audio.isMusicLooping() ? "(Looping)" : ""
             );
             ImGui::Text("Timestamp: %s", audio.formattedMusicTime().c_str());
@@ -379,13 +383,12 @@ void UiManager::drawSettings(
         ImGui::PushFont(fontLarge);
         if (ImGui::BeginTabItem("Controls")) {
             ImGui::Text("Controls (Unfinished)");
+            ImGui::PushFont(fontMedium);
             const ScancodeBindings& scancodeBidings = input.getScancodeBindings();
             for (size_t i = 0; i < static_cast<size_t>(InputVerb::VerbCount); i++) {
-                ImGui::Dummy(ImVec2{0.f, 10.f});
+                ImGui::Dummy(ImVec2{0.f, 25.f});
                 std::string currentVerb = inputVerbToString(static_cast<InputVerb>(i)).c_str();
                 ImGui::Text("%s: ", currentVerb.c_str());
-                ImGui::SameLine();
-                ImGui::SetCursorPosX(350.f);
                 for (int j = 0; j < MaxBindsPerVerb; j++) {
                     std::string current = SDL_GetScancodeName(scancodeBidings[i][j].scancode);
                     current += "##" + currentVerb + "Index" + std::to_string(j);
@@ -394,7 +397,9 @@ void UiManager::drawSettings(
                     ImGui::Dummy(ImVec2{10.f, 0.f});
                     ImGui::SameLine();
                 }
+                ImGui::NewLine();
             }
+            ImGui::PopFont();
             ImGui::EndTabItem();
         }
         ImGui::PopFont();

@@ -1,4 +1,5 @@
 #include "EntityController.hpp"
+#include "AssetPaths.hpp"
 #include "Camera.hpp"
 #include "Drawing.hpp"
 #include "Entity.hpp"
@@ -26,7 +27,7 @@ EntityController::EntityController(
     : entity(&entity), joystickId(joystickId) {
     std::string nametagStr = "Player ";
     nametagStr += std::to_string(joystickId.value_or(1));
-    nametag = assets.getText(nametagStr, GameAssets::Fonts::Xsku, 20.f);
+    nametag = assets.getSDLText(nametagStr, AssetPaths::Fonts::Consolas, 20.f);
 }
 
 void EntityController::setEntity(Entity& entity) {
@@ -98,7 +99,7 @@ void EntityController::handleInput(GameEventTypes::Input event, Camera* camera) 
             }
         } else if (event.verb == InputVerb::Jump) {
             float pitch = SDL_randf() * (1.25f - 1.f) + 1.f;
-            GameEvents::Push(GameEventTypes::PlaySound{GameAssets::Sounds::Jump, 100, pitch});
+            GameEvents::Push(GameEventTypes::PlaySound{AssetPaths::Sounds::Jump, 100, pitch});
             jump();
         }
     }

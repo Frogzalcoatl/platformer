@@ -1,4 +1,5 @@
 #pragma once
+#include "AssetPaths.hpp"
 #include "EntityController.hpp"
 #include <box2d/box2d.h>
 
@@ -20,7 +21,7 @@ struct LevelDrawDimensions {
     size_t maxY = 0;
 };
 
-using LevelTileVector = std::vector<std::vector<GameAssets::Textures>>;
+using LevelTileVector = std::vector<std::vector<AssetPaths::Textures::TileTypes>>;
 using EntitiesVector = std::vector<std::unique_ptr<Entity>>;
 using PlayersVector = std::vector<std::unique_ptr<EntityController>>;
 
@@ -42,7 +43,7 @@ class Level {
     const float physicsStep = 1.0f / 60.0f;
 
     void drawTile(
-        GameAssets::Textures textureId,
+        AssetPaths::Textures::TileTypes tileId,
         size_t x,
         size_t y,
         AssetManager& assets,
@@ -71,7 +72,7 @@ class Level {
         SDL_Texture* texture = nullptr,
         std::optional<b2Vec2> textureSize = std::nullopt
     );
-    void addTile(GameAssets::Textures textureId, size_t x, size_t y);
+    void addTile(AssetPaths::Textures::TileTypes tileId, size_t x, size_t y);
     void removeTile(size_t x, size_t y);
     void addPlayer(AssetManager& assets, std::optional<SDL_JoystickID> joystickId);
     void updatePlayers(const std::vector<SDL_JoystickID>& activeGamepads, AssetManager& assets);

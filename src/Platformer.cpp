@@ -59,10 +59,12 @@ void Platformer::handleGameEvent() {
         if (std::holds_alternative<GameEventTypes::CloseWindow>(event)) {
             running = false;
         } else if (const auto* playSoundEvent = std::get_if<GameEventTypes::PlaySound>(&event)) {
-            audio.playSound(playSoundEvent->soundId, playSoundEvent->volume, playSoundEvent->pitch);
+            audio.playSound(
+                playSoundEvent->relativePath, playSoundEvent->volume, playSoundEvent->pitch
+            );
         } else if (const auto* playMusicEvent = std::get_if<GameEventTypes::PlayMusic>(&event)) {
             audio.playMusic(
-                playMusicEvent->musicId,
+                playMusicEvent->relativePath,
                 playMusicEvent->volume,
                 playMusicEvent->pitch,
                 playMusicEvent->loop
@@ -144,16 +146,36 @@ void Platformer::handleGameEvent() {
     }
 }
 
-static bool playMusicFailed = false; // Just for testing
+// Just for testing
+static bool playMusicFailed = false;
+const std::vector<const char*> MusicFileNames = {
+    "2023_4 (unfinished).ogg",
+    "2023_11(3).ogg",
+    "2023_14.ogg",
+    "2023_23.ogg",
+    "2023_29.ogg",
+    "2023_35.ogg",
+    "2023_37.ogg",
+    "2024_3.ogg",
+    "2024_5.ogg",
+    "2024_7.ogg",
+    "2024_8.ogg",
+    "2026_2.ogg",
+    "2026_3.ogg",
+    "2026_4.ogg",
+    "2026_5.ogg",
+    "2026_6.ogg"
+};
 
 void Platformer::run() {
     running = true;
     while (running) {
         if (!audio.isMusicPlaying() && !playMusicFailed) {
-            GameAssets::Music randomSong = static_cast<GameAssets::Music>(
-                SDL_floorf(static_cast<float>(GameAssets::Music::MusicCount) * SDL_randf())
-            );
-            if (!audio.playMusic(randomSong, 100, audio.getMusicPitch(), false)) {
+            size_t randomSongId =
+                static_cast<size_t>(SDL_floorf(MusicFileNames.size() * SDL_randf()));
+            std::string relativePath = "music/";
+            relativePath += MusicFileNames[randomSongId];
+            if (!audio.playMusic(relativePath, 100, audio.getMusicPitch(), false)) {
                 playMusicFailed = true;
             }
         }
