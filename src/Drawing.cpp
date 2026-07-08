@@ -1,25 +1,7 @@
 #include "Drawing.hpp"
 #include <SDL3_image/SDL_image.h>
+#include <array>
 #include <cassert>
-#include <vector>
-
-static std::vector<SDL_FPoint> getPolygonPoints(
-    const b2Polygon& polygon,
-    b2Transform& transform,
-    float cameraScale,
-    WindowVec2 cameraOffsetPixels,
-    int windowHeight
-) {
-    std::vector<SDL_FPoint> points;
-    points.reserve(polygon.count);
-    for (int i = 0; i < polygon.count; i++) {
-        b2Vec2 pos = b2TransformPoint(transform, polygon.vertices[i]);
-        pos.x = pos.x * cameraScale - cameraOffsetPixels.x;
-        pos.y = windowHeight - (pos.y * cameraScale - cameraOffsetPixels.y);
-        points.push_back(SDL_FPoint{pos.x, pos.y});
-    }
-    return points;
-}
 
 // TODO: Account for polygon radius
 void Drawing::polygon(
@@ -30,19 +12,23 @@ void Drawing::polygon(
     WindowVec2 cameraOffsetPixels,
     SDL_FColor color
 ) {
-    assert(polygon.count >= 3);
+    assert(polygon.count >= 3 && polygon.count <= B2_MAX_POLYGON_VERTICES);
     SDL_Renderer* renderer = window.getSdlRenderer();
     if (!renderer) {
         return;
     }
-    std::vector<SDL_FPoint> points =
-        getPolygonPoints(polygon, transform, cameraScale, cameraOffsetPixels, window.getSize().y);
-    std::vector<SDL_Vertex> vertices;
-    for (size_t i = 0; i < points.size(); i++) {
-        SDL_Vertex vertex;
-        vertex.color = color;
-        vertex.position = points[i];
-        vertices.push_back(vertex);
+    std::array<SDL_FPoint, B2_MAX_POLYGON_VERTICES> points;
+    int windowHeight = window.getSize().y;
+    for (int i = 0; i < polygon.count; i++) {
+        b2Vec2 pos = b2TransformPoint(transform, polygon.vertices[i]);
+        pos.x = pos.x * cameraScale - cameraOffsetPixels.x;
+        pos.y = windowHeight - (pos.y * cameraScale - cameraOffsetPixels.y);
+        points[i] = SDL_FPoint{pos.x, pos.y};
+    }
+    std::array<SDL_Vertex, B2_MAX_POLYGON_VERTICES> vertices;
+    for (size_t i = 0; i < polygon.count; i++) {
+        vertices[i].color = color;
+        vertices[i].position = points[i];
     }
     // Fan triangulation
     std::vector<int> indices;
@@ -70,16 +56,21 @@ void Drawing::polygonBorders(
     WindowVec2 cameraOffsetPixels,
     SDL_FColor color
 ) {
-    assert(polygon.count >= 3);
+    assert(polygon.count >= 3 && polygon.count <= B2_MAX_POLYGON_VERTICES);
     SDL_Renderer* renderer = window.getSdlRenderer();
     if (!renderer) {
         return;
     }
-    std::vector<SDL_FPoint> points =
-        getPolygonPoints(polygon, transform, cameraScale, cameraOffsetPixels, window.getSize().y);
+    std::array<SDL_FPoint, B2_MAX_POLYGON_VERTICES + 1> points;
+    int windowHeight = window.getSize().y;
+    for (int i = 0; i < polygon.count; i++) {
+        b2Vec2 pos = b2TransformPoint(transform, polygon.vertices[i]);
+        points[i].x = pos.x * cameraScale - cameraOffsetPixels.x;
+        points[i].y = windowHeight - (pos.y * cameraScale - cameraOffsetPixels.y);
+    }
+    points[polygon.count] = points[0];
     SDL_SetRenderDrawColorFloat(renderer, color.r, color.g, color.b, color.a);
-    points.push_back(points[0]);
-    SDL_RenderLines(renderer, points.data(), static_cast<int>(points.size()));
+    SDL_RenderLines(renderer, points.data(), polygon.count + 1);
 }
 
 void Drawing::showFanTriangulation(
@@ -90,19 +81,21 @@ void Drawing::showFanTriangulation(
     WindowVec2 cameraOffsetPixels,
     SDL_FColor color
 ) {
-    assert(polygon.count >= 3);
+    assert(polygon.count >= 3 && polygon.count <= B2_MAX_POLYGON_VERTICES);
     SDL_Renderer* renderer = window.getSdlRenderer();
     if (!renderer) {
         return;
     }
-    std::vector<SDL_FPoint> points =
-        getPolygonPoints(polygon, transform, cameraScale, cameraOffsetPixels, window.getSize().y);
+    std::array<SDL_FPoint, B2_MAX_POLYGON_VERTICES + 1> points;
+    int windowHeight = window.getSize().y;
+    for (int i = 0; i < polygon.count; i++) {
+        b2Vec2 pos = b2TransformPoint(transform, polygon.vertices[i]);
+        points[i].x = pos.x * cameraScale - cameraOffsetPixels.x;
+        points[i].y = windowHeight - (pos.y * cameraScale - cameraOffsetPixels.y);
+    }
+    points[polygon.count] = points[0];
     SDL_SetRenderDrawColorFloat(renderer, color.r, color.g, color.b, color.a);
-    std::vector<SDL_FPoint> perimeter;
-    perimeter.reserve(polygon.count + 1);
-    perimeter.insert(perimeter.end(), points.begin(), points.end());
-    perimeter.push_back(points[0]);
-    SDL_RenderLines(renderer, perimeter.data(), static_cast<int>(perimeter.size()));
+    SDL_RenderLines(renderer, points.data(), polygon.count + 1);
     for (int i = 2; i < polygon.count; i++) {
         SDL_RenderLine(renderer, points[0].x, points[0].y, points[i].x, points[i].y);
     }
@@ -170,18 +163,20 @@ void Drawing::text(
     float oldRenderScaleX, oldRenderScaleY;
     SDL_GetRenderScale(renderer, &oldRenderScaleX, &oldRenderScaleY);
     SDL_SetRenderScale(renderer, textScale, textScale);
-    SDL_BlendMode oldBlendMode;
-    SDL_GetRenderDrawBlendMode(renderer, &oldBlendMode);
-    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-    SDL_SetRenderDrawColorFloat(
-        renderer,
-        backgroundColor.value().r,
-        backgroundColor.value().g,
-        backgroundColor.value().b,
-        backgroundColor.value().a
-    );
-    SDL_RenderFillRect(renderer, &unscaledTextRect);
-    SDL_SetRenderDrawBlendMode(renderer, oldBlendMode);
+    if (backgroundColor.has_value()) {
+        SDL_BlendMode oldBlendMode;
+        SDL_GetRenderDrawBlendMode(renderer, &oldBlendMode);
+        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+        SDL_SetRenderDrawColorFloat(
+            renderer,
+            backgroundColor.value().r,
+            backgroundColor.value().g,
+            backgroundColor.value().b,
+            backgroundColor.value().a
+        );
+        SDL_RenderFillRect(renderer, &unscaledTextRect);
+        SDL_SetRenderDrawBlendMode(renderer, oldBlendMode);
+    }
     TTF_SetTextColorFloat(text, textColor.r, textColor.g, textColor.b, textColor.a);
     TTF_DrawRendererText(text, unscaledTextRect.x, unscaledTextRect.y);
     SDL_SetRenderScale(renderer, oldRenderScaleX, oldRenderScaleY);
