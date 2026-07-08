@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
-constexpr int MaxBindsPerVerb = 3;
+inline constexpr int MaxBindsPerVerb = 3;
 
 enum class InputVerb : uint8_t {
     Up,
