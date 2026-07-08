@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     std::filesystem::path inputPath = argv[1];
-    std::string outputFileName = argv[2];
+    std::filesystem::path outputFilePath = argv[2];
     std::string versionArg = argv[3];
     if (!std::filesystem::exists(inputPath) || !std::filesystem::is_directory(inputPath)) {
         std::cout << "Error: input path is not a valid directory: " << inputPath << std::endl;
@@ -50,9 +50,12 @@ int main(int argc, char* argv[]) {
         tasks[i].entry.offset = currentOffset;
         currentOffset += tasks[i].entry.size;
     }
-    std::ofstream outputFile(outputFileName, std::ios::binary);
+    if (outputFilePath.has_parent_path()) {
+        std::filesystem::create_directories(outputFilePath.parent_path());
+    }
+    std::ofstream outputFile(outputFilePath, std::ios::binary);
     if (!outputFile.is_open()) {
-        std::cout << "Error: Could not create output file " << outputFileName << std::endl;
+        std::cout << "Error: Could not create output file " << outputFilePath.string() << std::endl;
         return 1;
     }
     VFS_Header header;
@@ -78,5 +81,5 @@ int main(int argc, char* argv[]) {
         outputFile.write(reinterpret_cast<const char*>(buffer.data()), buffer.size());
     }
     outputFile.close();
-    std::cout << "Successfully packed " << outputFileName << std::endl;
+    std::cout << "Successfully packed " << outputFilePath.string() << std::endl;
 }

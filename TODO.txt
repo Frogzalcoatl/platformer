@@ -1,9 +1,3 @@
 Account for polygon radius in draw func
 
-Packer is not working when the directory hasnt been created yet. Fix.
-
-Determine why memory is higher than usual only when opening a level for the first time.
-
-Asset funcs should take strings instead of using enums
-
 Maybe figure out some way to automatically load static entities on exposed solid tiles.
