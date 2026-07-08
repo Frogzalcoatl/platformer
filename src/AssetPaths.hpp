@@ -15,10 +15,9 @@ inline constexpr std::string_view Jump = "sounds/jump.wav";
 }
 
 namespace Textures {
-inline constexpr std::string_view Test = "textures/test.png";
-inline constexpr std::string_view Player = "textures/player.png";
-inline constexpr std::string_view Log = "textures/log.png";
-
+inline constexpr std::string_view Missing = "textures/missing.png";
+inline constexpr std::string_view Player = "textures/entities/player.png";
+inline constexpr std::string_view Log = "textures/entities/log.png";
 enum class TileTypes : size_t {
     Air,
     Grass,
@@ -26,8 +25,7 @@ enum class TileTypes : size_t {
     Stone,
     TileCount
 };
-
 inline constexpr std::array<std::string_view, static_cast<size_t>(TileTypes::TileCount)> TilePaths =
-    {"", "textures/grass.png", "textures/dirt.png", "textures/stone.png"};
+    {"", "textures/tiles/grass.png", "textures/tiles/dirt.png", "textures/tiles/stone.png"};
 }
 }

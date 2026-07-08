@@ -1,3 +1,11 @@
-Account for polygon radius in draw func
+Look in to using a tuple for font cache
+
+stop storing strings in unique ptr deleters
+    Especially since theyre all cached now, they can be logged on deletion using the attached relative pile in the class destructor as well as unload funcs
+    Speaking of unload funcs, write funcs that unload assets based on a relative path.
+
+Store player ids based on joystickid inside InputManager.
 
 Maybe figure out some way to automatically load static entities on exposed solid tiles.
+
+Account for polygon radius in draw func
