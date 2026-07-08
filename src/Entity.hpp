@@ -38,6 +38,9 @@ class Entity {
     );
     ~Entity();
 
+    Entity(const Entity&) = delete;
+    Entity& operator=(const Entity&) = delete;
+
     const bool isStatic;
     SDL_FColor hitboxColor;
 
