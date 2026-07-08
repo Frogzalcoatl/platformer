@@ -14,25 +14,33 @@ inline SDL_Color fColorToColor(const SDL_FColor& color) {
     };
 }
 
-inline SDL_Color hexToColor(Uint32 rgba) {
+constexpr SDL_Color hexToColor(Uint32 hex) {
+    if (hex <= 0xFFFFFF) {
+        return SDL_Color{
+            static_cast<Uint8>((hex >> 16) & 0xFF),
+            static_cast<Uint8>((hex >> 8) & 0xFF),
+            static_cast<Uint8>(hex & 0xFF),
+            255
+        };
+    }
     return SDL_Color{
-        static_cast<Uint8>((rgba >> 24) & 0xFF),
-        static_cast<Uint8>((rgba >> 16) & 0xFF),
-        static_cast<Uint8>((rgba >> 8 & 0xFF)),
-        static_cast<Uint8>(rgba & 0xFF)
+        static_cast<Uint8>((hex >> 24) & 0xFF),
+        static_cast<Uint8>((hex >> 16) & 0xFF),
+        static_cast<Uint8>((hex >> 8) & 0xFF),
+        static_cast<Uint8>(hex & 0xFF)
     };
 }
 
-inline struct Colors {
-    SDL_Color GrassGreen = {0, 154, 23, 255};
-    SDL_Color Gray = {200, 200, 200, 255};
-    SDL_Color Brown = {100, 65, 23, 255};
-    SDL_Color Purple = {186, 85, 211, 255};
-    SDL_Color Background = {20, 20, 30, 255};
-    SDL_Color White = {255, 255, 255, 255};
-    SDL_Color Red = {255, 0, 0, 255};
-    SDL_Color Black = {0, 0, 0, 255};
-    SDL_Color Yellow = {255, 255, 0, 255};
-    SDL_Color SkyBlue = hexToColor(0x82C8E5);
-    SDL_Color Blue = {0, 0, 255, 255};
-} Colors;
+namespace Colors {
+inline constexpr SDL_Color GrassGreen = {0, 154, 23, 255};
+inline constexpr SDL_Color Gray = {200, 200, 200, 255};
+inline constexpr SDL_Color Brown = {100, 65, 23, 255};
+inline constexpr SDL_Color Purple = {186, 85, 211, 255};
+inline constexpr SDL_Color Background = {20, 20, 30, 255};
+inline constexpr SDL_Color White = {255, 255, 255, 255};
+inline constexpr SDL_Color Red = {255, 0, 0, 255};
+inline constexpr SDL_Color Black = {0, 0, 0, 255};
+inline constexpr SDL_Color Yellow = {255, 255, 0, 255};
+inline constexpr SDL_Color SkyBlue = hexToColor(0x0082C8);
+inline constexpr SDL_Color Blue = {0, 0, 255, 255};
+}

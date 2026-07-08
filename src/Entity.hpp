@@ -32,7 +32,7 @@ class Entity {
         bool isStatic,
         b2BodyDef bodyDef = b2DefaultBodyDef(),
         b2ShapeDef shapeDef = b2DefaultShapeDef(),
-        SDL_FColor hitboxColor = colorToFColor(Colors.Yellow),
+        SDL_FColor hitboxColor = colorToFColor(Colors::Yellow),
         SDL_Texture* texture = nullptr,
         std::optional<b2Vec2> textureSize = std::nullopt
     );

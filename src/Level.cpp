@@ -135,7 +135,7 @@ void Level::draw(WindowManager& window, AssetManager& assets, float alpha) {
             window,
             cameraScale,
             cameraOffsetPixels,
-            colorToFColor(Colors.Blue)
+            colorToFColor(Colors::Blue)
         );
     }
 }
@@ -271,7 +271,7 @@ void Level::addPlayer(AssetManager& assets, std::optional<SDL_JoystickID> joysti
         false,
         playerBodyDef,
         playerShapeDef,
-        colorToFColor(Colors.Yellow),
+        colorToFColor(Colors::Yellow),
         assets.getTexture(Textures::Player),
         b2Vec2{1.f, 2.f}
     );
@@ -405,7 +405,7 @@ std::unique_ptr<Level> getTestLevel(AssetManager& assets, WindowManager& window)
         false,
         dynamicBodyDef,
         b2DefaultShapeDef(),
-        colorToFColor(Colors.Yellow),
+        colorToFColor(Colors::Yellow),
         assets.getTexture(Textures::Log),
         b2Vec2{1.f, 4.f}
     );
@@ -416,7 +416,7 @@ std::unique_ptr<Level> getTestLevel(AssetManager& assets, WindowManager& window)
         false,
         dynamicBodyDef,
         b2DefaultShapeDef(),
-        colorToFColor(Colors.Yellow),
+        colorToFColor(Colors::Yellow),
         assets.getTexture(Textures::Log),
         b2Vec2{1.f, 2.f}
     );

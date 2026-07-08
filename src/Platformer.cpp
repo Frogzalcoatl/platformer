@@ -9,7 +9,7 @@
 #include <stdexcept>
 
 Platformer::Platformer()
-    : window{"C++ Platformer", Colors.Background}, assets{window.getSdlRenderer()}, audio{assets},
+    : window{"C++ Platformer", Colors::Background}, assets{window.getSdlRenderer()}, audio{assets},
       ui{assets} {
     audio.setVolume(AudioCategory::Music, 30);
     assets.initSDLGameControllerDB();
@@ -133,10 +133,10 @@ void Platformer::handleGameEvent() {
             if (setLevelName->level == LevelName::Template) {
                 currentLevel = getTestLevel(assets, window);
                 GameEvents::Push(GameEventTypes::UpdateCurrentPlayers{});
-                window.backgroundColor = Colors.SkyBlue;
+                window.backgroundColor = Colors::SkyBlue;
             } else if (setLevelName->level == LevelName::None) {
                 currentLevel = nullptr;
-                window.backgroundColor = Colors.Background;
+                window.backgroundColor = Colors::Background;
             }
         } else if (std::holds_alternative<GameEventTypes::UpdateCurrentPlayers>(event)) {
             if (currentLevel) {

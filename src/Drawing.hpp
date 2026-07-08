@@ -11,7 +11,7 @@ void polygon(
     b2Transform& transform,
     float cameraScale,
     WindowVec2 cameraOffsetPixels,
-    SDL_FColor color = colorToFColor(Colors.White)
+    SDL_FColor color = colorToFColor(Colors::White)
 );
 void polygonBorders(
     const b2Polygon& polygon,
@@ -19,7 +19,7 @@ void polygonBorders(
     b2Transform& transform,
     float cameraScale,
     WindowVec2 cameraOffsetPixels,
-    SDL_FColor color = colorToFColor(Colors.Black)
+    SDL_FColor color = colorToFColor(Colors::Black)
 );
 void showFanTriangulation(
     const b2Polygon& polygon,
@@ -27,7 +27,7 @@ void showFanTriangulation(
     b2Transform& transform,
     float cameraScale,
     WindowVec2 cameraOffsetPixels,
-    SDL_FColor color = colorToFColor(Colors.Red)
+    SDL_FColor color = colorToFColor(Colors::Red)
 );
 void rectangleBorders(
     b2Vec2 min,
@@ -46,7 +46,7 @@ void text(
     // Next two params are consts from AssetManager
     float textRenderScale,
     float textWorldSizeMultiplier,
-    SDL_FColor textColor = colorToFColor(Colors.White),
+    SDL_FColor textColor = colorToFColor(Colors::White),
     std::optional<SDL_FColor> backgroundColor = SDL_FColor{0.f, 0.f, 0.f, 0.5f}
 );
 void texture(
