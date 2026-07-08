@@ -26,7 +26,7 @@ void Drawing::polygon(
         points[i] = SDL_FPoint{pos.x, pos.y};
     }
     std::array<SDL_Vertex, B2_MAX_POLYGON_VERTICES> vertices;
-    for (size_t i = 0; i < polygon.count; i++) {
+    for (int i = 0; i < polygon.count; i++) {
         vertices[i].color = color;
         vertices[i].position = points[i];
     }
