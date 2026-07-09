@@ -13,7 +13,7 @@ Platformer::Platformer()
       ui{assets} {
     audio.setVolume(AudioCategory::Music, 30);
     assets.addGameControllerMappings("gamepads/gamecontrollerdb.txt");
-    assets.addGameControllerMappings("gampads/retrolink.txt");
+    assets.addGameControllerMappings("gamepads/retrolink.txt");
 }
 
 void Platformer::handleSdlEvent() {
