@@ -36,8 +36,12 @@ int main(int argc, char* argv[]) {
     SDL_Log("Created ImGui Context");
     ImGuiIO& io = ImGui::GetIO();
     io.IniFilename = nullptr;
-    DiscordRpcManager::init();
-    DiscordRpcManager::setStatus("In Development", nullptr);
+    // https://discord.com/developers/applications/1521649642360668300/
+    DiscordRichPresence presence = {};
+    presence.largeImageKey = "icon";
+    presence.largeImageText = "Platformer";
+    presence.state = "In Development";
+    DiscordRpcManager::init("1521649642360668300", presence);
     int returnVal = 0;
     try {
         Platformer game;

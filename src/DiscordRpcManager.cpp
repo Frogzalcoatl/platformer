@@ -2,52 +2,51 @@
 #include <SDL3/SDL.h>
 
 static time_t lastConnectionAttempt = 0;
-static const int ReconnectIntervalSeconds = 10;
+static const int ReconnectIntervalSeconds = 5;
 static DiscordEventHandlers handlers;
 static DiscordRichPresence presence;
 static bool isConnected = false;
-static const char* ApplicationId = "1521649642360668300";
-// https://discord.com/developers/applications/1521649642360668300/
+static std::string applicationId = "";
 
 static void handleDiscordReady(const DiscordUser* connectedUser) {
     (void)connectedUser;
     isConnected = true;
     SDL_Log("Discord RPC connected");
-    DiscordRpcManager::setStatus(presence.state, presence.details);
+    DiscordRpcManager::updatePresence(presence);
 }
 
 static void handleDiscordDisconnected(int errorCode, const char* message) {
-    (void)errorCode;
-    (void)message;
     isConnected = false;
-    SDL_Log("Discord RPC disconnected");
+    SDL_Log("Discord RPC disconnected - Error %d: %s", errorCode, message);
 }
 
 static void discordConnect() {
-    Discord_Initialize(ApplicationId, &handlers, 1, nullptr);
+    Discord_Initialize(applicationId.c_str(), &handlers, 1, nullptr);
     presence.startTimestamp = time(nullptr);
 }
 
-void DiscordRpcManager::init() {
+void DiscordRpcManager::init(std::string_view applicationIdArg, DiscordRichPresence& presenceArg) {
     handlers.ready = handleDiscordReady;
     handlers.disconnected = handleDiscordDisconnected;
     handlers.errored = handleDiscordDisconnected;
+    applicationId = applicationIdArg;
+    presence = presenceArg;
     discordConnect();
 }
 
-void DiscordRpcManager::setStatus(const char* state, const char* details) {
-    presence.state = state;
-    presence.details = details;
-    presence.largeImageKey = "icon";
-    presence.largeImageText = "Platformer";
+void DiscordRpcManager::updatePresence(DiscordRichPresence& presenceArg) {
+    presence = presenceArg;
     Discord_UpdatePresence(&presence);
     if (isConnected) {
-        SDL_Log(
-            "Set Discord RPC status: \"%s\" | \"%s\" | \"%s\"",
-            presence.largeImageText,
-            presence.state,
-            presence.details
-        );
+        SDL_Log("Updated Discord RPC");
+    }
+}
+
+void DiscordRpcManager::updateState(const char* message) {
+    presence.state = message;
+    Discord_UpdatePresence(&presence);
+    if (isConnected) {
+        SDL_Log("Updated Discord RPC status: \"%s\"", presence.state);
     }
 }
 

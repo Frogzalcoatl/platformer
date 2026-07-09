@@ -4,8 +4,9 @@
 #include <string>
 
 namespace DiscordRpcManager {
-void init();
-void setStatus(const char* state, const char* details);
+void init(std::string_view applicationId, DiscordRichPresence& presence);
+void updatePresence(DiscordRichPresence& presenceArg);
+void updateState(const char* message);
 void update();
 void shutdown();
 }
