@@ -9,11 +9,8 @@
       "name": "base",
       "hidden": true,
       "binaryDir": "${sourceDir}/build/${presetName}",
-      "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
-      },
-      "environment": {
-        "VCPKG_ROOT": "${sourceDir}/vcpkg"
+      "warnings": {
+        "dev": false
       }
     },
     {
