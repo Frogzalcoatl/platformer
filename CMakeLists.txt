@@ -1,34 +1,51 @@
 cmake_minimum_required(VERSION 3.26)
 
-set(VCPKG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/.vcpkg")
+# vcpkg implementation written by AI
+# Once again I don't care much about learning CMake at the moment
+# Check if the developer has a global vcpkg defined in their environment variables
+if(DEFINED ENV{VCPKG_ROOT})
+    set(VCPKG_DIR "$ENV{VCPKG_ROOT}")
+    message(STATUS "[vcpkg] Using global installation found in environment: ${VCPKG_DIR}")
+else()
+    # Fallback to local bootstrapping if no global vcpkg is found
+    set(VCPKG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/.vcpkg")
 
-if(NOT EXISTS "${VCPKG_DIR}/vcpkg" AND NOT EXISTS "${VCPKG_DIR}/vcpkg.exe")
-    message(STATUS "vcpkg not found in ${VCPKG_DIR}. Cloning and bootstrapping...")
-    execute_process(
-        COMMAND git clone --depth 1 https://github.com/microsoft/vcpkg.git "${VCPKG_DIR}"
-        RESULT_VARIABLE CLONE_RESULT
-    )
-    if(NOT CLONE_RESULT EQUAL 0)
-        message(FATAL_ERROR "Failed to clone vcpkg repository.")
-    endif()
-    if(WIN32)
+    if(NOT EXISTS "${VCPKG_DIR}/vcpkg" AND NOT EXISTS "${VCPKG_DIR}/vcpkg.exe")
+        message(STATUS "[vcpkg] Global VCPKG_ROOT not found. Bootstrapping local vcpkg...")
+        
+        # Clone the lightweight single-depth vcpkg repository
         execute_process(
-            COMMAND "${VCPKG_DIR}/bootstrap-vcpkg.bat" -disableMetrics
-            WORKING_DIRECTORY "${VCPKG_DIR}"
-            RESULT_VARIABLE BOOTSTRAP_RESULT
+            COMMAND git clone --depth 1 https://github.com/microsoft/vcpkg.git "${VCPKG_DIR}"
+            RESULT_VARIABLE CLONE_RESULT
         )
+        if(NOT CLONE_RESULT EQUAL 0)
+            message(FATAL_ERROR "Failed to clone vcpkg repository.")
+        endif()
+
+        # Bootstrap the executable based on the host platform
+        if(WIN32)
+            execute_process(
+                COMMAND "${VCPKG_DIR}/bootstrap-vcpkg.bat" -disableMetrics
+                WORKING_DIRECTORY "${VCPKG_DIR}"
+                RESULT_VARIABLE BOOTSTRAP_RESULT
+            )
+        else()
+            execute_process(
+                COMMAND "${VCPKG_DIR}/bootstrap-vcpkg.sh" -disableMetrics
+                WORKING_DIRECTORY "${VCPKG_DIR}"
+                RESULT_VARIABLE BOOTSTRAP_RESULT
+            )
+        endif()
+
+        if(NOT BOOTSTRAP_RESULT EQUAL 0)
+            message(FATAL_ERROR "Failed to bootstrap vcpkg compiler.")
+        endif()
     else()
-        execute_process(
-            COMMAND "${VCPKG_DIR}/bootstrap-vcpkg.sh" -disableMetrics
-            WORKING_DIRECTORY "${VCPKG_DIR}"
-            RESULT_VARIABLE BOOTSTRAP_RESULT
-        )
-    endif()
-    if(NOT BOOTSTRAP_RESULT EQUAL 0)
-        message(FATAL_ERROR "Failed to bootstrap vcpkg compiler.")
+        message(STATUS "[vcpkg] Using existing local installation: ${VCPKG_DIR}")
     endif()
 endif()
 
+# Instruct CMake to use the detected toolchain
 set(CMAKE_TOOLCHAIN_FILE "${VCPKG_DIR}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
 
 project(MyPlatformer CXX C)
@@ -56,6 +73,7 @@ find_package(imgui CONFIG REQUIRED)
 
 find_path(DISCORD_INCLUDE_DIR NAMES discord_rpc.h)
 
+# Discord rpc static lib implementation written by AI
 if(DISCORD_INCLUDE_DIR)
     # Get the root installation directory of the triplet (the parent of /include)
     get_filename_component(DISCORD_ROOT "${DISCORD_INCLUDE_DIR}/.." ABSOLUTE)
