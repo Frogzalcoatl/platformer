@@ -19,6 +19,9 @@ class Platformer {
     std::unique_ptr<Level> currentLevel;
 
     void handleSdlEvent();
+
+    void handleGameEventInput(const GameEventTypes::Input& inputEvent);
+
     void handleGameEvent();
 
   public:

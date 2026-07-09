@@ -12,7 +12,8 @@ Platformer::Platformer()
     : window{"C++ Platformer", Colors::Background}, assets{window.getSdlRenderer()}, audio{assets},
       ui{assets} {
     audio.setVolume(AudioCategory::Music, 30);
-    assets.initSDLGameControllerDB();
+    assets.addGameControllerMappings("gamepads/gamecontrollerdb.txt");
+    assets.addGameControllerMappings("gampads/retrolink.txt");
 }
 
 void Platformer::handleSdlEvent() {
@@ -38,7 +39,8 @@ void Platformer::handleSdlEvent() {
         case SDL_EVENT_MOUSE_WHEEL:
         case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
         case SDL_EVENT_GAMEPAD_BUTTON_UP: {
-            auto inputEvents = input.getInputEventsFromSDLEvent(event);
+            std::vector<GameEventTypes::Input> inputEvents =
+                input.getInputEventsFromSDLEvent(event);
             for (const auto& inputEvent : inputEvents) {
                 GameEvents::Push(inputEvent);
             }
@@ -52,9 +54,66 @@ void Platformer::handleSdlEvent() {
     }
 }
 
+void Platformer::handleGameEventInput(const GameEventTypes::Input& inputEvent) {
+    SDL_Log("Input event: %s", inputVerbToString(inputEvent.verb).c_str());
+    UiState uiState = ui.getState();
+    if (inputEvent.state == InputState::Pressed) {
+        switch (inputEvent.verb) {
+        case InputVerb::ToggleFullscreen:
+            window.toggleFullscreen();
+            break;
+        case InputVerb::ZoomIn:
+            if (currentLevel && uiState == UiState::Playing) {
+                currentLevel->getCamera().incrementScaleMultiplierBy(0.05f);
+            }
+            break;
+        case InputVerb::ZoomOut:
+            if (currentLevel && uiState == UiState::Playing) {
+                currentLevel->getCamera().incrementScaleMultiplierBy(-0.05f);
+            }
+            break;
+        case InputVerb::ZoomReset:
+            if (currentLevel && uiState == UiState::Playing) {
+                currentLevel->getCamera().resetScaleMultiplier();
+            }
+            break;
+        case InputVerb::ToggleDebug:
+            ui.showDebug = !ui.showDebug;
+            break;
+        case InputVerb::Cancel:
+            if (uiState == UiState::Playing) {
+                break;
+            }
+            // Purposely continuing into pause, cancel and pause are nearly identical
+            // Only difference is cancel cannot be used to pause the game
+        case InputVerb::Pause:
+            if (ImGui::IsAnyItemActive()) {
+                break;
+            }
+            ui.runCancelEvent();
+            if (currentLevel) {
+                const auto& players = currentLevel.get()->getPlayers();
+                for (const auto& player : players) {
+                    player->resetMovement();
+                }
+            }
+            break;
+        case InputVerb::ShowHitboxes:
+            if (currentLevel) {
+                currentLevel->showHitBoxes = !currentLevel->showHitBoxes;
+            }
+        default:
+            break;
+        }
+    }
+    if (currentLevel && uiState == UiState::Playing) {
+        currentLevel->handleInput(inputEvent);
+    }
+    ui.passInputToImGui(inputEvent);
+}
+
 void Platformer::handleGameEvent() {
     GameEvent event;
-    bool stateChangedThisFrame = false;
     while (GameEvents::Poll(event)) {
         if (std::holds_alternative<GameEventTypes::CloseWindow>(event)) {
             running = false;
@@ -72,61 +131,7 @@ void Platformer::handleGameEvent() {
         } else if (const auto* setVolume = std::get_if<GameEventTypes::SetVolume>(&event)) {
             audio.setVolume(setVolume->category, setVolume->volume);
         } else if (const auto* inputEvent = std::get_if<GameEventTypes::Input>(&event)) {
-            UiState uiState = ui.getState();
-            if (inputEvent->state == InputState::Pressed) {
-                switch (inputEvent->verb) {
-                case InputVerb::ToggleFullscreen:
-                    window.toggleFullscreen();
-                    break;
-                case InputVerb::ZoomIn:
-                    if (currentLevel && uiState == UiState::Playing) {
-                        currentLevel->getCamera().incrementScaleMultiplierBy(0.05f);
-                    }
-                    break;
-                case InputVerb::ZoomOut:
-                    if (currentLevel && uiState == UiState::Playing) {
-                        currentLevel->getCamera().incrementScaleMultiplierBy(-0.05f);
-                    }
-                    break;
-                case InputVerb::ZoomReset:
-                    if (currentLevel && uiState == UiState::Playing) {
-                        currentLevel->getCamera().resetScaleMultiplier();
-                    }
-                    break;
-                case InputVerb::ToggleDebug:
-                    ui.showDebug = !ui.showDebug;
-                    break;
-                case InputVerb::Cancel:
-                    if (uiState == UiState::Playing) {
-                        break;
-                    }
-                    // Purposely continuing into pause, cancel and pause are nearly identical
-                    // Only difference is cancel cannot be used to pause the game
-                case InputVerb::Pause:
-                    if (ImGui::IsAnyItemActive() || stateChangedThisFrame) {
-                        break;
-                    }
-                    ui.runCancelEvent();
-                    stateChangedThisFrame = true;
-                    if (currentLevel) {
-                        const auto& players = currentLevel.get()->getPlayers();
-                        for (const auto& player : players) {
-                            player->resetMovement();
-                        }
-                    }
-                    break;
-                case InputVerb::ShowHitboxes:
-                    if (currentLevel) {
-                        currentLevel->showHitBoxes = !currentLevel->showHitBoxes;
-                    }
-                default:
-                    break;
-                }
-            }
-            if (currentLevel && uiState == UiState::Playing) {
-                currentLevel->handleInput(*inputEvent);
-            }
-            ui.passInputToImGui(*inputEvent);
+            handleGameEventInput(*inputEvent);
         } else if (const auto* setUiState = std::get_if<GameEventTypes::SetUiState>(&event)) {
             ui.setState(setUiState->state);
         } else if (const auto* setLevelName = std::get_if<GameEventTypes::SetLevelName>(&event)) {
@@ -185,13 +190,13 @@ void Platformer::run() {
         window.clearFrame();
         if (currentLevel) {
             UiState currentState = ui.getState();
-            float alpha = 0.f;
             if (currentState == UiState::Playing) {
-                alpha = currentLevel->update();
+                currentLevel->update();
             }
-            currentLevel->draw(window, assets, alpha);
+            currentLevel->draw(window, assets);
         }
-        ui.render(window, audio, input, currentLevel.get());
+        ui.update();
+        ui.draw(window, audio, input, currentLevel.get(), ui);
         window.render(frameStartNs);
         DiscordRpcManager::update();
     }

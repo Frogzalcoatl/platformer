@@ -1,4 +1,5 @@
 #pragma once
+#include "Events.hpp"
 #include <SDL3/SDL.h>
 #include <array>
 #include <filesystem>
@@ -8,69 +9,11 @@
 
 inline constexpr int MaxBindsPerVerb = 3;
 
-enum class InputVerb : uint8_t {
-    Up,
-    Down,
-    Left,
-    Right,
-    Jump,
-    Sprint,
-    Respawn,
-    Confirm,
-    Cancel,
-    Pause,
-    ZoomIn,
-    ZoomOut,
-    ZoomReset,
-    ToggleFullscreen,
-    ToggleDebug,
-    ShowHitboxes,
-    VerbCount
-};
-
 std::string inputVerbToString(InputVerb verb);
-
-enum class InputState : uint8_t {
-    Pressed,
-    Released,
-    InputStateCount
-};
-
-enum class InputSource : uint8_t {
-    KeyboardMouse,
-    Controller,
-    Touch,
-    InputSourceCount
-};
-
-struct InputVerbInfo {
-    InputVerb verb;
-    bool activateOnRepeat = false;
-};
 
 struct ScancodeInfo {
     SDL_Scancode scancode = SDL_SCANCODE_UNKNOWN;
     bool activateOnRepeat = false;
-};
-
-struct DefaultScancodeBinding {
-    InputVerb verb;
-    SDL_Scancode scancode;
-    bool activateOnRepeat = false;
-};
-
-struct DefaultButtonBinding {
-    InputVerb verb;
-    SDL_GamepadButton button;
-};
-
-namespace GameEventTypes {
-struct Input {
-    InputVerb verb;
-    InputState state;
-    InputSource source;
-    std::optional<SDL_JoystickID> joystickId = std::nullopt;
-};
 };
 
 using ScancodeBindings = std::
@@ -91,28 +34,42 @@ class InputManager {
         gamepadsVerbsPressed = {};
     std::array<int, static_cast<size_t>(InputVerb::VerbCount)> keyboardVerbsPressed = {};
 
-    // bool isImGuiCapturingKeyboard = false;
-
   public:
     InputManager();
+
     void bindScancodeToVerb(InputVerb verb, ScancodeInfo binding, std::optional<int> atIndexOpt);
+
     void unbindScancodeFromVerb(InputVerb verb, SDL_Scancode scancode);
+
     void clearScancodeBindingAtIndex(InputVerb verb, int index);
+
     std::vector<InputVerbInfo> getVerbsFromScancode(SDL_Scancode scancode);
+
     std::array<ScancodeInfo, MaxBindsPerVerb> getScancodesFromVerb(InputVerb verb);
+
     const ScancodeBindings& getScancodeBindings() const;
+
     void bindGamepadButtonToVerb(
         InputVerb verb, SDL_GamepadButton button, std::optional<int> atIndexOpt
     );
+
     void unbindGamepadButtonFromVerb(InputVerb verb, SDL_GamepadButton button);
+
     void clearGamepadButtonBindingAtIndex(InputVerb verb, int index);
+
     std::vector<InputVerb> getVerbsFromGamepadButton(SDL_GamepadButton button);
+
     std::array<SDL_GamepadButton, MaxBindsPerVerb> getGamepadButtonsFromVerb(InputVerb verb);
+
     void handleGamepadDeviceEvent(SDL_GamepadDeviceEvent& event);
-    std::vector<GameEventTypes::Input> getInputEventsFromSDLEvent(SDL_Event& event);
+
     const GamepadBindings& getGamepadBindings() const;
+
     size_t getGamepadCount() const;
+
     std::vector<SDL_JoystickID> getActiveGamepads() const;
+
+    std::vector<GameEventTypes::Input> getInputEventsFromSDLEvent(SDL_Event& event);
 
     // Will probably remove default bindings vectors later, currently here for convenience
     const std::vector<DefaultScancodeBinding> defaultVerbBindings = {
@@ -143,7 +100,7 @@ class InputManager {
         {InputVerb::ToggleDebug, SDL_SCANCODE_F3},
         {InputVerb::ShowHitboxes, SDL_SCANCODE_F1}
     };
-    const std::vector<DefaultButtonBinding> defaultButtonBindings = {
+    const std::vector<DefaultButtonBinding> defaultGamepadBindings = {
         {InputVerb::Up, SDL_GAMEPAD_BUTTON_DPAD_UP},
         {InputVerb::Down, SDL_GAMEPAD_BUTTON_DPAD_DOWN},
         {InputVerb::Left, SDL_GAMEPAD_BUTTON_DPAD_LEFT},

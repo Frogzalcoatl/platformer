@@ -111,12 +111,7 @@ class AssetManager {
     AudioCacheMap audioCachePredecoded;
     TextureCacheMap textureCache;
 
-    const std::string_view GamepadsFolderName = "gamepads";
-
     TTF_Font* getSDLFont(std::string_view relativePathStr, float ptSize, TTF_FontStyleFlags style);
-    int addGameControllerMappings(
-        std::string_view fileName
-    ); // Returns number of controller mappings added
 
   public:
     AssetManager(SDL_Renderer* renderer);
@@ -125,18 +120,20 @@ class AssetManager {
     AssetManager(const AssetManager&) = delete;
     AssetManager& operator=(const AssetManager&) = delete;
 
-    // Render text at a high resolution then scale down with multiplier so that it still looks good
-    // while zoomed in
+    // Render text at (pointSize * TextRenderScale) then scale down with multiplier so that it still
+    // looks good while zoomed in
     const float TextRenderScale = 10.f;
     const float TextWorldSizeMultiplier = 0.04f;
 
     TTF_TextEngine* getTextEngine() const;
+
     UniqueText getSDLText(
         std::string_view text,
         std::string_view relativePathStr,
         float ptSize,
         TTF_FontStyleFlags style = TTF_STYLE_NORMAL
     );
+
     ImFont* getImGuiFont(std::string_view relativePathStr, float ptSize);
 
     // predecode should be set to false for longer audio files like music
@@ -144,5 +141,7 @@ class AssetManager {
 
     SDL_Texture* getTexture(std::string_view relativePathStr);
 
-    int initSDLGameControllerDB(); // Returns number of controller mappings added
+    int addGameControllerMappings(
+        std::string_view relativePathStr
+    ); // Returns number of controller mappings added
 };

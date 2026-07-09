@@ -10,7 +10,7 @@ inline constexpr std::string_view Consolas = "fonts/consola.ttf";
 }
 
 namespace Sounds {
-inline constexpr std::string_view Fart = "sounds/far.wav";
+inline constexpr std::string_view Fart = "sounds/fart.wav";
 inline constexpr std::string_view Jump = "sounds/jump.wav";
 }
 

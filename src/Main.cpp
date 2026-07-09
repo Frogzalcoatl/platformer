@@ -9,7 +9,7 @@
 int main(int argc, char* argv[]) {
     (void)argc;
     (void)argv;
-    initLogFormatting();
+    initSdlLogFormatting();
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD | SDL_INIT_AUDIO)) {
         SDL_LogError(
             SDL_LOG_CATEGORY_APPLICATION, "SDL3 Initialization failed: %s", SDL_GetError()

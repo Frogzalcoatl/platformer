@@ -1,4 +1,4 @@
 #pragma once
 #include <SDL3/SDL.h>
 
-void initLogFormatting();
+void initSdlLogFormatting();

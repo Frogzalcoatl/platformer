@@ -41,6 +41,7 @@ class Level {
     uint64_t lastTime = 0;
     float accumulator = 0.f;
     const float physicsStep = 1.0f / 60.0f;
+    float alpha = 0.f;
 
     void drawTile(
         AssetPaths::Textures::TileTypes tileId,
@@ -58,34 +59,48 @@ class Level {
     bool showHitBoxes = false;
     bool showLevelBounds = false;
 
-    float update(); // Returns alpha
+    void update();
+
     void handleInput(GameEventTypes::Input event);
-    void draw(WindowManager& window, AssetManager& assets, float alpha);
+
+    void draw(WindowManager& window, AssetManager& assets);
+
+    b2WorldId getWorldId() const;
+
+    LevelDimensions getSize() const;
+
+    Camera& getCamera();
+
+    std::string_view getName() const;
+
+    size_t getTileCount() const;
+
+    const EntitiesVector& getEntities() const;
+
     void addEntity(
         b2WorldId world,
         b2Polygon polygon,
         b2Vec2 position,
-        bool isStatic,
         b2BodyDef bodyDef = b2DefaultBodyDef(),
         b2ShapeDef shapeDef = b2DefaultShapeDef(),
         SDL_FColor hitboxColor = colorToFColor(Colors::Yellow),
         SDL_Texture* texture = nullptr,
         std::optional<b2Vec2> textureSize = std::nullopt
     );
+
+    const LevelTileVector& getTiles() const;
+
     void addTile(AssetPaths::Textures::TileTypes tileId, size_t x, size_t y);
+
     void removeTile(size_t x, size_t y);
+
+    const PlayersVector& getPlayers() const;
+
     void addPlayer(AssetManager& assets, std::optional<SDL_JoystickID> joystickId);
+
     void updatePlayers(const std::vector<SDL_JoystickID>& activeGamepads, AssetManager& assets);
 
-    const EntitiesVector& getEntities() const;
-    const LevelTileVector& getTiles() const;
-    const PlayersVector& getPlayers() const;
-    b2WorldId getWorldId() const;
     const LevelDrawInfo& drawnLastFrame() const;
-    LevelDimensions getSize() const;
-    Camera& getCamera();
-    std::string_view getName() const;
-    size_t getTileCount() const;
 };
 
 std::unique_ptr<Level> getTestLevel(AssetManager& assets, WindowManager& window);

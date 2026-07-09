@@ -1,8 +1,7 @@
 #include "AudioManager.hpp"
-#include <cassert>
 
-AudioManager::AudioManager(AssetManager& assetManager) : assets{&assetManager} {
-    if (!assets) {
+AudioManager::AudioManager(AssetManager& assetManagerRef) : assetManager{&assetManagerRef} {
+    if (!assetManager) {
         SDL_LogError(
             SDL_LOG_CATEGORY_AUDIO,
             "Unable to create Audio Manager instance due to null asset manager ptr"
@@ -40,16 +39,16 @@ AudioManager::AudioManager(AssetManager& assetManager) : assets{&assetManager} {
 }
 
 bool AudioManager::playSound(std::string_view relativePath, unsigned int volume, float pitch) {
-    if (!assets) {
+    if (!assetManager) {
         SDL_LogError(
             SDL_LOG_CATEGORY_AUDIO,
-            "Unable to play music %.*s due to null SDL3 mixer music track",
+            "Unable to play sound \"%.*s\" due to null SDL3 mixer music track",
             static_cast<int>(relativePath.length()),
             relativePath.data()
         );
         return false;
     }
-    MIX_Audio* sound = assets->getAudio(relativePath, mixerDevice.get(), true);
+    MIX_Audio* sound = assetManager->getAudio(relativePath, mixerDevice.get(), true);
     if (!sound) {
         SDL_LogWarn(
             SDL_LOG_CATEGORY_AUDIO,
@@ -85,7 +84,7 @@ bool AudioManager::playMusic(
     if (!musicTrack) {
         SDL_LogError(
             SDL_LOG_CATEGORY_AUDIO,
-            "Unable to play music %.*s due to null SDL3 mixer music track",
+            "Unable to play music \"%.*s\" due to null SDL3 mixer music track",
             static_cast<int>(relativePath.length()),
             relativePath.data()
         );
@@ -93,17 +92,17 @@ bool AudioManager::playMusic(
         return false;
     }
     clearCurrentMusic();
-    if (!assets) {
+    if (!assetManager) {
         SDL_LogError(
             SDL_LOG_CATEGORY_AUDIO,
-            "Unable to play music %.*s due to null asset manager ptr",
+            "Unable to play music \"%.*s\" due to null asset manager ptr",
             static_cast<int>(relativePath.length()),
             relativePath.data()
         );
         clearCurrentMusic();
         return false;
     }
-    currentMusic = assets->getAudio(relativePath, mixerDevice.get(), false);
+    currentMusic = assetManager->getAudio(relativePath, mixerDevice.get(), false);
     if (!currentMusic) {
         clearCurrentMusic();
         return false;
@@ -126,8 +125,17 @@ bool AudioManager::playMusic(
     return true;
 }
 
+unsigned int AudioManager::getVolume(AudioCategory category) {
+    if (category >= AudioCategory::AudioCategoryCount) {
+        return 0;
+    }
+    return static_cast<unsigned int>(SDL_roundf(tagGain[static_cast<size_t>(category)] * 100));
+}
+
 void AudioManager::setVolume(AudioCategory category, unsigned int volume) {
-    assert(category < AudioCategory::AudioCategoryCount);
+    if (category >= AudioCategory::AudioCategoryCount) {
+        return;
+    }
     float volumeFloat = volume / 100.f;
     tagGain[static_cast<size_t>(category)] = volumeFloat;
     if (category == AudioCategory::Master) {
@@ -142,11 +150,26 @@ void AudioManager::setVolume(AudioCategory category, unsigned int volume) {
     }
 }
 
-void AudioManager::setMusicPitch(float pitch) {
-    if (pitch < 0.01f) {
-        pitch = 0.01f;
+void AudioManager::pauseCategory(AudioCategory category) {
+    if (category >= AudioCategory::AudioCategoryCount) {
+        return;
     }
-    MIX_SetTrackFrequencyRatio(musicTrack.get(), pitch);
+    if (category == AudioCategory::Master) {
+        MIX_PauseAllTracks(mixerDevice.get());
+        return;
+    }
+    MIX_PauseTag(mixerDevice.get(), TagNames[static_cast<size_t>(category)]);
+}
+
+void AudioManager::unpauseCategory(AudioCategory category) {
+    if (category >= AudioCategory::AudioCategoryCount) {
+        return;
+    }
+    if (category == AudioCategory::Master) {
+        MIX_ResumeAllTracks(mixerDevice.get());
+        return;
+    }
+    MIX_ResumeTag(mixerDevice.get(), TagNames[static_cast<size_t>(category)]);
 }
 
 void AudioManager::clearCurrentMusic() {
@@ -157,41 +180,6 @@ void AudioManager::clearCurrentMusic() {
     MIX_SetTrackAudio(musicTrack.get(), nullptr);
     currentMusic = nullptr;
     currentMusicName = "";
-}
-
-void AudioManager::pauseCategory(AudioCategory category) {
-    assert(category < AudioCategory::AudioCategoryCount);
-    if (category == AudioCategory::Master) {
-        MIX_PauseAllTracks(mixerDevice.get());
-        return;
-    }
-    MIX_PauseTag(mixerDevice.get(), TagNames[static_cast<size_t>(category)]);
-}
-
-void AudioManager::unpauseCategory(AudioCategory category) {
-    assert(category < AudioCategory::AudioCategoryCount);
-    if (category == AudioCategory::Master) {
-        MIX_ResumeAllTracks(mixerDevice.get());
-        return;
-    }
-    MIX_ResumeTag(mixerDevice.get(), TagNames[static_cast<size_t>(category)]);
-}
-
-unsigned int AudioManager::getVolume(AudioCategory category) {
-    assert(category < AudioCategory::AudioCategoryCount);
-    return static_cast<unsigned int>(SDL_roundf(tagGain[static_cast<size_t>(category)] * 100));
-}
-
-std::string AudioManager::getCurrentMusicName() const {
-    return currentMusicName;
-}
-
-float AudioManager::getMusicPitch() const {
-    return MIX_GetTrackFrequencyRatio(musicTrack.get());
-}
-
-bool AudioManager::isMusicLooping() const {
-    return MIX_GetTrackLoops(musicTrack.get()) == -1 ? true : false;
 }
 
 bool AudioManager::isMusicPlaying() const {
@@ -207,6 +195,25 @@ bool AudioManager::isMusicPlaying() const {
     Sint64 durationFrames = MIX_GetAudioDuration(music);
     Sint64 musicLengthMS = MIX_TrackFramesToMS(musicTrack.get(), durationFrames);
     return playbackPositionMS != musicLengthMS;
+}
+
+bool AudioManager::isMusicLooping() const {
+    return MIX_GetTrackLoops(musicTrack.get()) == -1 ? true : false;
+}
+
+float AudioManager::getMusicPitch() const {
+    return MIX_GetTrackFrequencyRatio(musicTrack.get());
+}
+
+void AudioManager::setMusicPitch(float pitch) {
+    if (pitch < 0.01f) {
+        pitch = 0.01f;
+    }
+    MIX_SetTrackFrequencyRatio(musicTrack.get(), pitch);
+}
+
+std::string AudioManager::getCurrentMusicName() const {
+    return currentMusicName;
 }
 
 Sint64 AudioManager::getMusicPlaybackPosition() const {

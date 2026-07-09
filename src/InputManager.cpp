@@ -50,7 +50,7 @@ InputManager::InputManager() {
             binding.verb, ScancodeInfo{binding.scancode, binding.activateOnRepeat}, std::nullopt
         );
     }
-    for (const auto& binding : defaultButtonBindings) {
+    for (const auto& binding : defaultGamepadBindings) {
         bindGamepadButtonToVerb(binding.verb, binding.button, std::nullopt);
     }
 }
@@ -216,8 +216,20 @@ void InputManager::handleGamepadDeviceEvent(SDL_GamepadDeviceEvent& event) {
     }
 }
 
+const GamepadBindings& InputManager::getGamepadBindings() const {
+    return gamepadBindings;
+}
+
 size_t InputManager::getGamepadCount() const {
     return gamepadsVerbsPressed.size();
+}
+
+std::vector<SDL_JoystickID> InputManager::getActiveGamepads() const {
+    std::vector<SDL_JoystickID> gamepads;
+    for (const auto& gamepad : gamepadsVerbsPressed) {
+        gamepads.push_back(gamepad.first);
+    }
+    return gamepads;
 }
 
 std::vector<GameEventTypes::Input> InputManager::getInputEventsFromSDLEvent(SDL_Event& event) {
@@ -238,7 +250,7 @@ std::vector<GameEventTypes::Input> InputManager::getInputEventsFromSDLEvent(SDL_
                             GameEventTypes::Input{
                                 static_cast<InputVerb>(i),
                                 InputState::Released,
-                                InputSource::KeyboardMouse
+                                InputSource::Keyboard
                             }
                         );
                     }
@@ -266,16 +278,14 @@ std::vector<GameEventTypes::Input> InputManager::getInputEventsFromSDLEvent(SDL_
             if (amountPressed == 0) {
                 inputEvents.push_back(
                     GameEventTypes::Input{
-                        verbs[i].verb, InputState::Released, InputSource::KeyboardMouse
+                        verbs[i].verb, InputState::Released, InputSource::Keyboard
                     }
                 );
             }
             if (amountPressed >= 1 && (verbs[i].activateOnRepeat || !event.key.repeat) &&
                 event.type == SDL_EVENT_KEY_DOWN) {
                 inputEvents.push_back(
-                    GameEventTypes::Input{
-                        verbs[i].verb, InputState::Pressed, InputSource::KeyboardMouse
-                    }
+                    GameEventTypes::Input{verbs[i].verb, InputState::Pressed, InputSource::Keyboard}
                 );
             }
         }
@@ -287,15 +297,11 @@ std::vector<GameEventTypes::Input> InputManager::getInputEventsFromSDLEvent(SDL_
         }
         if (event.wheel.integer_y > 0) {
             inputEvents.push_back(
-                GameEventTypes::Input{
-                    InputVerb::ZoomIn, InputState::Pressed, InputSource::KeyboardMouse
-                }
+                GameEventTypes::Input{InputVerb::ZoomIn, InputState::Pressed, InputSource::Mouse}
             );
         } else if (event.wheel.integer_y < 0) {
             inputEvents.push_back(
-                GameEventTypes::Input{
-                    InputVerb::ZoomOut, InputState::Pressed, InputSource::KeyboardMouse
-                }
+                GameEventTypes::Input{InputVerb::ZoomOut, InputState::Pressed, InputSource::Mouse}
             );
         }
     }; break;
@@ -331,16 +337,4 @@ std::vector<GameEventTypes::Input> InputManager::getInputEventsFromSDLEvent(SDL_
     }; break;
     }
     return inputEvents;
-}
-
-const GamepadBindings& InputManager::getGamepadBindings() const {
-    return gamepadBindings;
-}
-
-std::vector<SDL_JoystickID> InputManager::getActiveGamepads() const {
-    std::vector<SDL_JoystickID> gamepads;
-    for (const auto& gamepad : gamepadsVerbsPressed) {
-        gamepads.push_back(gamepad.first);
-    }
-    return gamepads;
 }

@@ -1,6 +1,5 @@
 #include "UiManager.hpp"
 #include "AssetPaths.hpp"
-#include <cassert>
 
 UiManager::UiManager(AssetManager& assets, UiState startingState) : currentState(startingState) {
     fontExtraSmall = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 12.f);
@@ -17,29 +16,24 @@ UiManager::UiManager(AssetManager& assets, UiState startingState) : currentState
                                            // on controlelr type properly in the future
 }
 
-void UiManager::setState(UiState state) {
-    assert(state < UiState::UiStateCount);
-    currentState = state;
-}
-
-UiState UiManager::getState() const {
-    return currentState;
-}
-
-void UiManager::render(
-    WindowManager& window, AudioManager& audio, InputManager& input, Level* level
+void UiManager::draw(
+    WindowManager& window,
+    AudioManager& audio,
+    InputManager& input,
+    Level* level,
+    UiManager& uiManager
 ) {
     Entity* player = nullptr;
     Camera* camera = nullptr;
     if (level) {
-        const auto& players = level->getPlayers();
+        const PlayersVector& players = level->getPlayers();
         if (players.size() > 0) {
             player = players[0]->getEntity();
         }
         camera = &level->getCamera();
     }
     if (showDebug) {
-        drawDebug(window, player, camera, input, level);
+        drawDebug(window, player, camera, input, level, uiManager);
     }
     switch (currentState) {
     case UiState::MainMenu: {
@@ -59,19 +53,52 @@ void UiManager::render(
     }
 }
 
+void UiManager::update() {
+    stateChangedThisFrame = false;
+}
+
+UiState UiManager::getState() const {
+    return currentState;
+}
+
+std::string UiManager::getStateStr() const {
+    switch (currentState) {
+    case UiState::MainMenu:
+        return "Main Menu";
+    case UiState::Settings:
+        return "Settings";
+    case UiState::Playing:
+        return "Playing";
+    case UiState::Paused:
+        return "Paused";
+    case UiState::PausedSettings:
+        return "Paused (Settings)";
+    default:
+        return "Invalid";
+    }
+}
+
+void UiManager::setState(UiState state) {
+    if (state >= UiState::UiStateCount || stateChangedThisFrame || state == currentState) {
+        return;
+    }
+    currentState = state;
+    stateChangedThisFrame = true;
+}
+
 void UiManager::runCancelEvent() {
     switch (currentState) {
     case UiState::Settings:
-        currentState = UiState::MainMenu;
+        setState(UiState::MainMenu);
         break;
     case UiState::Playing:
-        currentState = UiState::Paused;
+        setState(UiState::Paused);
         break;
     case UiState::Paused:
-        currentState = UiState::Playing;
+        setState(UiState::Playing);
         break;
     case UiState::PausedSettings:
-        currentState = UiState::Paused;
+        setState(UiState::Paused);
         break;
     default:
         break;
@@ -81,7 +108,7 @@ void UiManager::runCancelEvent() {
 void UiManager::passInputToImGui(const GameEventTypes::Input& event) {
     ImGuiIO& io = ImGui::GetIO();
     ImGuiKey imguiKey = ImGuiKey_None;
-    if (event.source == InputSource::KeyboardMouse) {
+    if (event.source == InputSource::Keyboard) {
         switch (event.verb) {
         case InputVerb::Up:
             imguiKey = ImGuiKey_UpArrow;
@@ -105,7 +132,12 @@ void UiManager::passInputToImGui(const GameEventTypes::Input& event) {
 }
 
 void UiManager::drawDebug(
-    WindowManager& window, Entity* player, Camera* camera, InputManager& input, Level* level
+    WindowManager& window,
+    Entity* player,
+    Camera* camera,
+    InputManager& input,
+    Level* level,
+    UiManager& uiManager
 ) {
     ImGui::PushFont(fontSmall);
     ImGui::SetNextWindowPos(ImVec2{0.f, 0.f}, ImGuiCond_Always);
@@ -120,6 +152,8 @@ void UiManager::drawDebug(
             window.targetFpsStr().c_str(),
             1000.0f / ImGui::GetIO().Framerate
         );
+        ImGui::Dummy(ImVec2{1.f, 1.f});
+        ImGui::Text("UI State: %s", uiManager.getStateStr().c_str());
         ImGui::Dummy(ImVec2{1.f, 1.f});
         if (level) {
             std::string_view levelName = level->getName();
@@ -226,13 +260,13 @@ void UiManager::drawMainMenu() {
         ImGui::SetCursorPosX(cursorX);
         if (ImGui::Button("Test Game", ImVec2{buttonWidth, buttonHeight})) {
             GameEvents::Push(GameEventTypes::SetLevelName{LevelName::Template});
-            currentState = UiState::Playing;
+            setState(UiState::Playing);
         }
         ImGui::SetItemDefaultFocus();
         ImGui::Dummy(ImVec2(0, verticalSpacing));
         ImGui::SetCursorPosX(cursorX);
         if (ImGui::Button("Settings", ImVec2{buttonWidth, buttonHeight})) {
-            currentState = UiState::Settings;
+            setState(UiState::Settings);
         }
         ImGui::Dummy(ImVec2(0, verticalSpacing));
         ImGui::SetCursorPosX(cursorX);
@@ -433,19 +467,19 @@ void UiManager::drawPauseMenu() {
         ImGui::Dummy(ImVec2(0, 50.f));
         ImGui::SetCursorPosX(cursorX);
         if (ImGui::Button("Resume", ImVec2{buttonWidth, buttonHeight})) {
-            currentState = UiState::Playing;
+            setState(UiState::Playing);
         }
         ImGui::SetItemDefaultFocus();
         ImGui::Dummy(ImVec2(0, verticalSpacing));
         ImGui::SetCursorPosX(cursorX);
         if (ImGui::Button("Settings", ImVec2{buttonWidth, buttonHeight})) {
-            currentState = UiState::PausedSettings;
+            setState(UiState::PausedSettings);
         }
         ImGui::Dummy(ImVec2(0, verticalSpacing));
         ImGui::SetCursorPosX(cursorX);
         if (ImGui::Button("Exit", ImVec2{buttonWidth, buttonHeight})) {
             GameEvents::Push(GameEventTypes::SetLevelName{LevelName::None});
-            currentState = UiState::MainMenu;
+            setState(UiState::MainMenu);
         }
         ImGui::PopFont();
     }

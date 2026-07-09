@@ -28,36 +28,52 @@ using UniqueRenderer = std::unique_ptr<SDL_Renderer, SDL_Renderer_Deleter>;
 
 class WindowManager {
   private:
+    UniqueWindow sdlWindow;
+    UniqueRenderer sdlRenderer;
     WindowVec2 size;
-    bool isFullscreen = false;
+    WindowVec2 mousePos;
     Uint64 targetFps = 240;
     Uint64 targetFrameTimeNs = 1000000000ULL / targetFps;
     bool vsync = false;
     bool fpsUnlimited = false;
-    UniqueRenderer sdlRenderer;
-    UniqueWindow sdlWindow;
-    WindowVec2 mousePos;
+    bool isFullscreen = false;
 
   public:
     SDL_Color backgroundColor;
 
     WindowManager(const char* windowName, SDL_Color backgroundColor);
 
-    SDL_Window* getSdlWindow() const;
-    SDL_Renderer* getSdlRenderer() const;
-    WindowVec2 getSize() const;
-    bool getIsFullscreen() const;
-    Uint64 getTargetFps() const;
-    std::string targetFpsStr() const;
-    void setTargetFps(Uint64 value);
-    void setVsync(bool value);
-    bool isVsyncEnabled() const;
-    void setFpsUnlimited(bool value);
-    bool getFpsUnlimited() const;
-    void render(Uint64 frameStartNs);
     void clearFrame();
-    void toggleFullscreen();
+
+    void render(Uint64 frameStartNs);
+
+    SDL_Window* getSdlWindow() const;
+
+    SDL_Renderer* getSdlRenderer() const;
+
+    WindowVec2 getSize() const;
+
     void handleResize(int sizeX, int sizeY);
-    void handleMouseMotionEvent(const SDL_MouseMotionEvent& event);
+
     WindowVec2 getMousePos() const;
+
+    void handleMouseMotionEvent(const SDL_MouseMotionEvent& event);
+
+    Uint64 getTargetFps() const;
+
+    std::string targetFpsStr() const;
+
+    void setTargetFps(Uint64 value);
+
+    bool isVsyncEnabled() const;
+
+    void setVsync(bool value);
+
+    bool getFpsUnlimited() const;
+
+    void setFpsUnlimited(bool value);
+
+    bool getIsFullscreen() const;
+
+    void toggleFullscreen();
 };

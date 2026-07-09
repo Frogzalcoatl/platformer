@@ -1,4 +1,5 @@
 #pragma once
+#include "AssetManager.hpp"
 #include "Camera.hpp"
 #include "Entity.hpp"
 #include "Events.hpp"
@@ -17,6 +18,39 @@ class EntityController {
         AssetManager& assets,
         std::optional<SDL_JoystickID> joystickId = std::nullopt
     );
+
+    void setEntity(Entity& entity);
+
+    void clearEntity();
+
+    Entity* getEntity() const;
+
+    void update();
+
+    void jump();
+
+    void respawn();
+
+    void resetMovement();
+
+    void handleInput(GameEventTypes::Input event, Camera* camera, float alpha);
+
+    void drawNameTag(
+        WindowManager& window,
+        AssetManager& assets,
+        float cameraScale,
+        WindowVec2 cameraOffsetPixels,
+        float alpha
+    );
+
+    b2Vec2 getNametagWorldSize(
+        // params are consts from AssetManager
+        float textRenderScale,
+        float textWorldSizeMultiplier
+    ) const;
+
+    b2Vec2 getNametagWorldPos(float alpha) const;
+
     std::optional<SDL_JoystickID> joystickId;
     b2Vec2 spawnPoint = {0.f, 0.f};
     float jumpForceNewtons = 160.f;
@@ -26,25 +60,4 @@ class EntityController {
     std::array<bool, static_cast<size_t>(EntityMovement::EntityMovementCount)> movement = {false};
     bool isSprinting = false;
     float sprintMultiplier = 2.f;
-    void setEntity(Entity& entity);
-    void clearEntity();
-    Entity* getEntity() const;
-    void update();
-    void jump();
-    void respawn();
-    void handleInput(GameEventTypes::Input event, Camera* camera);
-    void resetMovement();
-    void drawNameTag(
-        WindowManager& window,
-        AssetManager& assets,
-        float cameraScale,
-        WindowVec2 cameraOffsetPixels,
-        float alpha
-    );
-    b2Vec2 getNametagWorldSize(
-        // params are consts from AssetManager
-        float textRenderScale,
-        float textWorldSizeMultiplier
-    ) const;
-    b2Vec2 getNametagWorldPos(float alpha) const;
 };

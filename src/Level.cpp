@@ -23,7 +23,34 @@ Level::~Level() {
     SDL_Log("Destroyed box2d world for level \"%s\"", levelName);
 }
 
-float Level::update() {
+void Level::drawTile(
+    AssetPaths::Textures::TileTypes tileId,
+    size_t x,
+    size_t y,
+    AssetManager& assets,
+    WindowManager& window,
+    float cameraScale
+) {
+    assert(tileId < Textures::TileTypes::TileCount);
+    if (tileId >= Textures::TileTypes::TileCount) {
+        return;
+    }
+    std::string_view relativePath = Textures::TilePaths[static_cast<size_t>(tileId)];
+    SDL_Texture* texture = assets.getTexture(relativePath);
+    if (!texture) {
+        return;
+    }
+    Drawing::texture(
+        texture,
+        window,
+        b2Vec2{static_cast<float>(x + 0.5f), static_cast<float>(y + 0.5f)},
+        b2Vec2{1.f, 1.f},
+        cameraScale,
+        camera.getOffsetPixels()
+    );
+}
+
+void Level::update() {
     currentTime = SDL_GetTicks();
     float deltaTime = (float)(currentTime - lastTime) / 1000.0f;
     lastTime = currentTime;
@@ -45,10 +72,26 @@ float Level::update() {
         b2World_Step(world, physicsStep, 4);
         accumulator -= physicsStep;
     }
-    return accumulator / physicsStep;
+    alpha = accumulator / physicsStep;
 }
 
-void Level::draw(WindowManager& window, AssetManager& assets, float alpha) {
+void Level::handleInput(GameEventTypes::Input event) {
+    EntityController* playerForInput = nullptr;
+    for (auto& player : players) {
+        if (!player) {
+            continue;
+        }
+        if (player->joystickId == event.joystickId) {
+            playerForInput = player.get();
+        }
+    }
+    if (!playerForInput) {
+        return;
+    }
+    playerForInput->handleInput(event, &camera, alpha);
+}
+
+void Level::draw(WindowManager& window, AssetManager& assets) {
     camera.run(alpha);
     if (tiles.empty()) {
         return;
@@ -140,54 +183,39 @@ void Level::draw(WindowManager& window, AssetManager& assets, float alpha) {
     }
 }
 
-void Level::drawTile(
-    AssetPaths::Textures::TileTypes tileId,
-    size_t x,
-    size_t y,
-    AssetManager& assets,
-    WindowManager& window,
-    float cameraScale
-) {
-    assert(tileId < Textures::TileTypes::TileCount);
-    if (tileId >= Textures::TileTypes::TileCount) {
-        return;
-    }
-    std::string_view relativePath = Textures::TilePaths[static_cast<size_t>(tileId)];
-    SDL_Texture* texture = assets.getTexture(relativePath);
-    if (!texture) {
-        return;
-    }
-    Drawing::texture(
-        texture,
-        window,
-        b2Vec2{static_cast<float>(x + 0.5f), static_cast<float>(y + 0.5f)},
-        b2Vec2{1.f, 1.f},
-        cameraScale,
-        camera.getOffsetPixels()
-    );
+b2WorldId Level::getWorldId() const {
+    return world;
 }
 
-void Level::handleInput(GameEventTypes::Input event) {
-    EntityController* playerForInput = nullptr;
-    for (auto& player : players) {
-        if (!player) {
-            continue;
-        }
-        if (player->joystickId == event.joystickId) {
-            playerForInput = player.get();
-        }
+LevelDimensions Level::getSize() const {
+    size_t width = tiles.size();
+    size_t height = 0;
+    if (!tiles.empty()) {
+        height = tiles[0].size();
     }
-    if (!playerForInput) {
-        return;
-    }
-    playerForInput->handleInput(event, &camera);
+    return LevelDimensions{width, height};
+}
+
+Camera& Level::getCamera() {
+    return camera;
+}
+
+std::string_view Level::getName() const {
+    return levelName;
+}
+
+size_t Level::getTileCount() const {
+    return tileCount;
+}
+
+const EntitiesVector& Level::getEntities() const {
+    return entities;
 }
 
 void Level::addEntity(
     b2WorldId world,
     b2Polygon polygon,
     b2Vec2 position,
-    bool isStatic,
     b2BodyDef bodyDef,
     b2ShapeDef shapeDef,
     SDL_FColor hitboxColor,
@@ -195,10 +223,14 @@ void Level::addEntity(
     std::optional<b2Vec2> textureSize
 ) {
     auto entity = std::make_unique<Entity>(
-        world, polygon, position, isStatic, bodyDef, shapeDef, hitboxColor, texture, textureSize
+        world, polygon, position, bodyDef, shapeDef, hitboxColor, texture, textureSize
     );
     entities.push_back(std::move(entity));
     b2World_Step(world, physicsStep, 4);
+}
+
+const LevelTileVector& Level::getTiles() const {
+    return tiles;
 }
 
 void Level::addTile(Textures::TileTypes tileId, size_t x, size_t y) {
@@ -244,6 +276,10 @@ void Level::removeTile(size_t x, size_t y) {
     tiles[x][y] = Textures::TileTypes::Air;
 }
 
+const PlayersVector& Level::getPlayers() const {
+    return players;
+}
+
 void Level::addPlayer(AssetManager& assets, std::optional<SDL_JoystickID> joystickId) {
     if (!joystickId.has_value()) {
         for (const auto& player : players) {
@@ -261,6 +297,7 @@ void Level::addPlayer(AssetManager& assets, std::optional<SDL_JoystickID> joysti
     }
     b2BodyDef playerBodyDef = b2DefaultBodyDef();
     playerBodyDef.fixedRotation = true;
+    playerBodyDef.type = b2_dynamicBody;
     b2ShapeDef playerShapeDef = b2DefaultShapeDef();
     playerShapeDef.material.friction = 0.f;
     playerShapeDef.density = 4.f;
@@ -268,7 +305,6 @@ void Level::addPlayer(AssetManager& assets, std::optional<SDL_JoystickID> joysti
         world,
         b2MakeBox(0.5f, 1.f),
         b2Vec2{10.f, 4.f},
-        false,
         playerBodyDef,
         playerShapeDef,
         colorToFColor(Colors::Yellow),
@@ -329,47 +365,13 @@ void Level::updatePlayers(const std::vector<SDL_JoystickID>& activeGamepads, Ass
     }
 }
 
-const EntitiesVector& Level::getEntities() const {
-    return entities;
-}
-const LevelTileVector& Level::getTiles() const {
-    return tiles;
-}
-const PlayersVector& Level::getPlayers() const {
-    return players;
-}
-
-b2WorldId Level::getWorldId() const {
-    return world;
-}
-
 const LevelDrawInfo& Level::drawnLastFrame() const {
     return drawInfo;
 }
 
-LevelDimensions Level::getSize() const {
-    size_t width = tiles.size();
-    size_t height = 0;
-    if (!tiles.empty()) {
-        height = tiles[0].size();
-    }
-    return LevelDimensions{width, height};
-}
-
-Camera& Level::getCamera() {
-    return camera;
-}
-
-std::string_view Level::getName() const {
-    return levelName;
-}
-
-size_t Level::getTileCount() const {
-    return tileCount;
-}
-
 std::unique_ptr<Level> getTestLevel(AssetManager& assets, WindowManager& window) {
-    auto level = std::make_unique<Level>("Test", LevelDimensions{100, 40}, window);
+    std::unique_ptr<Level> level =
+        std::make_unique<Level>("Test", LevelDimensions{100, 40}, window);
     level->showLevelBounds = true;
     b2WorldId world = level->getWorldId();
     const int GroundWidth = 50;
@@ -381,20 +383,17 @@ std::unique_ptr<Level> getTestLevel(AssetManager& assets, WindowManager& window)
     level->addEntity(
         world,
         b2MakeBox(static_cast<float>(GroundWidth) / 2.f, static_cast<float>(GroundHeight) / 2.f),
-        b2Vec2{static_cast<float>(GroundWidth) / 2.f, 1.f},
-        true
+        b2Vec2{static_cast<float>(GroundWidth) / 2.f, 1.f}
     );
     level->addEntity(
         world,
         b2MakeBox(0.5f, static_cast<float>(WallHeight) / 2.f),
-        b2Vec2{WallPosLeft + 0.5f, static_cast<float>(WallHeight) / 2.f},
-        true
+        b2Vec2{WallPosLeft + 0.5f, static_cast<float>(WallHeight) / 2.f}
     );
     level->addEntity(
         world,
         b2MakeBox(0.5f, static_cast<float>(WallHeight) / 2.f),
-        b2Vec2{WallPosRight + 0.5f, static_cast<float>(WallHeight) / 2.f},
-        true
+        b2Vec2{WallPosRight + 0.5f, static_cast<float>(WallHeight) / 2.f}
     );
     b2BodyDef dynamicBodyDef = b2DefaultBodyDef();
     dynamicBodyDef.type = b2_dynamicBody;
@@ -402,7 +401,6 @@ std::unique_ptr<Level> getTestLevel(AssetManager& assets, WindowManager& window)
         world,
         b2MakeBox(0.5f, 2.f),
         b2Vec2{28.f, 4.f},
-        false,
         dynamicBodyDef,
         b2DefaultShapeDef(),
         colorToFColor(Colors::Yellow),
@@ -413,7 +411,6 @@ std::unique_ptr<Level> getTestLevel(AssetManager& assets, WindowManager& window)
         world,
         b2MakeBox(0.5f, 1.f),
         b2Vec2{8.f, 3.f},
-        false,
         dynamicBodyDef,
         b2DefaultShapeDef(),
         colorToFColor(Colors::Yellow),

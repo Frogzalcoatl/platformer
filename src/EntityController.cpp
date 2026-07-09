@@ -33,15 +33,17 @@ EntityController::EntityController(
 void EntityController::setEntity(Entity& entity) {
     this->entity = &entity;
 }
+
 void EntityController::clearEntity() {
     entity = nullptr;
 }
+
 Entity* EntityController::getEntity() const {
     return entity;
 }
 
 void EntityController::update() {
-    if (!entity || entity->isStatic) {
+    if (!entity) {
         return;
     }
     b2BodyId bodyId = entity->getBodyId();
@@ -85,7 +87,14 @@ void EntityController::respawn() {
     entity->teleport(spawnPoint);
 }
 
-void EntityController::handleInput(GameEventTypes::Input event, Camera* camera) {
+void EntityController::resetMovement() {
+    for (size_t i = 0; i < movement.size(); i++) {
+        movement[i] = false;
+    }
+    isSprinting = false;
+}
+
+void EntityController::handleInput(GameEventTypes::Input event, Camera* camera, float alpha) {
     assert(event.state == InputState::Pressed || event.state == InputState::Released);
     assert(event.verb < InputVerb::VerbCount);
     if (!entity) {
@@ -95,7 +104,7 @@ void EntityController::handleInput(GameEventTypes::Input event, Camera* camera) 
         if (event.verb == InputVerb::Respawn) {
             respawn();
             if (camera && camera->entityToFollow == entity) {
-                camera->centerOnEntity();
+                camera->centerOnEntity(alpha);
             }
         } else if (event.verb == InputVerb::Jump) {
             float pitch = SDL_randf() * (1.25f - 1.f) + 1.f;
@@ -106,20 +115,13 @@ void EntityController::handleInput(GameEventTypes::Input event, Camera* camera) 
     if (event.verb == InputVerb::Sprint) {
         isSprinting = event.state == InputState::Pressed;
     }
-    auto directionOpt = inputVerbToDirection(event.verb);
+    std::optional<EntityMovement> directionOpt = inputVerbToDirection(event.verb);
     if (!directionOpt.has_value()) {
         return;
     }
     EntityMovement direction = directionOpt.value();
     bool shouldBeMoving = event.state == InputState::Pressed;
     movement[static_cast<size_t>(direction)] = shouldBeMoving;
-}
-
-void EntityController::resetMovement() {
-    for (size_t i = 0; i < movement.size(); i++) {
-        movement[i] = false;
-    }
-    isSprinting = false;
 }
 
 void EntityController::drawNameTag(
@@ -132,8 +134,7 @@ void EntityController::drawNameTag(
     if (!entity || !nametag) {
         return;
     }
-    b2Vec2 pos = entity->getInterpolatedPosition(alpha);
-    pos.y += 2.f;
+    b2Vec2 pos = getNametagWorldPos(alpha);
     Drawing::text(
         nametag.get(),
         window,
@@ -155,6 +156,8 @@ b2Vec2 EntityController::getNametagWorldPos(float alpha) const {
         return b2Vec2{0.f, 0.f};
     }
     b2Vec2 pos = entity->getInterpolatedPosition(alpha);
-    pos.y += 2.f;
+    b2BodyId bodyId = entity->getBodyId();
+    b2AABB aabb = b2Body_ComputeAABB(bodyId);
+    pos.y += (aabb.upperBound.y - aabb.lowerBound.y);
     return pos;
 }

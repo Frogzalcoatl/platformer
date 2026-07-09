@@ -14,26 +14,42 @@ class Camera {
     float scaleMultiplier = 1.f;
 
     void applyViewableLimits(b2Vec2& camPos);
+
     void updateScaleFactor(int windowSizeX, int windowSizeY);
+
     void updateOffset(b2Vec2 worldPosition);
 
   public:
     Camera(Entity* followEntity, WindowManager& window);
+
     void run(float alpha);
-    void handleWindowResize(int x, int y);
+
     b2Vec2 getSize() const;
+
+    void handleWindowResize(int x, int y);
+
     WindowVec2 getOffsetPixels() const;
+
     b2Vec2 getOffsetWorld() const;
+
     float getScaleFactor() const;
-    b2Vec2 getEntitySafeAreaValue() const;
+
     b2Vec2 getSafeAreaSize() const;
-    void centerOnEntity();
+
+    b2Vec2 getEntitySafeAreaValue() const;
+
     void centerOnEntity(float alpha);
+
     void incrementScaleMultiplierBy(float amount);
+
     void resetScaleMultiplier();
+
     b2Vec2 pixelPosToWorldPos(WindowVec2 pos);
+
     b2Vec2 safeArea = {0.15f, 0.15f};
+
     Entity* entityToFollow;
+
     std::optional<float> minViewableY = 0.f;
     std::optional<float> maxViewableY;
     std::optional<float> minViewableX = 0.f;

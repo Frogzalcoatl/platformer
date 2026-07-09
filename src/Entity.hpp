@@ -19,8 +19,8 @@ class Entity {
   private:
     b2BodyId bodyId;
     b2Polygon polygon;
-    b2Vec2 previousPosition;
-    float previousAngle;
+    b2Vec2 positionLastRealFrame;
+    float angleLastRealFrame;
     SDL_Texture* texture;
     std::optional<b2Vec2> textureSize;
 
@@ -29,7 +29,6 @@ class Entity {
         b2WorldId world,
         b2Polygon polygon,
         b2Vec2 position,
-        bool isStatic,
         b2BodyDef bodyDef = b2DefaultBodyDef(),
         b2ShapeDef shapeDef = b2DefaultShapeDef(),
         SDL_FColor hitboxColor = colorToFColor(Colors::Yellow),
@@ -41,7 +40,6 @@ class Entity {
     Entity(const Entity&) = delete;
     Entity& operator=(const Entity&) = delete;
 
-    const bool isStatic;
     SDL_FColor hitboxColor;
 
     const b2BodyId& getBodyId() const;

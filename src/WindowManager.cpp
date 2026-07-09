@@ -30,20 +30,6 @@ WindowManager::WindowManager(const char* windowName, SDL_Color backgroundColor)
     ImGui_ImplSDLRenderer3_Init(sdlRenderer.get());
 }
 
-void WindowManager::render(Uint64 frameStartNs) {
-    ImGui::Render();
-    ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), sdlRenderer.get());
-    SDL_RenderPresent(sdlRenderer.get());
-    if (fpsUnlimited || vsync) {
-        return;
-    }
-    const Uint64 frameTimeNs = SDL_GetTicksNS() - frameStartNs;
-    if (frameTimeNs < targetFrameTimeNs) {
-        const Uint64 delayNs = targetFrameTimeNs - frameTimeNs;
-        SDL_DelayPrecise(delayNs);
-    }
-}
-
 void WindowManager::clearFrame() {
     ImGui_ImplSDLRenderer3_NewFrame();
     ImGui_ImplSDL3_NewFrame();
@@ -58,20 +44,44 @@ void WindowManager::clearFrame() {
     SDL_RenderClear(sdlRenderer.get());
 }
 
+void WindowManager::render(Uint64 frameStartNs) {
+    ImGui::Render();
+    ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), sdlRenderer.get());
+    SDL_RenderPresent(sdlRenderer.get());
+    if (fpsUnlimited || vsync) {
+        return;
+    }
+    const Uint64 frameTimeNs = SDL_GetTicksNS() - frameStartNs;
+    if (frameTimeNs < targetFrameTimeNs) {
+        const Uint64 delayNs = targetFrameTimeNs - frameTimeNs;
+        SDL_DelayPrecise(delayNs);
+    }
+}
+
 SDL_Window* WindowManager::getSdlWindow() const {
     return sdlWindow.get();
 }
 
 SDL_Renderer* WindowManager::getSdlRenderer() const {
     return sdlRenderer.get();
-};
+}
 
 WindowVec2 WindowManager::getSize() const {
     return size;
 }
 
-bool WindowManager::getIsFullscreen() const {
-    return isFullscreen;
+void WindowManager::handleResize(int sizeX, int sizeY) {
+    size.x = sizeX;
+    size.y = sizeY;
+}
+
+WindowVec2 WindowManager::getMousePos() const {
+    return mousePos;
+}
+
+void WindowManager::handleMouseMotionEvent(const SDL_MouseMotionEvent& event) {
+    mousePos.x = event.x;
+    mousePos.y = event.y;
 }
 
 Uint64 WindowManager::getTargetFps() const {
@@ -102,6 +112,10 @@ void WindowManager::setTargetFps(Uint64 value) {
     SDL_Log("Set target fps to %zu", value);
 }
 
+bool WindowManager::isVsyncEnabled() const {
+    return vsync;
+}
+
 void WindowManager::setVsync(bool value) {
     if (value && fpsUnlimited) {
         setFpsUnlimited(false);
@@ -115,8 +129,8 @@ void WindowManager::setVsync(bool value) {
     vsync = value;
 }
 
-bool WindowManager::isVsyncEnabled() const {
-    return vsync;
+bool WindowManager::getFpsUnlimited() const {
+    return fpsUnlimited;
 }
 
 void WindowManager::setFpsUnlimited(bool value) {
@@ -127,25 +141,11 @@ void WindowManager::setFpsUnlimited(bool value) {
     SDL_Log("FPS Unlimited set to %s", value ? "true" : "false");
 }
 
-bool WindowManager::getFpsUnlimited() const {
-    return fpsUnlimited;
+bool WindowManager::getIsFullscreen() const {
+    return isFullscreen;
 }
 
 void WindowManager::toggleFullscreen() {
     isFullscreen = !isFullscreen;
     SDL_SetWindowFullscreen(sdlWindow.get(), isFullscreen);
-}
-
-void WindowManager::handleResize(int sizeX, int sizeY) {
-    size.x = sizeX;
-    size.y = sizeY;
-}
-
-void WindowManager::handleMouseMotionEvent(const SDL_MouseMotionEvent& event) {
-    mousePos.x = event.x;
-    mousePos.y = event.y;
-}
-
-WindowVec2 WindowManager::getMousePos() const {
-    return mousePos;
 }

@@ -7,23 +7,18 @@ Entity::Entity(
     b2WorldId world,
     b2Polygon polygon,
     b2Vec2 position,
-    bool isStatic,
     b2BodyDef bodyDef,
     b2ShapeDef shapeDef,
     SDL_FColor hitboxColor,
     SDL_Texture* texture,
     std::optional<b2Vec2> textureSize
 )
-    : polygon(polygon), texture(texture), textureSize(textureSize), isStatic(isStatic),
-      hitboxColor(hitboxColor) {
+    : polygon(polygon), texture(texture), textureSize(textureSize), hitboxColor(hitboxColor) {
     bodyDef.position = position;
-    if (!isStatic) {
-        bodyDef.type = b2_dynamicBody;
-    }
     bodyId = b2CreateBody(world, &bodyDef);
     b2CreatePolygonShape(bodyId, &shapeDef, &polygon);
-    previousPosition = position;
-    previousAngle = b2Rot_GetAngle(bodyDef.rotation);
+    positionLastRealFrame = position;
+    angleLastRealFrame = b2Rot_GetAngle(bodyDef.rotation);
 }
 
 Entity::~Entity() {
@@ -45,21 +40,21 @@ b2Vec2 Entity::getPosition() const {
 b2Vec2 Entity::getInterpolatedPosition(float alpha) const {
     b2Vec2 currentPos = b2Body_GetPosition(bodyId);
     b2Vec2 interpolatedPos;
-    interpolatedPos.x = previousPosition.x * (1.f - alpha) + currentPos.x * alpha;
-    interpolatedPos.y = previousPosition.y * (1.f - alpha) + currentPos.y * alpha;
+    interpolatedPos.x = positionLastRealFrame.x * (1.f - alpha) + currentPos.x * alpha;
+    interpolatedPos.y = positionLastRealFrame.y * (1.f - alpha) + currentPos.y * alpha;
     return interpolatedPos;
 }
 
 b2Rot Entity::getInterpolatedRotation(float alpha) const {
     b2Rot currentRot = b2Body_GetRotation(bodyId);
-    b2Rot previousRot = b2MakeRot(previousAngle);
-    b2Rot interpolatedRot = b2NLerp(previousRot, currentRot, alpha);
+    b2Rot rotationLastRealFrame = b2MakeRot(angleLastRealFrame);
+    b2Rot interpolatedRot = b2NLerp(rotationLastRealFrame, currentRot, alpha);
     return interpolatedRot;
 }
 
 void Entity::savePreviousState() {
-    previousPosition = b2Body_GetPosition(bodyId);
-    previousAngle = b2Rot_GetAngle(b2Body_GetRotation(bodyId));
+    positionLastRealFrame = b2Body_GetPosition(bodyId);
+    angleLastRealFrame = b2Rot_GetAngle(b2Body_GetRotation(bodyId));
 }
 
 bool Entity::draw(
@@ -99,6 +94,6 @@ void Entity::teleport(b2Vec2 location) {
     // b2Rot_identity is default rotation
     b2Body_SetTransform(bodyId, location, b2Rot_identity);
     b2Body_SetAwake(bodyId, true);
-    previousPosition = location;
-    previousAngle = b2Rot_GetAngle(b2Rot_identity);
+    positionLastRealFrame = location;
+    angleLastRealFrame = b2Rot_GetAngle(b2Rot_identity);
 }

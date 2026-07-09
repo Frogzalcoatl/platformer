@@ -10,6 +10,7 @@
 class UiManager {
   private:
     UiState currentState = UiState::MainMenu;
+    bool stateChangedThisFrame = false;
 
     ImFont* fontExtraSmall = nullptr;
     ImFont* fontSmall = nullptr;
@@ -22,23 +23,48 @@ class UiManager {
 
     ImGuiWindowFlags staticFlags =
         ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings;
+
     ImGuiSliderFlags sliderFlags = ImGuiSliderFlags_NoInput;
+
     void drawDebug(
-        WindowManager& window, Entity* player, Camera* camera, InputManager& input, Level* level
+        WindowManager& window,
+        Entity* player,
+        Camera* camera,
+        InputManager& input,
+        Level* level,
+        UiManager& uiManager
     );
+
+    void drawLargeLogo();
+
     void drawMainMenu();
+
     void
     drawSettings(WindowManager& window, AudioManager& audio, InputManager& input, Level* level);
+
     void drawPauseMenu();
-    void drawLargeLogo();
 
   public:
     UiManager(AssetManager& assets, UiState startingState = UiState::MainMenu);
 
-    void render(WindowManager& window, AudioManager& audio, InputManager& input, Level* level);
-    void setState(UiState state);
+    void draw(
+        WindowManager& window,
+        AudioManager& audio,
+        InputManager& input,
+        Level* level,
+        UiManager& uiManager
+    );
+
+    void update();
+
     UiState getState() const;
+
+    std::string getStateStr() const;
+
+    void setState(UiState state);
+
     void runCancelEvent();
+
     void passInputToImGui(const GameEventTypes::Input& event);
 
     bool showDebug = false;
