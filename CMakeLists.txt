@@ -125,11 +125,9 @@ add_custom_target(copy_assets
     COMMENT "Copying modified assets to the build directory next to the executable"
 )
 
-add_custom_target(pack_assets
-    COMMAND $<TARGET_FILE:Packer> 
-            "${CMAKE_CURRENT_SOURCE_DIR}/${ASSETS_FOLDER_NAME}" 
-            "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${DAT_FILE_NAME}" 
-            "${GAME_VERSION}"
-    DEPENDS Packer
-    COMMENT "Packing assets into a single .dat archive next to the game executable"
+vfs_pack_assets(
+    ${PROJECT_NAME}
+    "${CMAKE_CURRENT_SOURCE_DIR}/${ASSETS_FOLDER_NAME}"
+    "${DAT_FILE_NAME}"
+    "${GAME_VERSION}"
 )
