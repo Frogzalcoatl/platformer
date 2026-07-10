@@ -25,7 +25,8 @@ WindowManager::WindowManager(const char* windowName, SDL_Color backgroundColor)
     }
     SDL_Log("Created SDL3 renderer");
     setVsync(vsync);
-    setTargetFps(240);
+    float vsyncFps = getVsyncFps();
+    setTargetFps(vsyncFps);
     ImGui_ImplSDL3_InitForSDLRenderer(sdlWindow.get(), sdlRenderer.get());
     ImGui_ImplSDLRenderer3_Init(sdlRenderer.get());
 }
@@ -88,17 +89,22 @@ Uint64 WindowManager::getTargetFps() const {
     return targetFps;
 }
 
+float WindowManager::getVsyncFps() const {
+    SDL_DisplayID displayID = SDL_GetDisplayForWindow(sdlWindow.get());
+    if (displayID == 0) {
+        return 60;
+    }
+    const SDL_DisplayMode* mode = SDL_GetCurrentDisplayMode(displayID);
+    if (!mode) {
+        return 60;
+    }
+    return mode->refresh_rate;
+}
+
 std::string WindowManager::targetFpsStr() const {
     if (vsync) {
-        SDL_DisplayID displayID = SDL_GetDisplayForWindow(sdlWindow.get());
-        if (displayID == 0) {
-            return "Unknown";
-        }
-        const SDL_DisplayMode* mode = SDL_GetCurrentDisplayMode(displayID);
-        if (!mode) {
-            return "Unknown";
-        }
-        return std::to_string(static_cast<int>(SDL_roundf(mode->refresh_rate))) + ".0";
+        float vsyncFps = getVsyncFps();
+        return std::to_string(static_cast<int>(SDL_roundf(vsyncFps))) + ".0";
     } else if (fpsUnlimited) {
         return "Unlimited";
     } else {

@@ -34,7 +34,7 @@ class WindowManager {
     WindowVec2 mousePos;
     Uint64 targetFps = 240;
     Uint64 targetFrameTimeNs = 1000000000ULL / targetFps;
-    bool vsync = false;
+    bool vsync = true;
     bool fpsUnlimited = false;
     bool isFullscreen = false;
 
@@ -60,6 +60,8 @@ class WindowManager {
     void handleMouseMotionEvent(const SDL_MouseMotionEvent& event);
 
     Uint64 getTargetFps() const;
+
+    float getVsyncFps() const;
 
     std::string targetFpsStr() const;
 
