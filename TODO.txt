@@ -1,7 +1,8 @@
-Look in to using a tuple for font cache
-
 Store player ids based on joystickid inside InputManager.
 
-Maybe figure out some way to automatically load static entities on exposed solid tiles.
+MusicPlayer class
+Store in platformer class. Store str array of music file paths in Level class.
+
+Figure out some way to automatically load static entities on exposed solid tiles.
 
 Account for polygon radius in draw func

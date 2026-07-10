@@ -2,8 +2,7 @@
 #include <SDL3/SDL.h>
 #include <array>
 
-#define EventQueueSize 256
-
+constexpr size_t EventQueueSize = 256;
 static std::array<GameEvent, EventQueueSize> eventQueue = {};
 static int head = 0;
 static int tail = 0;
@@ -18,7 +17,7 @@ void GameEvents::Push(GameEvent event) {
         );
         return;
     }
-    eventQueue[head] = event;
+    eventQueue[head] = std::move(event);
     head = nextHead;
 }
 
@@ -27,7 +26,7 @@ bool GameEvents::Poll(GameEvent& event) {
         // Queue is empty
         return false;
     }
-    event = eventQueue[tail];
+    event = std::move(eventQueue[tail]);
     tail = (tail + 1) % EventQueueSize;
     return true;
 }

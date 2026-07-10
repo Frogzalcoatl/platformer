@@ -41,7 +41,8 @@ class Level {
     uint64_t lastTime = 0;
     float accumulator = 0.f;
     const float physicsStep = 1.0f / 60.0f;
-    float alpha = 0.f;
+    float alpha = 0.f; // Value between 0.0 and 1.0 representing how far the game is between the
+                       // last physics step and the next.
 
     void drawTile(
         AssetPaths::Textures::TileTypes tileId,

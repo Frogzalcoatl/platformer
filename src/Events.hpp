@@ -87,16 +87,25 @@ struct Input {
 };
 
 struct PlaySound {
-    std::string_view relativePath;
+    std::string relativePath;
     unsigned int volume = 100;
     float pitch = 1.f;
+
+    // Cleanly accept std::string_view
+    PlaySound(std::string_view path, unsigned int vol = 100, float p = 1.f)
+        : relativePath(path), volume(vol), pitch(p) {
+    }
 };
 
 struct PlayMusic {
-    std::string_view relativePath;
+    std::string relativePath;
     unsigned int volume = 100;
     float pitch = 1.f;
     bool loop = false;
+
+    PlayMusic(std::string_view path, unsigned int vol = 100, float p = 1.f, bool l = false)
+        : relativePath(path), volume(vol), pitch(p), loop(l) {
+    }
 };
 
 struct SetVolume {

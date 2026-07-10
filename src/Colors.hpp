@@ -14,6 +14,17 @@ inline SDL_Color fColorToColor(const SDL_FColor& color) {
     };
 }
 
+/*
+">>"
+Right shift operator, slides number over by n bits.
+
+"&"
+And operator
+
+Example: (hex >> 16) & 0xFF
+0s out all bits in the number besides last 8 bits,
+which after shifting to the left 16 bits is the R number in RGB format
+*/
 constexpr SDL_Color hexToColor(Uint32 hex) {
     if (hex <= 0xFFFFFF) {
         return SDL_Color{

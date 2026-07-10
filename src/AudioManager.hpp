@@ -39,6 +39,7 @@ class AudioManager {
     float currentMusicVolume =
         1.f; // Separate volume multiplier, based on volume passed into playMusic func
     MIX_Audio* currentMusic = nullptr;
+    std::filesystem::path currentMusicRelativePath;
     std::string currentMusicName = "";
 
   public:

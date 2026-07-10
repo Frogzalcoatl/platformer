@@ -11,7 +11,7 @@
 Platformer::Platformer()
     : window{"C++ Platformer", Colors::Background}, assets{window.getSdlRenderer()}, audio{assets},
       ui{assets} {
-    audio.setVolume(AudioCategory::Music, 30);
+    audio.setVolume(AudioCategory::Music, 50);
     assets.addGameControllerMappings("gamepads/gamecontrollerdb.txt");
     assets.addGameControllerMappings("gamepads/retrolink.txt");
 }
@@ -55,7 +55,6 @@ void Platformer::handleSdlEvent() {
 }
 
 void Platformer::handleGameEventInput(const GameEventTypes::Input& inputEvent) {
-    SDL_Log("Input event: %s", inputVerbToString(inputEvent.verb).c_str());
     UiState uiState = ui.getState();
     if (inputEvent.state == InputState::Pressed) {
         switch (inputEvent.verb) {
@@ -81,12 +80,12 @@ void Platformer::handleGameEventInput(const GameEventTypes::Input& inputEvent) {
             ui.showDebug = !ui.showDebug;
             break;
         case InputVerb::Cancel:
+            // Purposely continuing into pause, cancel and pause are nearly identical
+            // Only difference is cancel cannot be used to pause the game
             if (uiState == UiState::Playing) {
                 break;
             }
             SDL_FALLTHROUGH;
-            // Purposely continuing into pause, cancel and pause are nearly identical
-            // Only difference is cancel cannot be used to pause the game
         case InputVerb::Pause:
             if (ImGui::IsAnyItemActive()) {
                 break;

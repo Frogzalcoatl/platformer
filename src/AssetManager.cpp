@@ -282,7 +282,7 @@ int AssetManager::addGameControllerMappings(std::string_view relativePathStr) {
 }
 
 bool AssetManager::unloadSDLFont(
-    std::string_view relativePathStr, float ptSize, TTF_FontStyleFlags style = TTF_STYLE_NORMAL
+    std::string_view relativePathStr, float ptSize, TTF_FontStyleFlags style
 ) {
     std::filesystem::path relativePath = relativePathStr;
     std::string pathStr = relativePath.generic_string();
@@ -297,6 +297,7 @@ bool AssetManager::unloadSDLFont(
     });
     bool wasUnloaded = fontCache.size() < sizeBefore;
     if (wasUnloaded) {
+        SDL_Log("Unloaded SDL3 ttf from file \"%s\"", pathStr.c_str());
         bool pathStillInUse =
             std::any_of(fontCache.begin(), fontCache.end(), [&](const CachedFont& cached) {
                 return cached.fontPath == relativePath;
@@ -315,11 +316,13 @@ bool AssetManager::unloadAudio(std::string_view relativePathStr) {
     auto iteratorNon = audioCacheNonPredecoded.find(relativePathStr);
     if (iteratorNon != audioCacheNonPredecoded.end()) {
         audioCacheNonPredecoded.erase(iteratorNon);
+        SDL_Log("Destroyed non-predecoded MIX_Audio from file \"%s\"", pathStr.c_str());
         wasUnloaded = true;
     }
     auto iteratorPre = audioCachePredecoded.find(relativePathStr);
     if (iteratorPre != audioCachePredecoded.end()) {
         audioCachePredecoded.erase(iteratorPre);
+        SDL_Log("Destroyed predecoded MIX_Audio from file \"%s\"", pathStr.c_str());
         wasUnloaded = true;
     }
     return wasUnloaded;
@@ -331,6 +334,7 @@ bool AssetManager::unloadTexture(std::string_view relativePathStr) {
     auto iterator = textureCache.find(relativePathStr);
     if (iterator != textureCache.end()) {
         textureCache.erase(iterator);
+        SDL_Log("Unloaded SDL3 texture from file \"%s\"", pathStr.c_str());
         return true;
     } else {
         return false;
