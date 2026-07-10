@@ -13,30 +13,18 @@
 #include <vector>
 
 struct SDL_Texture_Deleter {
-    std::string fileName;
-    SDL_Texture_Deleter() = default;
-    // Using explicit tells the compiler to not do automatic silent type conversions. Good practice
-    // here.
-    explicit SDL_Texture_Deleter(std::string fileName) : fileName(std::move(fileName)) {
-    }
     // Overloading the function call operator by using "operator()"
     // Doing things this way prevents unique_ptr from carrying an extra ptr for the delete func
     void operator()(SDL_Texture* t) const {
         if (t) {
             SDL_DestroyTexture(t);
-            SDL_Log("Unloaded SDL3 texture from file \"%s\"", fileName.c_str());
         }
     }
 };
 struct TTF_Font_Deleter {
-    std::string fileName;
-    TTF_Font_Deleter() = default;
-    explicit TTF_Font_Deleter(std::string fileName) : fileName(std::move(fileName)) {
-    }
     void operator()(TTF_Font* f) const {
         if (f) {
             TTF_CloseFont(f);
-            SDL_Log("Unloaded SDL3 ttf from file \"%s\"", fileName.c_str());
         }
     }
 };
@@ -44,27 +32,20 @@ struct TTF_TextEngine_Deleter {
     void operator()(TTF_TextEngine* t) const {
         if (t) {
             TTF_DestroyRendererTextEngine(t);
-            SDL_Log("Destroyed SDL3_ttf text engine");
         }
     }
 };
 struct TTF_Text_Deleter {
     void operator()(TTF_Text* t) const {
         if (t) {
-            SDL_Log("Destroyed TTF text \"%s\"", t->text);
             TTF_DestroyText(t);
         }
     }
 };
 struct MIX_Audio_Deleter {
-    std::string fileName;
-    MIX_Audio_Deleter() = default;
-    explicit MIX_Audio_Deleter(std::string fileName) : fileName(std::move(fileName)) {
-    }
     void operator()(MIX_Audio* a) const {
         if (a) {
             MIX_DestroyAudio(a);
-            SDL_Log("Destroyed MIX Audio from file \"%s\"", fileName.c_str());
         }
     }
 };
@@ -115,6 +96,8 @@ class AssetManager {
 
   public:
     AssetManager(SDL_Renderer* renderer);
+
+    ~AssetManager();
 
     // Disable copying to protect the stability of memory buffers
     AssetManager(const AssetManager&) = delete;

@@ -17,6 +17,23 @@ AssetManager::AssetManager(SDL_Renderer* renderer)
     }
 }
 
+AssetManager::~AssetManager() {
+    // Log all cached assets before destruction
+    for (const auto& [path, texture] : textureCache) {
+        SDL_Log("Unloaded SDL3 texture from file \"%s\"", path.c_str());
+    }
+    for (const auto& [path, audio] : audioCachePredecoded) {
+        SDL_Log("Destroyed predecoded MIX_Audio from file \"%s\"", path.c_str());
+    }
+    for (const auto& [path, audio] : audioCacheNonPredecoded) {
+        SDL_Log("Destroyed non-predecoded MIX_Audio from file \"%s\"", path.c_str());
+    }
+    for (const auto& cachedFont : fontCache) {
+        SDL_Log("Unloaded SDL3 ttf from file \"%s\"", cachedFont.fontPath.string().c_str());
+    }
+    // All this stuff automatically destructs after this
+}
+
 TTF_Font*
 AssetManager::getSDLFont(std::string_view relativePathStr, float ptSize, TTF_FontStyleFlags style) {
     std::filesystem::path relativePath = relativePathStr;
@@ -65,7 +82,7 @@ AssetManager::getSDLFont(std::string_view relativePathStr, float ptSize, TTF_Fon
     TTF_SetFontStyle(newFont, style);
     CachedFont newCachedFont;
     newCachedFont.fontPath = relativePath;
-    newCachedFont.font = UniqueFont(newFont, TTF_Font_Deleter(pathStr));
+    newCachedFont.font = UniqueFont(newFont, TTF_Font_Deleter());
     newCachedFont.ptSize = ptSize;
     newCachedFont.style = style;
     fontCache.push_back(
@@ -182,7 +199,7 @@ AssetManager::getAudio(std::string_view relativePathStr, MIX_Mixer* mixerDevice,
         );
         return nullptr;
     }
-    UniqueAudio sound(rawSound, MIX_Audio_Deleter(pathStr));
+    UniqueAudio sound(rawSound, MIX_Audio_Deleter());
     auto [insertedIterator, success] = audioCache.emplace(pathStr, std::move(sound));
     SDL_Log("Loaded audio from file \"%s\"", pathStr.c_str());
     return insertedIterator->second.get();
@@ -235,7 +252,7 @@ SDL_Texture* AssetManager::getTexture(std::string_view relativePathStr) {
         }
     }
     SDL_Texture* rawTexture = IMG_LoadTexture_IO(renderer, io, true);
-    UniqueTexture texture(rawTexture, SDL_Texture_Deleter(pathStr));
+    UniqueTexture texture(rawTexture, SDL_Texture_Deleter());
     auto [insertedIterator, success] = textureCache.emplace(pathStr, std::move(texture));
     SDL_SetTextureScaleMode(insertedIterator->second.get(), SDL_SCALEMODE_PIXELART);
     SDL_Log("Loaded SDL3 texture from file \"%s\"", pathStr.c_str());
