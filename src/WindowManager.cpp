@@ -26,7 +26,8 @@ WindowManager::WindowManager(const char* windowName, SDL_Color backgroundColor)
     SDL_Log("Created SDL3 renderer");
     setVsync(vsync);
     float vsyncFps = getVsyncFps();
-    setTargetFps(vsyncFps);
+    targetFps = vsyncFps;
+    targetFrameTimeNs = 1000000000ULL / targetFps;
     ImGui_ImplSDL3_InitForSDLRenderer(sdlWindow.get(), sdlRenderer.get());
     ImGui_ImplSDLRenderer3_Init(sdlRenderer.get());
 }
@@ -113,6 +114,7 @@ std::string WindowManager::targetFpsStr() const {
 }
 
 void WindowManager::setTargetFps(Uint64 value) {
+    // Logic is copied in constructor to avoid log
     targetFps = value;
     targetFrameTimeNs = 1000000000ULL / targetFps;
     SDL_Log("Set target fps to %zu", value);

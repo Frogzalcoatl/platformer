@@ -184,7 +184,7 @@ AssetManager::getAudio(std::string_view relativePathStr, MIX_Mixer* mixerDevice,
     }
     UniqueAudio sound(rawSound, MIX_Audio_Deleter(pathStr));
     auto [insertedIterator, success] = audioCache.emplace(pathStr, std::move(sound));
-    SDL_Log("Loaded sound from file \"%s\"", pathStr.c_str());
+    SDL_Log("Loaded audio from file \"%s\"", pathStr.c_str());
     return insertedIterator->second.get();
 }
 
