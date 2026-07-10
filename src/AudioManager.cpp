@@ -121,8 +121,8 @@ bool AudioManager::playMusic(
     }
     MIX_PlayTrack(musicTrack.get(), properties);
     SDL_DestroyProperties(properties);
-    const std::string fileName = std::filesystem::path(relativePath).filename().string();
-    currentMusicName = fileName;
+    currentMusicRelativePath = std::filesystem::path(relativePath);
+    currentMusicName = currentMusicRelativePath.filename().string();
     return true;
 }
 
@@ -179,8 +179,12 @@ void AudioManager::clearCurrentMusic() {
     }
     MIX_PauseTrack(musicTrack.get());
     MIX_SetTrackAudio(musicTrack.get(), nullptr);
+    if (assetManager) {
+        assetManager->unloadAudio(currentMusicRelativePath.generic_string());
+    }
     currentMusic = nullptr;
     currentMusicName = "";
+    currentMusicRelativePath = "";
 }
 
 bool AudioManager::isMusicPlaying() const {
