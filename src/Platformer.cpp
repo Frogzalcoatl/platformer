@@ -84,6 +84,7 @@ void Platformer::handleGameEventInput(const GameEventTypes::Input& inputEvent) {
             if (uiState == UiState::Playing) {
                 break;
             }
+            SDL_FALLTHROUGH;
             // Purposely continuing into pause, cancel and pause are nearly identical
             // Only difference is cancel cannot be used to pause the game
         case InputVerb::Pause:
