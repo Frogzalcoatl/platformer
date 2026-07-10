@@ -1,5 +1,6 @@
 #include "AssetManager.hpp"
 #include "AssetPaths.hpp"
+#include <cstring>
 #include <fstream>
 
 AssetManager::AssetManager(SDL_Renderer* renderer)

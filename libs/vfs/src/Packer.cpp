@@ -1,9 +1,11 @@
 #include "Packer.hpp"
 #include <algorithm>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <vector>
 
 struct PackerTask {
     VFS_Entry entry;

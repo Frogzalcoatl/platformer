@@ -1,4 +1,5 @@
 #include "AudioManager.hpp"
+#include <format>
 
 AudioManager::AudioManager(AssetManager& assetManagerRef) : assetManager{&assetManagerRef} {
     if (!assetManager) {

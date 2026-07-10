@@ -1,5 +1,6 @@
 #pragma once
-#include <cstddef>     // Required for std::byte
+#include <cstddef> // Required for std::byte
+#include <cstdint>
 #include <string_view> // Required for std::string_view
 
 // WVFS backwards. (W Virtual File System) [hopefully itll be a W]
