@@ -18,7 +18,7 @@ xcode-select --install
 
 This project is set up to have a pretty straightforward build process using CMake and Vcpkg. If you've never installed vcpkg, don't worry. It will automatically clone into the project directory on build. However, if you have vcpkg installed globally with the VCPKG_ROOT environment variable set up, the global installation is used for efficiency.
 
-This project works fine in whatever ide you want, given you use a preset listed in [CMakePresets.json](https://github.com/Frogzalcoatl/platformer/blob/main/CMakePresets.json). I use vscode with the [ms-vscode.cpptools-extension-pack](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools-extension-pack) extension. I select **"windows-clang-vs"**, **"Clang VS Debug"**, then click **"build"** in the status bar.
+This project works fine in whatever ide you want, given you use a preset listed in [CMakePresets.json](https://github.com/Frogzalcoatl/platformer/blob/main/CMakePresets.json). I use vscode with the [ms-vscode.cpptools-extension-pack](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools-extension-pack). I select **"windows-clang-vs"**, **"Clang VS Debug"**, then click **"build"** in the status bar.
 
 If you do not want to use vscode, the equivalent commands are:
 
