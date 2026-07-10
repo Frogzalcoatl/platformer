@@ -92,8 +92,6 @@ class AssetManager {
     AudioCacheMap audioCachePredecoded;
     TextureCacheMap textureCache;
 
-    TTF_Font* getSDLFont(std::string_view relativePathStr, float ptSize, TTF_FontStyleFlags style);
-
   public:
     AssetManager(SDL_Renderer* renderer);
 
@@ -109,6 +107,8 @@ class AssetManager {
     const float TextWorldSizeMultiplier = 0.04f;
 
     TTF_TextEngine* getTextEngine() const;
+
+    TTF_Font* getSDLFont(std::string_view relativePathStr, float ptSize, TTF_FontStyleFlags style);
 
     UniqueText getSDLText(
         std::string_view text,
@@ -127,4 +127,13 @@ class AssetManager {
     int addGameControllerMappings(
         std::string_view relativePathStr
     ); // Returns number of controller mappings added
+
+    // unloaders return true if asset was unloaded
+    bool unloadSDLFont(
+        std::string_view relativePathStr, float ptSize, TTF_FontStyleFlags style = TTF_STYLE_NORMAL
+    );
+
+    bool unloadAudio(std::string_view relativePathStr);
+
+    bool unloadTexture(std::string_view relativePathStr);
 };

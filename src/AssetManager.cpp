@@ -280,3 +280,59 @@ int AssetManager::addGameControllerMappings(std::string_view relativePathStr) {
     SDL_Log("Added %d gampad mapping(s) from file \"%s\"", result, pathStr.c_str());
     return result;
 }
+
+bool AssetManager::unloadSDLFont(
+    std::string_view relativePathStr, float ptSize, TTF_FontStyleFlags style = TTF_STYLE_NORMAL
+) {
+    std::filesystem::path relativePath = relativePathStr;
+    std::string pathStr = relativePath.generic_string();
+    ptSize *= TextRenderScale;
+    const float epsilon = 0.001f;
+    size_t sizeBefore = fontCache.size();
+    std::erase_if(fontCache, [&](const CachedFont& cachedFont) {
+        return (
+            cachedFont.fontPath == relativePath && std::abs(cachedFont.ptSize - ptSize) < epsilon &&
+            cachedFont.style == style
+        );
+    });
+    bool wasUnloaded = fontCache.size() < sizeBefore;
+    if (wasUnloaded) {
+        bool pathStillInUse =
+            std::any_of(fontCache.begin(), fontCache.end(), [&](const CachedFont& cached) {
+                return cached.fontPath == relativePath;
+            });
+        if (!pathStillInUse) {
+            fontData.erase(pathStr);
+        }
+    }
+    return wasUnloaded;
+}
+
+bool AssetManager::unloadAudio(std::string_view relativePathStr) {
+    std::filesystem::path relativePath = relativePathStr;
+    std::string pathStr = relativePath.generic_string();
+    bool wasUnloaded = false;
+    auto iteratorNon = audioCacheNonPredecoded.find(relativePathStr);
+    if (iteratorNon != audioCacheNonPredecoded.end()) {
+        audioCacheNonPredecoded.erase(iteratorNon);
+        wasUnloaded = true;
+    }
+    auto iteratorPre = audioCachePredecoded.find(relativePathStr);
+    if (iteratorPre != audioCachePredecoded.end()) {
+        audioCachePredecoded.erase(iteratorPre);
+        wasUnloaded = true;
+    }
+    return wasUnloaded;
+}
+
+bool AssetManager::unloadTexture(std::string_view relativePathStr) {
+    std::filesystem::path relativePath = relativePathStr;
+    std::string pathStr = relativePath.generic_string();
+    auto iterator = textureCache.find(relativePathStr);
+    if (iterator != textureCache.end()) {
+        textureCache.erase(iterator);
+        return true;
+    } else {
+        return false;
+    }
+}

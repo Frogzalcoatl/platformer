@@ -1,7 +1,5 @@
 Look in to using a tuple for font cache
 
-Speaking of unload funcs, write funcs that unload assets based on a relative path.
-
 Store player ids based on joystickid inside InputManager.
 
 Maybe figure out some way to automatically load static entities on exposed solid tiles.
