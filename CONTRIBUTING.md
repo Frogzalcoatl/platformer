@@ -23,7 +23,7 @@ I use vscode with the [ms-vscode.cpptools-extension-pack](https://marketplace.vi
 If you're not using vscode, I believe a preset can be selected by running a command like this:
 
 ```
-cmake --preset windows-msvc
+cmake --build --preset windows-msvc
 ```
 
 In vscode, I click **"windows-clang-vs"** then **"build"** in the status bar, which is added by the vscode extension listed above.
