@@ -12,6 +12,7 @@
 #include <variant>
 #include <vector>
 
+// Got idea to use deleter structs from AI. Makes sense to me.
 struct SDL_Texture_Deleter {
     // Overloading the function call operator by using "operator()"
     // Doing things this way prevents unique_ptr from carrying an extra ptr for the delete func

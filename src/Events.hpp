@@ -124,6 +124,7 @@ struct SetLevelName {
 struct UpdateCurrentPlayers {};
 }
 
+// Learned about std::variant from AI. Seems like a reasonable choice here.
 using GameEvent = std::variant<
     GameEventTypes::CloseWindow,
     GameEventTypes::PlaySound,
