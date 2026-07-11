@@ -109,32 +109,33 @@ class AssetManager {
 
     TTF_TextEngine* getTextEngine() const;
 
-    TTF_Font* getSDLFont(std::string_view relativePathStr, float ptSize, TTF_FontStyleFlags style);
+    // All relativePath args should use forward slashes
+    TTF_Font* getSDLFont(std::string_view relativePath, float ptSize, TTF_FontStyleFlags style);
 
     UniqueText getSDLText(
         std::string_view text,
-        std::string_view relativePathStr,
+        std::string_view relativePath,
         float ptSize,
         TTF_FontStyleFlags style = TTF_STYLE_NORMAL
     );
 
-    ImFont* getImGuiFont(std::string_view relativePathStr, float ptSize);
+    ImFont* getImGuiFont(std::string_view relativePath, float ptSize);
 
     // predecode should be set to false for longer audio files like music
-    MIX_Audio* getAudio(std::string_view relativePathStr, MIX_Mixer* mixerDevice, bool predecode);
+    MIX_Audio* getAudio(std::string_view relativePath, MIX_Mixer* mixerDevice, bool predecode);
 
-    SDL_Texture* getTexture(std::string_view relativePathStr);
+    SDL_Texture* getTexture(std::string_view relativePath);
 
     int addGameControllerMappings(
-        std::string_view relativePathStr
+        std::string_view relativePath
     ); // Returns number of controller mappings added
 
     // unloaders return true if asset was unloaded
     bool unloadSDLFont(
-        std::string_view relativePathStr, float ptSize, TTF_FontStyleFlags style = TTF_STYLE_NORMAL
+        std::string_view relativePath, float ptSize, TTF_FontStyleFlags style = TTF_STYLE_NORMAL
     );
 
-    bool unloadAudio(std::string_view relativePathStr);
+    bool unloadAudio(std::string_view relativePath);
 
-    bool unloadTexture(std::string_view relativePathStr);
+    bool unloadTexture(std::string_view relativePath);
 };

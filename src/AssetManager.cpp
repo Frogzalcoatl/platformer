@@ -35,9 +35,8 @@ AssetManager::~AssetManager() {
 }
 
 TTF_Font*
-AssetManager::getSDLFont(std::string_view relativePathStr, float ptSize, TTF_FontStyleFlags style) {
-    std::filesystem::path relativePath = relativePathStr;
-    std::string pathStr = relativePath.generic_string();
+AssetManager::getSDLFont(std::string_view relativePath, float ptSize, TTF_FontStyleFlags style) {
+    std::string pathStr(relativePath);
     if (ptSize <= 0) {
         ptSize = 12;
         SDL_LogWarn(
@@ -97,18 +96,15 @@ TTF_TextEngine* AssetManager::getTextEngine() const {
 }
 
 UniqueText AssetManager::getSDLText(
-    std::string_view text, std::string_view relativePathStr, float ptSize, TTF_FontStyleFlags style
+    std::string_view text, std::string_view relativePath, float ptSize, TTF_FontStyleFlags style
 ) {
     if (!textEngine) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Unable to get text. SDL3 text engine is null.");
         return nullptr;
     }
-    TTF_Font* font = getSDLFont(relativePathStr, ptSize, style);
+    TTF_Font* font = getSDLFont(relativePath, ptSize, style);
     if (!font) {
-        std::filesystem::path relativePath = relativePathStr;
-        std::string pathStr =
-            relativePath
-                .generic_string(); // Using this to stay consistent with other relative path logging
+        std::string pathStr(relativePath);
         SDL_LogError(
             SDL_LOG_CATEGORY_APPLICATION,
             "Unable to get SDL3 TTF text \"%.*s\" using font \"%s\"",
@@ -132,9 +128,8 @@ UniqueText AssetManager::getSDLText(
     return UniqueText(ttfText, TTF_Text_Deleter{});
 }
 
-ImFont* AssetManager::getImGuiFont(std::string_view relativePathStr, float ptSize) {
-    std::filesystem::path relativePath = relativePathStr;
-    std::string pathStr = relativePath.generic_string();
+ImFont* AssetManager::getImGuiFont(std::string_view relativePath, float ptSize) {
+    std::string pathStr(relativePath);
     std::vector<std::byte> fontData = vfs.readFile(pathStr);
     if (fontData.empty()) {
         SDL_LogError(
@@ -162,14 +157,13 @@ ImFont* AssetManager::getImGuiFont(std::string_view relativePathStr, float ptSiz
 }
 
 MIX_Audio*
-AssetManager::getAudio(std::string_view relativePathStr, MIX_Mixer* mixerDevice, bool predecode) {
+AssetManager::getAudio(std::string_view relativePath, MIX_Mixer* mixerDevice, bool predecode) {
     AudioCacheMap& audioCache = predecode ? audioCachePredecoded : audioCacheNonPredecoded;
-    auto iterator = audioCache.find(relativePathStr);
+    auto iterator = audioCache.find(relativePath);
     if (iterator != audioCache.end()) {
         return iterator->second.get();
     }
-    std::filesystem::path relativePath = relativePathStr;
-    std::string pathStr = relativePath.generic_string();
+    std::string pathStr(relativePath);
     std::vector<std::byte> soundData = vfs.readFile(pathStr);
     if (soundData.empty()) {
         SDL_LogError(
@@ -205,20 +199,19 @@ AssetManager::getAudio(std::string_view relativePathStr, MIX_Mixer* mixerDevice,
     return insertedIterator->second.get();
 }
 
-SDL_Texture* AssetManager::getTexture(std::string_view relativePathStr) {
-    auto iterator = textureCache.find(relativePathStr);
+SDL_Texture* AssetManager::getTexture(std::string_view relativePath) {
+    auto iterator = textureCache.find(relativePath);
     if (iterator != textureCache.end()) {
         return iterator->second.get();
     }
-    std::filesystem::path relativePath = relativePathStr;
-    std::string pathStr = relativePath.generic_string();
+    std::string pathStr(relativePath);
     if (!renderer) {
         SDL_LogError(
             SDL_LOG_CATEGORY_APPLICATION,
             "Unable to load SDL3 texture from file \"%s\": SDL3 renderer is null",
             pathStr.c_str()
         );
-        if (relativePathStr != AssetPaths::Textures::Missing) {
+        if (relativePath != AssetPaths::Textures::Missing) {
             return getTexture(AssetPaths::Textures::Missing);
         } else {
             return nullptr;
@@ -231,7 +224,7 @@ SDL_Texture* AssetManager::getTexture(std::string_view relativePathStr) {
             "Unable to get SDL3 texture from file \"%s\"",
             pathStr.c_str()
         );
-        if (relativePathStr != AssetPaths::Textures::Missing) {
+        if (relativePath != AssetPaths::Textures::Missing) {
             return getTexture(AssetPaths::Textures::Missing);
         } else {
             return nullptr;
@@ -245,7 +238,7 @@ SDL_Texture* AssetManager::getTexture(std::string_view relativePathStr) {
             pathStr.c_str(),
             SDL_GetError()
         );
-        if (relativePathStr != AssetPaths::Textures::Missing) {
+        if (relativePath != AssetPaths::Textures::Missing) {
             return getTexture(AssetPaths::Textures::Missing);
         } else {
             return nullptr;
@@ -259,9 +252,8 @@ SDL_Texture* AssetManager::getTexture(std::string_view relativePathStr) {
     return insertedIterator->second.get();
 }
 
-int AssetManager::addGameControllerMappings(std::string_view relativePathStr) {
-    std::filesystem::path relativePath = relativePathStr;
-    std::string pathStr = relativePath.generic_string();
+int AssetManager::addGameControllerMappings(std::string_view relativePath) {
+    std::string pathStr(relativePath);
     std::vector<std::byte> controllerData = vfs.readFile(pathStr);
     if (controllerData.empty()) {
         SDL_LogError(
@@ -282,10 +274,9 @@ int AssetManager::addGameControllerMappings(std::string_view relativePathStr) {
 }
 
 bool AssetManager::unloadSDLFont(
-    std::string_view relativePathStr, float ptSize, TTF_FontStyleFlags style
+    std::string_view relativePath, float ptSize, TTF_FontStyleFlags style
 ) {
-    std::filesystem::path relativePath = relativePathStr;
-    std::string pathStr = relativePath.generic_string();
+    std::string pathStr(relativePath);
     ptSize *= TextRenderScale;
     const float epsilon = 0.001f;
     size_t sizeBefore = fontCache.size();
@@ -309,17 +300,16 @@ bool AssetManager::unloadSDLFont(
     return wasUnloaded;
 }
 
-bool AssetManager::unloadAudio(std::string_view relativePathStr) {
-    std::filesystem::path relativePath = relativePathStr;
-    std::string pathStr = relativePath.generic_string();
+bool AssetManager::unloadAudio(std::string_view relativePath) {
+    std::string pathStr(relativePath);
     bool wasUnloaded = false;
-    auto iteratorNon = audioCacheNonPredecoded.find(relativePathStr);
+    auto iteratorNon = audioCacheNonPredecoded.find(pathStr);
     if (iteratorNon != audioCacheNonPredecoded.end()) {
         audioCacheNonPredecoded.erase(iteratorNon);
         SDL_Log("Destroyed non-predecoded MIX_Audio from file \"%s\"", pathStr.c_str());
         wasUnloaded = true;
     }
-    auto iteratorPre = audioCachePredecoded.find(relativePathStr);
+    auto iteratorPre = audioCachePredecoded.find(pathStr);
     if (iteratorPre != audioCachePredecoded.end()) {
         audioCachePredecoded.erase(iteratorPre);
         SDL_Log("Destroyed predecoded MIX_Audio from file \"%s\"", pathStr.c_str());
@@ -328,10 +318,9 @@ bool AssetManager::unloadAudio(std::string_view relativePathStr) {
     return wasUnloaded;
 }
 
-bool AssetManager::unloadTexture(std::string_view relativePathStr) {
-    std::filesystem::path relativePath = relativePathStr;
-    std::string pathStr = relativePath.generic_string();
-    auto iterator = textureCache.find(relativePathStr);
+bool AssetManager::unloadTexture(std::string_view relativePath) {
+    std::string pathStr(relativePath);
+    auto iterator = textureCache.find(pathStr);
     if (iterator != textureCache.end()) {
         textureCache.erase(iterator);
         SDL_Log("Unloaded SDL3 texture from file \"%s\"", pathStr.c_str());
