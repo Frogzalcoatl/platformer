@@ -53,7 +53,7 @@ macro(vfs_pack_assets TARGET_NAME ASSETS_DIR OUTPUT_NAME VERSION)
     )
 
     # 5. Create a unique custom target linked to our stamp file
-    set(_vfs_pack_target_name "pack_${TARGET_NAME}_assets")
+    set(_vfs_pack_target_name "pack_assets")
     add_custom_target(${_vfs_pack_target_name}
         DEPENDS "${_vfs_stamp_file}"
     )
