@@ -203,7 +203,7 @@ set(HOST_CMAKE_ARGS
 # This prevents it from inheriting "Ninja Multi-Config" from the parent preset.
 if(CMAKE_HOST_WIN32)
     # 1. Set the default fallback (Visual Studio 2022)
-    set(PACKER_TOOL "${HOST_BUILD_DIR}/Release/Packer.exe")
+    set(PACKER_TOOL "${HOST_BUILD_DIR}/$<CONFIG>/Packer.exe")
     set(HOST_GENERATOR CMAKE_GENERATOR "Visual Studio 17 2022")
 
     # 2. Try to locate Microsoft's official VS locator (vswhere.exe)
