@@ -8,7 +8,8 @@ generated/
 
 # Android
 .gradle/
-.idea/
+.idea/*
+!.idea/externalDependencies.xml
 local.properties
 *.iml
 .externalNativeBuild/

@@ -4,6 +4,8 @@
 #include <iostream>
 #include <sstream>
 
+static SDL_LogOutputFunction defaultSdlLogFunc = nullptr;
+
 static std::string getTimeStamp() {
     SDL_Time ticks;
     SDL_DateTime dt;
@@ -70,10 +72,16 @@ static void sdlOutput(void* userdata, int category, SDL_LogPriority priority, co
         return;
     }
     std::string timeStamp = getTimeStamp();
-    std::cout << "[" << timeStamp << "] [" << categoryToString(category) << "/"
-              << priorityToString(priority) << "]: " << message << std::endl;
+    std::string categoryStr = categoryToString(category);
+    std::string priorityStr = priorityToString(priority);
+    std::string formattedMessage = "[" + getTimeStamp() + "]" + " [" + categoryToString(category) +
+                                   "/" + priorityToString(priority) + "]: " + message;
+    if (defaultSdlLogFunc) {
+        defaultSdlLogFunc(userdata, category, priority, formattedMessage.c_str());
+    }
 }
 
 void initSdlLogFormatting() {
+    defaultSdlLogFunc = SDL_GetDefaultLogOutputFunction();
     SDL_SetLogOutputFunction(sdlOutput, nullptr);
 }

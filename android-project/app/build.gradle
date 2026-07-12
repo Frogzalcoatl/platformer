@@ -1,8 +1,6 @@
-plugins {
-     id 'com.android.application'
-}
+apply plugin: 'com.android.application'
 
-def buildWithCMake = project.hasProperty('BUILD_WITH_CMAKE');
+def buildWithCMake = project.hasProperty('BUILD_WITH_CMAKE')
 
 android {
     namespace = "org.libsdl.app"
@@ -35,4 +33,28 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
+}
+
+tasks.register('cmakeCopyAssets', Exec) {
+    group = 'build'
+    description = 'Executes the CMake preset build with copy_assets target'
+    workingDir '../../' // Moves up to your root directory where CMakeLists.txt is
+
+    if (System.getProperty('os.name').toLowerCase().contains('windows')) {
+        commandLine 'cmd', '/c', 'cmake --build --preset android-arm64-debug --target copy_assets'
+    } else {
+        commandLine 'sh', '-c', 'cmake --build --preset android-arm64-debug --target copy_assets'
+    }
+}
+
+tasks.register('cmakePackAssets', Exec) {
+    group = 'build'
+    description = 'Executes the CMake preset build with pack_assets target'
+    workingDir '../../'
+
+    if (System.getProperty('os.name').toLowerCase().contains('windows')) {
+        commandLine 'cmd', '/c', 'cmake --build --preset android-arm64-debug --target pack_assets'
+    } else {
+        commandLine 'sh', '-c', 'cmake --build --preset android-arm64-debug --target pack_assets'
+    }
 }
