@@ -6,6 +6,10 @@
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_sdlrenderer3.h>
 
+#if defined(SDL_PLATFORM_WINDOWS) || defined(SDL_PLATFORM_MACOS) || defined(SDL_PLATFORM_LINUX)
+#define DISCORD_RPC_MANAGER 1
+#endif
+
 int main(int argc, char* argv[]) {
     (void)argc;
     (void)argv;
@@ -36,12 +40,14 @@ int main(int argc, char* argv[]) {
     SDL_Log("Created ImGui Context");
     ImGuiIO& io = ImGui::GetIO();
     io.IniFilename = nullptr;
+#ifdef DISCORD_RPC_MANAGER
     // https://discord.com/developers/applications/1521649642360668300/
     DiscordRichPresence presence = {};
     presence.largeImageKey = "icon";
     presence.largeImageText = "Platformer";
     presence.state = "In Development";
     DiscordRpcManager::init("1521649642360668300", presence);
+#endif
     int returnVal = 0;
     try {
         Platformer game;

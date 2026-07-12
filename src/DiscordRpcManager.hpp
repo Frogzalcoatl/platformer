@@ -1,12 +1,15 @@
 #pragma once
 #include <ctime>
-#include <discord_rpc.h>
 #include <string>
+#ifdef DISCORD_RPC_MANAGER
+#include <discord_rpc.h>
+#endif
 
 namespace DiscordRpcManager {
-void init(std::string_view applicationId, DiscordRichPresence& presence);
-void updatePresence(DiscordRichPresence& presenceArg);
-void updateState(const char* message);
+#ifdef DISCORD_RPC_MANAGER
+void init(std::string_view applicationId, , DiscordRichPresence presence);
+#endif
+void updateState(std::string_view state, std::string_view details);
 void update();
 void shutdown();
 }

@@ -1,10 +1,11 @@
 #include "DiscordRpcManager.hpp"
+#ifdef DISCORD_RPC_MANAGER
 #include <SDL3/SDL.h>
 
 static time_t lastConnectionAttempt = 0;
 static const int ReconnectIntervalSeconds = 5;
-static DiscordEventHandlers handlers;
-static DiscordRichPresence presence;
+static DiscordEventHandlers handlers{};
+static DiscordRichPresence presence{};
 static bool isConnected = false;
 static std::string applicationId = "";
 
@@ -25,7 +26,7 @@ static void discordConnect() {
     presence.startTimestamp = time(nullptr);
 }
 
-void DiscordRpcManager::init(std::string_view applicationIdArg, DiscordRichPresence& presenceArg) {
+void DiscordRpcManager::init(std::string_view applicationIdArg, DiscordRichPresence presenceArg) {
     handlers.ready = handleDiscordReady;
     handlers.disconnected = handleDiscordDisconnected;
     handlers.errored = handleDiscordDisconnected;
@@ -34,15 +35,7 @@ void DiscordRpcManager::init(std::string_view applicationIdArg, DiscordRichPrese
     discordConnect();
 }
 
-void DiscordRpcManager::updatePresence(DiscordRichPresence& presenceArg) {
-    presence = presenceArg;
-    Discord_UpdatePresence(&presence);
-    if (isConnected) {
-        SDL_Log("Updated Discord RPC");
-    }
-}
-
-void DiscordRpcManager::updateState(const char* message) {
+void DiscordRpcManager::updateState(std::string_view state, std::string_view details) {
     presence.state = message;
     Discord_UpdatePresence(&presence);
     if (isConnected) {
@@ -65,3 +58,15 @@ void DiscordRpcManager::shutdown() {
     Discord_Shutdown();
     SDL_Log("Shutdown Discord RPC");
 }
+#else
+void DiscordRpcManager::updateState(std::string_view state, std::string_view details) {
+    (void)state;
+    (void)details;
+}
+
+void DiscordRpcManager::update() {
+}
+
+void DiscordRpcManager::shutdown() {
+}
+#endif

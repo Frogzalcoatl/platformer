@@ -31,7 +31,7 @@ else()
             )
         else()
             execute_process(
-                COMMAND "${VCPKG_DIR}/bootstrap-vcpkg.sh" -disableMetrics
+                COMMAND sh "${VCPKG_DIR}/bootstrap-vcpkg.sh" -disableMetrics
                 WORKING_DIRECTORY "${VCPKG_DIR}"
                 RESULT_VARIABLE BOOTSTRAP_RESULT
             )
@@ -48,7 +48,11 @@ endif()
 # Instruct CMake to use the detected toolchain
 set(CMAKE_TOOLCHAIN_FILE "${VCPKG_DIR}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
 
-project(MyPlatformer CXX C)
+project(MyAndroidProject CXX C)
+
+if(NOT ANDROID)
+    message(FATAL_ERROR "This branch is configured exclusively for Android. Please configure using an Android preset (e.g. android-arm64 or android-x86_64).")
+endif()
 
 set(ASSETS_FOLDER_NAME "assets")
 set(DAT_FILE_NAME "${PROJECT_NAME}.dat")
@@ -71,45 +75,6 @@ find_package(SDL3_mixer REQUIRED)
 find_package(box2d CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 
-find_path(DISCORD_INCLUDE_DIR NAMES discord_rpc.h)
-
-# Discord rpc static lib implementation written by AI
-if(DISCORD_INCLUDE_DIR)
-    # Get the root installation directory of the triplet (the parent of /include)
-    get_filename_component(DISCORD_ROOT "${DISCORD_INCLUDE_DIR}/.." ABSOLUTE)
-    
-    # Construct the platform-independent library filename (e.g. "discord-rpc.lib" or "libdiscord-rpc.a")
-    set(DISCORD_LIB_NAME "${CMAKE_STATIC_LIBRARY_PREFIX}discord-rpc${CMAKE_STATIC_LIBRARY_SUFFIX}")
-    
-    # Directly construct the Release and Debug absolute paths
-    set(DISCORD_LIBRARY_RELEASE "${DISCORD_ROOT}/lib/${DISCORD_LIB_NAME}")
-    set(DISCORD_LIBRARY_DEBUG "${DISCORD_ROOT}/debug/lib/${DISCORD_LIB_NAME}")
-    
-    # Print paths to the output during configuration for easy verification
-    message(STATUS "[Discord-RPC] Found header at: ${DISCORD_INCLUDE_DIR}")
-    message(STATUS "[Discord-RPC] Release library: ${DISCORD_LIBRARY_RELEASE}")
-    message(STATUS "[Discord-RPC] Debug library:   ${DISCORD_LIBRARY_DEBUG}")
-    
-    if(EXISTS "${DISCORD_LIBRARY_RELEASE}" AND EXISTS "${DISCORD_LIBRARY_DEBUG}")
-        add_library(discord-rpc::discord-rpc STATIC IMPORTED)
-        set_target_properties(discord-rpc::discord-rpc PROPERTIES
-            INTERFACE_INCLUDE_DIRECTORIES "${DISCORD_INCLUDE_DIR}"
-            IMPORTED_CONFIGURATIONS "RELEASE;DEBUG"
-            IMPORTED_LOCATION_RELEASE "${DISCORD_LIBRARY_RELEASE}"
-            IMPORTED_LOCATION_DEBUG "${DISCORD_LIBRARY_DEBUG}"
-        )
-    elseif(EXISTS "${DISCORD_LIBRARY_RELEASE}")
-        # Fallback if only Release is available
-        add_library(discord-rpc::discord-rpc STATIC IMPORTED)
-        set_target_properties(discord-rpc::discord-rpc PROPERTIES
-            INTERFACE_INCLUDE_DIRECTORIES "${DISCORD_INCLUDE_DIR}"
-            IMPORTED_LOCATION "${DISCORD_LIBRARY_RELEASE}"
-        )
-    else()
-        message(WARNING "[Discord-RPC] Could not locate the library file: ${DISCORD_LIBRARY_RELEASE}")
-    endif()
-endif()
-
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 set(SOURCES
@@ -130,7 +95,8 @@ set(SOURCES
     src/WindowManager.cpp
 )
 
-add_executable(${PROJECT_NAME} ${SOURCES})
+# Android requires native binaries to be SHARED libraries (.so)
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE src)
 
@@ -149,7 +115,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     SDL3_mixer::SDL3_mixer
     box2d::box2d
     imgui::imgui
-    discord-rpc::discord-rpc
     VirtualFileSystem
 )
 
@@ -167,16 +132,111 @@ if(WIN32)
     )
 endif()
 
-add_custom_target(copy_assets
-    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
-            "${CMAKE_CURRENT_SOURCE_DIR}/assets"
-            "$<TARGET_FILE_DIR:${PROJECT_NAME}>/assets"
-    COMMENT "Copying modified assets to the build directory next to the executable"
+set(ANDROID_PROJ_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android-project")
+set(ANDROID_PROJ_DIR_MAIN "${ANDROID_PROJ_DIR}/app/src/main")
+set(ANDROID_JNILIBS_DIR "${ANDROID_PROJ_DIR_MAIN}/jniLibs/${CMAKE_ANDROID_ARCH_ABI}")
+set(ANDROID_ASSETS_DIR "${ANDROID_PROJ_DIR_MAIN}/assets")
+
+if(CMAKE_HOST_WIN32)
+    set(GRADLE_CMD "gradlew.bat")
+else()
+    set(GRADLE_CMD "./gradlew")
+endif()
+
+if(CMAKE_HOST_UNIX)
+    set(CHMOD_COMMAND COMMAND chmod +x "${ANDROID_PROJ_DIR}/${GRADLE_CMD}")
+else()
+    set(CHMOD_COMMAND)
+endif()
+
+set(PREPARE_JNILIBS_COMMANDS
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${ANDROID_PROJ_DIR_MAIN}"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${ANDROID_JNILIBS_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different 
+            "$<TARGET_FILE:${PROJECT_NAME}>" 
+            "${ANDROID_JNILIBS_DIR}/$<TARGET_FILE_NAME:${PROJECT_NAME}>"
 )
 
-vfs_pack_assets(
-    ${PROJECT_NAME}
-    "${CMAKE_CURRENT_SOURCE_DIR}/${ASSETS_FOLDER_NAME}"
-    "${DAT_FILE_NAME}"
-    "${GAME_VERSION}"
+set(GRADLE_COMMANDS
+    ${CHMOD_COMMAND}
+    COMMAND "${ANDROID_PROJ_DIR}/${GRADLE_CMD}" "assemble$<IF:$<CONFIG:Debug>,Debug,Release>"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/bin"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${ANDROID_PROJ_DIR}/app/build/outputs/apk/$<IF:$<CONFIG:Debug>,debug/app-debug.apk,release/app-release-unsigned.apk>"
+            "${CMAKE_BINARY_DIR}/bin/$<IF:$<CONFIG:Debug>,app-debug.apk,app-release-unsigned.apk>"
+)
+
+add_custom_target(copy_assets ALL
+    # 1. Clean and recreate assets folder
+    COMMAND ${CMAKE_COMMAND} -E remove_directory "${ANDROID_ASSETS_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${ANDROID_ASSETS_DIR}"
+
+    # 2. Setup libs and copy .so files
+    ${PREPARE_JNILIBS_COMMANDS}
+
+    # 3. Copy Raw Assets Folder
+    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+            "${CMAKE_CURRENT_SOURCE_DIR}/${ASSETS_FOLDER_NAME}"
+            "${ANDROID_ASSETS_DIR}"
+
+    # 4. Compile APK with Gradle
+    ${GRADLE_COMMANDS}
+    
+    WORKING_DIRECTORY "${ANDROID_PROJ_DIR}"
+    DEPENDS ${PROJECT_NAME}
+    COMMENT "VFS: Packaging raw assets folder and compiling APK..."
+    VERBATIM
+)
+
+include(ExternalProject)
+set(HOST_BUILD_DIR "${CMAKE_BINARY_DIR}/host_packer_build")
+
+# Setup the host compiler arguments
+set(HOST_CMAKE_ARGS 
+    "-DCMAKE_BUILD_TYPE=Release"
+    "-DHOST_BUILD=ON"
+    "-DCMAKE_TOOLCHAIN_FILE=" # Clear the parent's Android cross-compiling toolchain
+    "-DVCPKG_MANIFEST_MODE=OFF" # Prevent host packer from processing your game's vcpkg.json
+)
+
+# On Windows, we override the generator using CMAKE_GENERATOR.
+# This prevents it from inheriting "Ninja Multi-Config" from the parent preset.
+if(CMAKE_HOST_WIN32)
+    set(PACKER_TOOL "${HOST_BUILD_DIR}/$<CONFIG>/Packer.exe")
+    set(HOST_GENERATOR CMAKE_GENERATOR "Visual Studio 17 2022")
+else()
+    set(PACKER_TOOL "${HOST_BUILD_DIR}/Packer")
+    set(HOST_GENERATOR CMAKE_GENERATOR "Ninja") # Forces single-config Ninja to prevent /Release/ subdirectory placement
+endif()
+
+# Spawns a background compiler targeting your Desktop environment to build Packer
+ExternalProject_Add(host_packer_project
+    SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libs/vfs"
+    BINARY_DIR "${HOST_BUILD_DIR}"
+    ${HOST_GENERATOR} # Pass CMAKE_GENERATOR override here
+    CMAKE_ARGS ${HOST_CMAKE_ARGS}
+    INSTALL_COMMAND ""
+)
+
+add_custom_target(pack_assets
+    # 1. Clean and recreate assets folder
+    COMMAND ${CMAKE_COMMAND} -E remove_directory "${ANDROID_ASSETS_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${ANDROID_ASSETS_DIR}"
+
+    # 2. Setup libs and copy .so files
+    ${PREPARE_JNILIBS_COMMANDS}
+
+    # 3. Execute the compiled Host Packer to write the .dat package inside the assets folder
+    COMMAND "${PACKER_TOOL}" 
+            "${CMAKE_CURRENT_SOURCE_DIR}/${ASSETS_FOLDER_NAME}" 
+            "${ANDROID_ASSETS_DIR}/${DAT_FILE_NAME}" 
+            "${GAME_VERSION}"
+
+    # 4. Compile APK with Gradle
+    ${GRADLE_COMMANDS}
+    
+    WORKING_DIRECTORY "${ANDROID_PROJ_DIR}"
+    DEPENDS ${PROJECT_NAME} host_packer_project
+    COMMENT "VFS: Building host Packer, packing .dat bundle, and compiling APK..."
+    VERBATIM
 )

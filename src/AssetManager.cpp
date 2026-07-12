@@ -4,7 +4,11 @@
 #include <fstream>
 
 AssetManager::AssetManager(SDL_Renderer* renderer)
-    : vfs{SDL_GetBasePath(), DatFileName, GameVersion, AssetsFolderName}, renderer{renderer} {
+    : vfs(std::filesystem::path(SDL_GetBasePath() ? SDL_GetBasePath() : ""),
+          DatFileName,
+          GameVersion,
+          AssetsFolderName),
+      renderer{renderer} {
     if (!renderer) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL3 renderer for AssetManager is null");
         return;

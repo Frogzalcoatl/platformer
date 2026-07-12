@@ -1,41 +1,16 @@
 #include "VirtualFileSystem.hpp"
 #include <algorithm>
 #include <fstream>
+#include <iostream>
 #include <stdexcept>
 #include <string>
 
-VirtualFileSystem::VirtualFileSystem(
-    const std::filesystem::path& basePath,
-    const std::filesystem::path& datFileName,
-    std::string_view expectedVersion,
-    std::string_view assetsFolderName
-)
-    : basePath(basePath), assetsFolderName(assetsFolderName) {
-    std::filesystem::path assetsPath = std::filesystem::path(basePath) / assetsFolderName;
-    packFilePath = std::filesystem::path(basePath) / datFileName;
-    if (std::filesystem::exists(assetsPath) && std::filesystem::is_directory(assetsPath)) {
-        useFolder = true;
-    }
-    std::ifstream packFile(packFilePath, std::ios::binary);
-    if (!packFile.is_open()) {
-        if (useFolder) {
-            return;
-        }
-        throw std::runtime_error("Missing dat file\n" + datFileName.string());
-    }
-    VFS_Header header{};
-    packFile.read(reinterpret_cast<char*>(&header), sizeof(VFS_Header));
-    if (!packFile) {
-        if (useFolder) {
-            return;
-        }
-        throw std::runtime_error("Failed to read header from dat file\n" + datFileName.string());
-    }
+void VirtualFileSystem::validateHeader(VFS_Header& header, std::string_view expectedVersion) {
     if (header.magic != PackMagic) {
         if (useFolder) {
             return;
         }
-        throw std::runtime_error("Invalid dat file magic\n" + datFileName.string());
+        throw std::runtime_error("Invalid pack file magic\n" + packFilePath.filename().string());
     }
     std::string_view headerVersion(header.version, sizeof(header.version));
     size_t nullPos = headerVersion.find('\0');
@@ -46,13 +21,39 @@ VirtualFileSystem::VirtualFileSystem(
         if (useFolder) {
             return;
         }
-        std::string error = "Invalid dat file version:\nExpected \"";
+        std::string error = "Invalid pack file version:\nExpected \"";
         error += expectedVersion;
         error += "\"\nFound \"";
         error += headerVersion;
-        error += "\"";
+        error += "\"\n";
+        error += packFilePath.filename().string();
         throw std::runtime_error(error);
     }
+}
+
+void VirtualFileSystem::constructorDefault(std::string_view expectedVersion) {
+    std::filesystem::path assetsPath = std::filesystem::path(basePath) / assetsFolderName;
+    if (std::filesystem::exists(assetsPath) && std::filesystem::is_directory(assetsPath)) {
+        useFolder = true;
+    }
+    std::ifstream packFile(packFilePath, std::ios::binary);
+    if (!packFile.is_open()) {
+        if (useFolder) {
+            return;
+        }
+        throw std::runtime_error("Missing pack file\n" + packFilePath.filename().string());
+    }
+    VFS_Header header{};
+    packFile.read(reinterpret_cast<char*>(&header), sizeof(VFS_Header));
+    if (!packFile) {
+        if (useFolder) {
+            return;
+        }
+        throw std::runtime_error(
+            "Failed to read header from pack file\n" + packFilePath.filename().string()
+        );
+    }
+    validateHeader(header, expectedVersion); // Will throw error on failure
     entries.resize(header.fileCount);
     if (header.fileCount > 0) {
         packFile.read(reinterpret_cast<char*>(entries.data()), entries.size() * sizeof(VFS_Entry));
@@ -61,12 +62,74 @@ VirtualFileSystem::VirtualFileSystem(
                 entries.clear();
                 return;
             }
-            throw std::runtime_error("Failed to read VFS entries from " + datFileName.string());
+            throw std::runtime_error(
+                "Failed to read VFS entries from " + packFilePath.filename().string()
+            );
         }
     }
+    std::cout << "Initialized VFS for file: \"" << packFilePath.filename().string() << "\""
+              << std::endl;
 }
 
-std::vector<std::byte> VirtualFileSystem::readFile(std::string_view relativeFilePath) {
+void VirtualFileSystem::constructorSDL(std::string_view expectedVersion) {
+#ifndef VFS_USE_SDL
+    constructorDefault(expectedVersion);
+#else
+    std::filesystem::path assetsPath = std::filesystem::path(basePath) / assetsFolderName;
+    SDL_PathInfo pathInfo;
+#ifdef SDL_PLATFORM_ANDROID
+    // No good way to determine whether assets folder exists on android.
+    // It most likely always will though if someone's using this vfs
+    useFolder = true;
+#else
+    bool getPathResult = SDL_GetPathInfo(assetsPath.string().c_str(), &pathInfo);
+    if (getPathResult && pathInfo.type == SDL_PATHTYPE_DIRECTORY) {
+        useFolder = true;
+    }
+#endif
+    packFileIO = SDL_IOFromFile(packFilePath.string().c_str(), "rb");
+    if (!packFileIO) {
+        if (useFolder) {
+            return;
+        }
+        throw std::runtime_error("Missing pack file\n" + packFilePath.filename().string());
+    }
+    VFS_Header header{};
+    SDL_ReadIO(packFileIO, &header, sizeof(VFS_Header));
+    validateHeader(header, expectedVersion); // Will throw error on failure
+    entries.resize(header.fileCount);
+    if (header.fileCount > 0) {
+        SDL_ReadIO(packFileIO, entries.data(), entries.size() * sizeof(VFS_Entry));
+    }
+    SDL_Log("Initialized SDL VFS for file \"%s\"", packFilePath.filename().string().c_str());
+#endif
+}
+
+VirtualFileSystem::VirtualFileSystem(
+    const std::filesystem::path& basePath,
+    const std::filesystem::path& packFileName,
+    std::string_view expectedVersion,
+    std::string_view assetsFolderName
+)
+    : basePath(basePath), assetsFolderName(assetsFolderName),
+      packFilePath(std::filesystem::path(basePath) / packFileName) {
+#ifdef VFS_USE_SDL
+    constructorSDL(expectedVersion);
+#else
+    constructorDefault(expectedVersion);
+#endif
+}
+
+VirtualFileSystem::~VirtualFileSystem() {
+#ifdef VFS_USE_SDL
+    if (packFileIO) {
+        SDL_CloseIO(packFileIO);
+        packFileIO = nullptr;
+    }
+#endif
+}
+
+std::vector<std::byte> VirtualFileSystem::readFileDefault(std::string_view relativeFilePath) {
     if (useFolder) {
         std::filesystem::path fullFilePath = basePath / assetsFolderName / relativeFilePath;
         if (std::filesystem::exists(fullFilePath) &&
@@ -101,4 +164,54 @@ std::vector<std::byte> VirtualFileSystem::readFile(std::string_view relativeFile
         }
     }
     return {};
+}
+
+std::vector<std::byte> VirtualFileSystem::readFileSDL(std::string_view relativeFilePath) {
+#ifndef VFS_USE_SDL
+    return readFileDefault(relativeFilePath);
+#else
+    std::filesystem::path fullFilePath = basePath / assetsFolderName / relativeFilePath;
+    if (useFolder) {
+        SDL_IOStream* io = SDL_IOFromFile(fullFilePath.string().c_str(), "rb");
+        if (io) {
+            Sint64 ioSize = SDL_GetIOSize(io);
+            if (ioSize >= 0) {
+                std::vector<std::byte> buffer(ioSize);
+                SDL_ReadIO(io, buffer.data(), ioSize);
+                SDL_CloseIO(io);
+                return buffer;
+            }
+            SDL_CloseIO(io);
+        }
+    }
+    if (!packFileIO) {
+        return {};
+    }
+    uint64_t hash = stringHash(relativeFilePath);
+    auto iterator = std::lower_bound(
+        entries.begin(), entries.end(), hash, [](const VFS_Entry& entry, uint64_t h) {
+            return entry.id < h;
+        }
+    );
+    if (iterator != entries.end() && iterator->id == hash) {
+        if (SDL_SeekIO(packFileIO, iterator->offset, SDL_IO_SEEK_SET) < 0) {
+            return {};
+        }
+        std::vector<std::byte> buffer(iterator->size);
+        size_t bytesRead = SDL_ReadIO(packFileIO, buffer.data(), iterator->size);
+        if (bytesRead != iterator->size) {
+            return {};
+        }
+        return buffer;
+    }
+    return {};
+#endif
+}
+
+std::vector<std::byte> VirtualFileSystem::readFile(std::string_view relativeFilePath) {
+#ifdef VFS_USE_SDL
+    return readFileSDL(relativeFilePath);
+#else
+    return readFileDefault(relativeFilePath);
+#endif
 }
