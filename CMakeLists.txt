@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.26)
 
-# vcpkg implementation written by AI
-# Once again I don't care much about learning CMake at the moment
+# Android build implementation heavily influenced by AI.
+# Learned a lot in the process and this would have taken much longer to set up by myself
+
 # Check if the developer has a global vcpkg defined in their environment variables
 if(DEFINED ENV{VCPKG_ROOT})
     set(VCPKG_DIR "$ENV{VCPKG_ROOT}")
