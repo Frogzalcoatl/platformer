@@ -12,6 +12,7 @@
 
 ### 3. Java Development Kit (JDK 17+)
 * Install [here](https://adoptium.net/temurin/releases/?version=17). Required for gradle to build the apk file.
+   - During the installation you must click the red X dropdown next to "Set JAVA_HOME variable" and change it to "Will be installed on local hard drive". If you forget, you can also manually set the environment variable to the jdk directory after installing.
 
 ### 4. Build Tools
 These are the same as on the main branch.
