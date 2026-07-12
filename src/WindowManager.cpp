@@ -8,9 +8,15 @@
 WindowManager::WindowManager(const char* windowName, SDL_Color backgroundColor)
     : backgroundColor(backgroundColor) {
     size = WindowVec2{1280, 720};
-    sdlWindow = UniqueWindow(
-        SDL_CreateWindow(windowName, size.x, size.y, SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED)
-    );
+#if defined(SDL_PLATFORM_ANDROID) | defined(SDL_PLATFORM_IOS)
+    SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
+#endif
+    sdlWindow = UniqueWindow(SDL_CreateWindow(
+        windowName,
+        size.x,
+        size.y,
+        SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED | SDL_WINDOW_FULLSCREEN
+    ));
     if (!sdlWindow) {
         SDL_LogError(
             SDL_LOG_CATEGORY_APPLICATION, "Unable to create SDL3 Window: %s", SDL_GetError()

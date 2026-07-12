@@ -134,7 +134,7 @@ std::vector<std::byte> VirtualFileSystem::readFileDefault(std::string_view relat
         std::filesystem::path fullFilePath = basePath / assetsFolderName / relativeFilePath;
         if (std::filesystem::exists(fullFilePath) &&
             std::filesystem::is_regular_file(fullFilePath)) {
-            // std::ios::ate starts the stream pointer at the end position to immedietely get total
+            // std::ios::ate starts the stream pointer at the end position to immediately get total
             // file size.
             std::ifstream file(fullFilePath, std::ios::binary | std::ios::ate);
             if (file.is_open()) {
