@@ -202,8 +202,34 @@ set(HOST_CMAKE_ARGS
 # On Windows, we override the generator using CMAKE_GENERATOR.
 # This prevents it from inheriting "Ninja Multi-Config" from the parent preset.
 if(CMAKE_HOST_WIN32)
-    set(PACKER_TOOL "${HOST_BUILD_DIR}/$<CONFIG>/Packer.exe")
+    # 1. Set the default fallback (Visual Studio 2022)
+    set(PACKER_TOOL "${HOST_BUILD_DIR}/Release/Packer.exe")
     set(HOST_GENERATOR CMAKE_GENERATOR "Visual Studio 17 2022")
+
+    # 2. Try to locate Microsoft's official VS locator (vswhere.exe)
+    find_program(VSWHERE_EXE 
+        NAMES vswhere 
+        PATHS 
+            "$ENV{ProgramFiles\(x86\)}/Microsoft Visual Studio/Installer"
+            "$ENV{ProgramFiles}/Microsoft Visual Studio/Installer"
+    )
+
+    if(VSWHERE_EXE)
+        # 3. Query vswhere to see if VS 2026 (v18.x) is installed on this machine
+        execute_process(
+            COMMAND "${VSWHERE_EXE}" -version "[18.0,19.0)" -products * -property installationVersion
+            OUTPUT_VARIABLE VS_2026_INSTALLED
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+
+        # 4. VS 2026 requires both the VS 2026 IDE/Build Tools AND CMake 4.2.0+
+        if(VS_2026_INSTALLED AND CMAKE_VERSION VERSION_GREATER_EQUAL "4.2.0")
+            set(HOST_GENERATOR CMAKE_GENERATOR "Visual Studio 18 2026")
+            message(STATUS "[vfs] Detected Visual Studio 2026 and compatible CMake. Using VS 2026 generator.")
+        else()
+            message(STATUS "[vfs] Defaulting to Visual Studio 2022 generator.")
+        endif()
+    endif()
 else()
     set(PACKER_TOOL "${HOST_BUILD_DIR}/Packer")
     set(HOST_GENERATOR CMAKE_GENERATOR "Ninja") # Forces single-config Ninja to prevent /Release/ subdirectory placement
