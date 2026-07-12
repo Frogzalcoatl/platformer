@@ -5,12 +5,23 @@ If you ever update the app version, make sure to update both vcpkg.json and andr
 
 ## Prerequisites
 ### 1. Android SDK
-* Install [here](https://developer.android.com/studio#command-line-tools-only) and define the ANDROID_HOME environment variable pointing to your SDK root.
+* Download [here](https://developer.android.com/studio#command-line-tools-only) and extract. I personally extracted this to my C: drive for simplicity. Open a terminal in `android-sdk/cmdline-tools/bin` and run `sdkmanager.bat` (Simply sdkmanager on linux/macos) with the following arguments:
+
+```
+./sdkmanager.bat "platform-tools" "build-tools;34.0.0" "platforms;android-28"
+```
+
+It also wont work unless you accept the licenses:
+```
+./sdkmanager.bat --licenses
+```
+
+Define the `ANDROID_HOME` environment variable pointing to your SDK root.
    - Example (Windows): `set ANDROID_HOME=C:\android-sdk`
    - Example (Linux/MacOS): `export ANDROID_HOME=~/Android/Sdk`
 
 ### 2. Android NDK (r29 suggested)
-* Install [here](https://developer.android.com/ndk/downloads) and define the ANDROID_NDK_HOME environment variable pointing to your NDK version
+* Download [here](https://developer.android.com/ndk/downloads) and extract. No extra setup needed for the ndk. Define the `ANDROID_NDK_HOME` environment variable to point to the extracted android-ndk-r29 folder.
    - Example (Windows): `set ANDROID_NDK_HOME=C:\android-ndk-r29`
    - Example (Linux/MacOS): `export ANDROID_NDK_HOME=~/Android/Sdk/ndk/29.x.xxxxxx`
 
