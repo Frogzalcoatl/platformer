@@ -1,4 +1,6 @@
 # Contributing (Android Crosscompiling Branch)
+You'll probably want to check whether the src folder in this branch is up to date with main. I most likely will not always keep it up to date. I will try to always write code on the main branch in a way that it will be compatible with android. Shouldn't be too hard since SDL handles basically all the hard work for me.
+
 ## Prerequisites
 ### 1. Android SDK
 * Install [here](https://developer.android.com/studio#command-line-tools-only) and define the ANDROID_HOME environment variable pointing to your SDK root.
