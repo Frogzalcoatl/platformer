@@ -1,9 +1,22 @@
 # Contributing (Android Crosscompiling Branch)
+This branch is specifically set up for android cross compilation.
+
 ## Prerequisites
-1. Install the [Android NDK](https://developer.android.com/ndk/downloads).
-2. Set the "ANDROID_NDK_HOME" environment variable to point to your NDK directory.
-   - *Example (Linux/macOS)*: `export ANDROID_NDK_HOME=~/Android/Sdk/ndk/25.x.xxxxxx`
-   - *Example (Windows)*: `set ANDROID_NDK_HOME=C:\Users\YourUser\AppData\Local\Android\Sdk\ndk\25.x.xxxxxx`
+### 1. Android SDK
+* Install [here](https://developer.android.com/studio#command-line-tools-only) and define the ANDROID_HOME environment variable pointing to your SDK root.
+   - Example (Windows): `set ANDROID_HOME=C:\android-sdk`
+   - Example (Linux/MacOS): `export ANDROID_HOME=~/Android/Sdk`
+
+### 2. Android NDK (r29 suggested)
+* Install [here](https://developer.android.com/ndk/downloads) and define the ANDROID_NDK_HOME environment variable pointing to your NDK version
+   - Example (Windows): `set ANDROID_NDK_HOME=C:\android-ndk-r29`
+   - Example (Linux/MacOS): `export ANDROID_NDK_HOME=~/Android/Sdk/ndk/29.x.xxxxxx`
+
+### 3. Java Development Kit (JDK 17+)
+* Install [here](https://adoptium.net/temurin/releases/?version=17). Required for gradle to build the apk file.
+
+### 4. Build Tools
+These are the same as on the main branch.
 
 **Windows:**
 * Download [Build Tools for Visual Studio](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2026)
@@ -20,24 +33,22 @@ xcode-select --install
 * If there are additional dependencies I'm unaware of, they will likely be logged as an error or warning when you try to build the project.
 
 ## Building the Project
+I tried my best to set this up as straightforwardly as possible. Just like in the main branch, I use CMake and Vcpkg. If you've never installed vcpkg, don't worry. It will automatically clone into the project directory on build. However, if you have vcpkg installed globally with the VCPKG_ROOT environment variable set up, your global installation is used for efficiency.
 
-1. Build a desktop version of this project first to properly pack the assets into a .dat file.
+As for what has changed for android. CMake builds the .so file and copies the assets, then copies them both to the android-project directory. Then gradle runs to turn those two files into a runnable .apk file. You'll find the outputted apk copied to build/configurePresetName/bin. I also added a CMake target called pack_assets, which will instead run the packer and copy the pack file into the apk instead of the assets directory.
 
-This project is set up to have a pretty straightforward build process using CMake and Vcpkg. If you've never installed vcpkg, don't worry. It will automatically clone into the project directory on build. However, if you have vcpkg installed globally with the VCPKG_ROOT environment variable set up, your global installation is used for efficiency.
-
-This project works fine in whatever ide you want, given you use a preset listed in [CMakePresets.json](https://github.com/Frogzalcoatl/platformer/blob/main/CMakePresets.json). I use vscode with the [ms-vscode.cpptools-extension-pack](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools-extension-pack). I select **"windows-clang-vs"**, **"Clang VS Debug"**, then click **"build"** in the status bar.
+This project works fine in whatever ide you want, given you use a preset listed in CMakePresets.json. I use vscode with the ms-vscode.cpptools-extension-pack. I select "Android (ARM64)", "Android ARM64 Debug", then click "build" in the status bar.
 
 If you do not want to use vscode, the equivalent commands are:
 
 ```
-cmake --preset windows-clang-vs
-cmake --build --preset clang-vs-debug
-```
-
-First command uses a [CMakePresets.json](https://github.com/Frogzalcoatl/platformer/blob/main/CMakePresets.json) option in **"configurePresets"**. Second uses a matching option in **"buildPresets".** Each configure preset has a "debug", "release", and "release with debug info" build preset.
-
-2. Switch to the android preset and build.
-```
 cmake --preset android-arm64
 cmake --build --preset android-arm64-debug
+```
+
+First command uses a CMakePresets.json option in "configurePresets". Second uses a matching option in "buildPresets". Each configure preset has a "debug", "release", and "release with debug info" build preset.
+
+If you want to run the packer during the build:
+```
+cmake --build --preset android-arm64-debug --target pack_assets
 ```

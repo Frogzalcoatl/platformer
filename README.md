@@ -7,7 +7,7 @@ Project to keep my C++ knowledge sharp while taking data structures. Improves up
 - [SDL3_Mixer](https://github.com/libsdl-org/SDL_mixer)
 - [Box2D](https://github.com/erincatto/box2d)
 - [ImGui](https://github.com/ocornut/imgui)
-- [Discord RPC](https://github.com/discord/discord-rpc)
+- [Discord RPC](https://github.com/discord/discord-rpc) (Not applicable to android though)
 
 ### Disclaimer:
 
