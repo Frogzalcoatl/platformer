@@ -6,10 +6,6 @@
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_sdlrenderer3.h>
 
-#if defined(SDL_PLATFORM_WINDOWS) || defined(SDL_PLATFORM_MACOS) || defined(SDL_PLATFORM_LINUX)
-#define DISCORD_RPC_MANAGER 1
-#endif
-
 int main(int argc, char* argv[]) {
     (void)argc;
     (void)argv;
