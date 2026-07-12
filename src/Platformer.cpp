@@ -59,7 +59,9 @@ void Platformer::handleGameEventInput(const GameEventTypes::Input& inputEvent) {
     if (inputEvent.state == InputState::Pressed) {
         switch (inputEvent.verb) {
         case InputVerb::ToggleFullscreen:
-            window.toggleFullscreen();
+#if defined(SDL_PLATFORM_WINDOWS) || defined(SDL_PLATFORM_MACOS) || defined(SDL_PLATFORM_LINUX)
+            window.toggleFullscreen(); // Toggling fullscreen should only be accessible on desktop
+#endif
             break;
         case InputVerb::ZoomIn:
             if (currentLevel && uiState == UiState::Playing) {

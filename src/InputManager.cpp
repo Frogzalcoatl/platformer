@@ -261,6 +261,16 @@ std::vector<GameEventTypes::Input> InputManager::getInputEventsFromSDLEvent(SDL_
             break;
         }
         */
+        if (event.key.scancode == SDL_SCANCODE_AC_BACK && event.key.type == SDL_EVENT_KEY_DOWN) {
+            // Always return input pause and cancel events for android back button.
+            inputEvents.push_back(
+                GameEventTypes::Input{InputVerb::Pause, InputState::Pressed, InputSource::Touch}
+            );
+            inputEvents.push_back(
+                GameEventTypes::Input{InputVerb::Cancel, InputState::Pressed, InputSource::Touch}
+            );
+            return inputEvents;
+        }
         std::vector<InputVerbInfo> verbs = getVerbsFromScancode(event.key.scancode);
         if (verbs.size() == 0) {
             break;
