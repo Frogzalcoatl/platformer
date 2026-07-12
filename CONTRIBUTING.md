@@ -34,9 +34,6 @@ go [here](https://github.com/llvm/llvm-project/releases). Make
 sure you select "Add LLVM to the system PATH" during installation.
 
 ### 2. Build Tools
-
-* These are the same as on the main branch.
-
 **Windows:**
 
 * Download [Build Tools for Visual Studio](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2026)
@@ -61,7 +58,7 @@ xcode-select --install
 ### 3. Android SDK
 
 * Download [here](https://developer.android.com/studio#command-line-tools-only) and extract. I
-  personally extracted this to my C: drive for simplicity. Open a terminal in
+  personally extracted to my C: drive for simplicity. Open a terminal in
   `android-sdk/cmdline-tools/bin` and run `sdkmanager.bat` (Simply sdkmanager on linux/macos) with
   the following arguments:
 
@@ -135,16 +132,14 @@ cmake --build --preset android-arm64-debug --target pack_assets
 
 ## Debugging with Android Studio
 
-I also just set this project up to work in [Android Studio](https://developer.android.com/studio)
-for debugging. I personally plug my
-android phone into my computer and use USB debugging. SDL_Logs are visible in
+If you want to debug the android build, I suggest downloading [Android Studio](https://developer.android.com/studio). I plug my
+android phone into my computer and use USB debugging, which I had to enable in my phone's developer options. SDL_Logs are visible in
 the logcat tab (Looks like a little cat icon in the bottom left as of July 2026 when I run the
 debugger).
 
-Make sure to filter by `tag:SDL/APP`, otherwise you'll see a bunch of logs from processes
+Make sure to filter by `package:mine` or `tag:SDL/APP`, otherwise you'll see a bunch of logs from processes
 not related to this project. If you're on Windows, you need to install the
 [Google USB Driver](https://developer.android.com/studio/run/win-usb) to use USB debugging.
 
-Additionally, I
-include the extensions rainbow brackets, for proper cpp text coloring, and clang format for
+I include the extensions rainbow brackets for proper cpp text coloring and clang format for
 formatting on save while in Android Studio.
