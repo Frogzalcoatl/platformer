@@ -1,6 +1,4 @@
 # Contributing (Android Crosscompiling Branch)
-This branch is specifically set up for android cross compilation.
-
 ## Prerequisites
 ### 1. Android SDK
 * Install [here](https://developer.android.com/studio#command-line-tools-only) and define the ANDROID_HOME environment variable pointing to your SDK root.
@@ -35,9 +33,9 @@ xcode-select --install
 ## Building the Project
 I tried my best to set this up as straightforwardly as possible. Just like in the main branch, I use CMake and Vcpkg. If you've never installed vcpkg, don't worry. It will automatically clone into the project directory on build. However, if you have vcpkg installed globally with the VCPKG_ROOT environment variable set up, your global installation is used for efficiency.
 
-As for what has changed for android. CMake builds the .so file and copies the assets, then copies them both to the android-project directory. Then gradle runs to turn those two files into a runnable .apk file. You'll find the outputted apk copied to build/configurePresetName/bin. I also added a CMake target called pack_assets, which will instead run the packer and copy the pack file into the apk instead of the assets directory.
+As for what has changed for android. CMake builds the .so file and copies the assets, then copies them both to the android-project directory. Then gradle runs to turn those two files into a runnable .apk file. You'll find the outputted apk copied to build/configurePresetName/bin. I also added a CMake target called pack_assets, which runs the packer and bundles the pack file into the apk instead of the assets directory.
 
-This project works fine in whatever ide you want, given you use a preset listed in CMakePresets.json. I use vscode with the ms-vscode.cpptools-extension-pack. I select "Android (ARM64)", "Android ARM64 Debug", then click "build" in the status bar.
+This project works fine in whatever ide you want, given you use a preset listed in CMakePresets.json. I use vscode with the [ms-vscode.cpptools-extension-pack](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools-extension-pack). I select "Android (ARM64)", "Android ARM64 Debug", then click "build" in the status bar.
 
 If you do not want to use vscode, the equivalent commands are:
 
