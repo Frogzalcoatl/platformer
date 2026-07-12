@@ -49,7 +49,7 @@ xcode-select --install
 ## Building the Project
 I tried my best to set this up as straightforwardly as possible. Just like in the main branch, I use CMake and Vcpkg. If you've never installed vcpkg, don't worry. It will automatically clone into the project directory on build. However, if you have vcpkg installed globally with the VCPKG_ROOT environment variable set up, your global installation is used for efficiency.
 
-As for what has changed for android. CMake builds the .so file and copies the assets, then copies them both to the android-project directory. Then gradle runs to turn those two files into a runnable .apk file. You'll find the outputted apk copied to build/configurePresetName/bin. I also added a CMake target called pack_assets, which runs the packer and bundles the pack file into the apk instead of budnling each file from the assets directory individually.
+As for what has changed for android. CMake builds the .so file and copies the assets, then copies them both to the android-project directory. Then gradle runs to turn those two files into a runnable .apk file. You'll find the outputted apk copied to build/configurePresetName/bin. I also added a CMake target called pack_assets. It runs the packer and bundles the pack file into the apk instead of bundling each file from the assets directory individually.
 
 This project works fine in whatever ide you want, given you use a preset listed in [CMakePresets.json](https://github.com/Frogzalcoatl/platformer/blob/android/CMakePresets.json). I use vscode with the [ms-vscode.cpptools-extension-pack](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools-extension-pack). I select "Android (ARM64)", "Android ARM64 Debug", then click "build" in the status bar.
 
@@ -60,7 +60,7 @@ cmake --preset android-arm64
 cmake --build --preset android-arm64-debug
 ```
 
-First command uses a [CMakePresets.json](https://github.com/Frogzalcoatl/platformer/blob/android/CMakePresets.json) option in "configurePresets". Second uses a matching option in "buildPresets". Each configure preset has a "debug", "release", and "release with debug info" build preset.
+First command uses a [CMakePresets.json](https://github.com/Frogzalcoatl/platformer/blob/android/CMakePresets.json) option in "configurePresets". Second uses a matching option in "buildPresets". Each configure preset has a "debug" and "release" build preset.
 
 If you want to run the packer during the build:
 ```
