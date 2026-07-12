@@ -29,8 +29,8 @@ pip install clang-format
 
 **Full LLVM Installation:**
 
-* If you don't care about downloading all of LLVM's tools, then
-go [here](https://github.com/llvm/llvm-project/releases). Make
+* If you don't care about installing all of LLVM's tools, then
+download [here](https://github.com/llvm/llvm-project/releases). Make
 sure you select "Add LLVM to the system PATH" during installation.
 
 ### 2. Build Tools
