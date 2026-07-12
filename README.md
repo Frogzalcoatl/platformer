@@ -1,5 +1,5 @@
 # Platformer (Android Crosscompiling Branch)
-Project to keep my C++ knowledge sharp while taking data structures. Improves upon my previous Connect4 SDL project. Uses Vcpkg and CMake for build process. Includes the following libraries using Vcpkg:
+Project to keep my C++ knowledge sharp while taking data structures. Improves upon my previous Connect4 SDL project. Uses Vcpkg and CMake for build process. Includes the following libraries:
 
 - [SDL3](https://github.com/libsdl-org/SDL)
 - [SDL3_Image](https://github.com/libsdl-org/SDL_image)
