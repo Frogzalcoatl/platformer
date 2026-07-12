@@ -36,7 +36,7 @@ I tried my best to set this up as straightforwardly as possible. Just like in th
 
 As for what has changed for android. CMake builds the .so file and copies the assets, then copies them both to the android-project directory. Then gradle runs to turn those two files into a runnable .apk file. You'll find the outputted apk copied to build/configurePresetName/bin. I also added a CMake target called pack_assets, which runs the packer and bundles the pack file into the apk instead of budnling each file from the assets directory individually.
 
-This project works fine in whatever ide you want, given you use a preset listed in [CMakePresets.json](https://github.com/Frogzalcoatl/platformer/blob/main/CMakePresets.json). I use vscode with the [ms-vscode.cpptools-extension-pack](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools-extension-pack). I select "Android (ARM64)", "Android ARM64 Debug", then click "build" in the status bar.
+This project works fine in whatever ide you want, given you use a preset listed in [CMakePresets.json](https://github.com/Frogzalcoatl/platformer/blob/android/CMakePresets.json). I use vscode with the [ms-vscode.cpptools-extension-pack](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools-extension-pack). I select "Android (ARM64)", "Android ARM64 Debug", then click "build" in the status bar.
 
 If you do not want to use vscode, the equivalent commands are:
 
@@ -45,7 +45,7 @@ cmake --preset android-arm64
 cmake --build --preset android-arm64-debug
 ```
 
-First command uses a [CMakePresets.json](https://github.com/Frogzalcoatl/platformer/blob/main/CMakePresets.json) option in "configurePresets". Second uses a matching option in "buildPresets". Each configure preset has a "debug", "release", and "release with debug info" build preset.
+First command uses a [CMakePresets.json](https://github.com/Frogzalcoatl/platformer/blob/android/CMakePresets.json) option in "configurePresets". Second uses a matching option in "buildPresets". Each configure preset has a "debug", "release", and "release with debug info" build preset.
 
 If you want to run the packer during the build:
 ```
