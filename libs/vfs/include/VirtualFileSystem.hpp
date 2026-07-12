@@ -9,10 +9,10 @@
 
 class VirtualFileSystem {
   private:
-    std::filesystem::path packFilePath;
-    std::vector<VFS_Entry> entries;
     const std::filesystem::path basePath;
+    std::filesystem::path packFilePath;
     std::string_view assetsFolderName;
+    std::vector<VFS_Entry> entries;
     bool useFolder = false;
 
 #ifdef VFS_USE_SDL

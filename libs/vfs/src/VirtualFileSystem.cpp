@@ -111,8 +111,8 @@ VirtualFileSystem::VirtualFileSystem(
     std::string_view expectedVersion,
     std::string_view assetsFolderName
 )
-    : basePath(basePath), assetsFolderName(assetsFolderName),
-      packFilePath(std::filesystem::path(basePath) / packFileName) {
+    : basePath(basePath), packFilePath(std::filesystem::path(basePath) / packFileName),
+      assetsFolderName(assetsFolderName) {
 #ifdef VFS_USE_SDL
     constructorSDL(expectedVersion);
 #else
