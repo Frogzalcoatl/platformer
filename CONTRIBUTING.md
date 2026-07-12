@@ -60,7 +60,7 @@ cmake --preset android-arm64
 cmake --build --preset android-arm64-debug
 ```
 
-First command uses a [CMakePresets.json](https://github.com/Frogzalcoatl/platformer/blob/android/CMakePresets.json) option in "configurePresets". Second uses a matching option in "buildPresets". Each configure preset has a "debug", "release", and "release with debug info" build preset.
+First command uses a [CMakePresets.json](https://github.com/Frogzalcoatl/platformer/blob/android/CMakePresets.json) option in "configurePresets". Second uses a matching option in "buildPresets". Each configure preset has a "debug" and "release" build preset.
 
 If you want to run the packer during the build:
 ```
