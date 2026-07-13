@@ -75,13 +75,12 @@ void VirtualFileSystem::constructorSDL(std::string_view expectedVersion) {
 #ifndef VFS_USE_SDL
     constructorDefault(expectedVersion);
 #else
-    std::filesystem::path assetsPath = std::filesystem::path(basePath) / assetsFolderName;
-    SDL_PathInfo pathInfo;
 #ifdef SDL_PLATFORM_ANDROID
-    // No good way to determine whether assets folder exists on android.
-    // It most likely always will though if someone's using this vfs
+    // No good way to check this for android
     useFolder = true;
 #else
+    std::filesystem::path assetsPath = std::filesystem::path(basePath) / assetsFolderName;
+    SDL_PathInfo pathInfo;
     bool getPathResult = SDL_GetPathInfo(assetsPath.string().c_str(), &pathInfo);
     if (getPathResult && pathInfo.type == SDL_PATHTYPE_DIRECTORY) {
         useFolder = true;
@@ -92,7 +91,10 @@ void VirtualFileSystem::constructorSDL(std::string_view expectedVersion) {
         if (useFolder) {
             return;
         }
-        throw std::runtime_error("Missing pack file\n" + packFilePath.filename().string());
+        throw std::runtime_error(
+            "Missing pack file.\n" + packFilePath.filename().string() +
+            "\nAssets folder with name \"" + std::string(assetsFolderName) + "\"was also not found."
+        );
     }
     VFS_Header header{};
     SDL_ReadIO(packFileIO, &header, sizeof(VFS_Header));
@@ -170,7 +172,12 @@ std::vector<std::byte> VirtualFileSystem::readFileSDL(std::string_view relativeF
 #ifndef VFS_USE_SDL
     return readFileDefault(relativeFilePath);
 #else
+#ifdef SDL_PLATFORM_ANDROID
+    // basePath and assetsFolderName do not need to be included on android.
+    std::filesystem::path fullFilePath = relativeFilePath;
+#else
     std::filesystem::path fullFilePath = basePath / assetsFolderName / relativeFilePath;
+#endif
     if (useFolder) {
         SDL_IOStream* io = SDL_IOFromFile(fullFilePath.string().c_str(), "rb");
         if (io) {
