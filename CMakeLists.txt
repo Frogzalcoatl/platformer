@@ -49,7 +49,7 @@ endif()
 # Instruct CMake to use the detected toolchain
 set(CMAKE_TOOLCHAIN_FILE "${VCPKG_DIR}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
 
-project(MyAndroidProject CXX C)
+project(MyPlatformer CXX C)
 
 if(NOT ANDROID)
     message(FATAL_ERROR "This branch is configured exclusively for Android. Please configure using an Android preset (e.g. android-arm64 or android-x86_64).")
@@ -79,6 +79,7 @@ find_package(imgui CONFIG REQUIRED)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 set(SOURCES
+    src/Android.cpp
     src/AssetManager.cpp
     src/AudioManager.cpp
     src/Camera.cpp
