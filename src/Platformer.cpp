@@ -1,4 +1,5 @@
 #include "Platformer.hpp"
+#include "Android.hpp"
 #include "Colors.hpp"
 #include "DiscordRpcManager.hpp"
 #include "Drawing.hpp"
@@ -23,6 +24,9 @@ void Platformer::handleSdlEvent() {
         switch (event.type) {
         case SDL_EVENT_QUIT: {
             running = false;
+#ifdef SDL_PLATFORM_ANDROID
+            Android::quitAndRemoveTask();
+#endif
         }; break;
         case SDL_EVENT_WINDOW_RESIZED: {
             window.handleResize(event.window.data1, event.window.data2);
@@ -119,6 +123,9 @@ void Platformer::handleGameEvent() {
     while (GameEvents::Poll(event)) {
         if (std::holds_alternative<GameEventTypes::CloseWindow>(event)) {
             running = false;
+#ifdef SDL_PLATFORM_ANDROID
+            Android::quitAndRemoveTask();
+#endif
         } else if (const auto* playSoundEvent = std::get_if<GameEventTypes::PlaySound>(&event)) {
             audio.playSound(
                 playSoundEvent->relativePath, playSoundEvent->volume, playSoundEvent->pitch
