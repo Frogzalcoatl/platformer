@@ -7,7 +7,7 @@
 #endif
 
 namespace DiscordRpcManager {
-#ifdef DISCORD_RPC_MANAGER
+#ifdef USE_DISCORD_RPC
 void init(std::string_view applicationId, DiscordRichPresence presence);
 #endif
 void updateState(std::string_view state, std::string_view details);
