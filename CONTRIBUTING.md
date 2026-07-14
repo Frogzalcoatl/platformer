@@ -90,9 +90,9 @@ Define the `ANDROID_HOME` environment variable pointing to your SDK root.
   - During the installation you must click the red X dropdown next to "SeJAVA_HOME variable" and change it to "Will be installed on local hard drive". If you forget you can also manually set the environment variable to the jdk directory after installing.
 
 ## Building the Project
-You can compile the same way as described above in vscode or in the terminal using one of the android presets.
+You can build for android the same way as described above using vscode or in the terminal with an android preset listed in [CMakePresets.json](https://github.com/Frogzalcoatl/platformer/blob/main/CMakePresets.json).
 
-How it works: When you crosscompile for android, CMake builds the .so file and copies the assets, then copies them both to the android-project directory. Then gradle runs to turn the assets and .so file into a runnable .apk file. You'll find the outputted apk copied to build/configurePresetName/bin.
+Android Crosscompilation Process: When you crosscompile for android, CMake builds the .so file and copies the assets, then copies them both to the android-project directory. Then gradle runs to turn the assets and .so file into a runnable .apk file. You'll find the outputted apk copied to `${ProjectRoot}/build/configurePresetName/bin`.
 
 ## Debugging with Android Studio
 If you want to debug the android build, I suggest downloading [Android Studio](https://developer.android.com/studio). I plug my android phone into my computer and use USB debugging, which I had to enable in my phone's developer options. SDL_Logs are visible in the logcat tab (Looks like a little cat icon in the bottom left as of July 2026 when I run the debugger).
