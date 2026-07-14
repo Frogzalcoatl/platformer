@@ -67,7 +67,7 @@ First command uses a [CMakePresets.json](https://github.com/Frogzalcoatl/platfor
 ./sdkmanager.bat "platform-tools" "build-tools;34.0.0" "platforms;android-28"
 ```
 
-It also wont work unless you accept the licenses:
+It also wont work unless you accept the licenses after:
 
 ```
 ./sdkmanager.bat --licenses
