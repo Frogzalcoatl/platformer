@@ -87,7 +87,7 @@ Define the `ANDROID_HOME` environment variable pointing to your SDK root.
 ### 3. Java Development Kit (JDK 17+)
 
 * Install [here](https://adoptium.net/temurin/releases/?version=17). Required for gradle to build the apk file.
-  - During the installation you must click the red X dropdown next to "SeJAVA_HOME variable" and change it to "Will be installed on local hard drive". If you forget you can also manually set the environment variable to the jdk directory after installing.
+  - During the installation you must click the red X dropdown next to "Set JAVA_HOME variable" and change it to "Will be installed on local hard drive". If you forget you can also manually set the environment variable to the jdk directory after installing.
 
 ## Building the Project
 You can build for android the same way as described above using vscode or in the terminal with an android preset listed in [CMakePresets.json](https://github.com/Frogzalcoatl/platformer/blob/main/CMakePresets.json).
