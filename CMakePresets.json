@@ -6,6 +6,124 @@
   },
   "configurePresets": [
     {
+      "name": "base",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "warnings": {
+        "dev": false
+      }
+    },
+    {
+      "name": "windows-base",
+      "hidden": true,
+      "inherits": "base",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static"
+      }
+    },
+    {
+      "name": "windows-clang-base",
+      "hidden": true,
+      "inherits": "windows-base",
+      "toolset": "ClangCL"
+    },
+    {
+      "name": "windows-msvc-2022",
+      "displayName": "Windows (MSVC 2022)",
+      "description": "Visual Studio 2022",
+      "inherits": "windows-base",
+      "generator": "Visual Studio 17 2022"
+    },
+    {
+      "name": "windows-msvc-2026",
+      "displayName": "Windows (MSVC 2026)",
+      "description": "Visual Studio 2026",
+      "inherits": "windows-base",
+      "generator": "Visual Studio 18 2026"
+    },
+    {
+      "name": "windows-clang-cl-2022",
+      "displayName": "Windows (Clang-CL VS2022)",
+      "description": "Clang via Visual Studio 2022",
+      "inherits": "windows-clang-base",
+      "generator": "Visual Studio 17 2022"
+    },
+    {
+      "name": "windows-clang-cl-2026",
+      "displayName": "Windows (Clang-CL VS2026)",
+      "description": "Clang via Visual Studio 2026",
+      "inherits": "windows-clang-base",
+      "generator": "Visual Studio 18 2026"
+    },
+    {
+      "name": "linux-gcc",
+      "displayName": "Linux (GCC)",
+      "description": "GCC (Multi-Config)",
+      "inherits": "base",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "generator": "Ninja Multi-Config",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++",
+        "CMAKE_CONFIGURATION_TYPES": "Debug;Release;RelWithDebInfo"
+      }
+    },
+    {
+      "name": "linux-clang",
+      "displayName": "Linux (Clang)",
+      "description": "Clang (Multi-Config)",
+      "inherits": "base",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "generator": "Ninja Multi-Config",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_CONFIGURATION_TYPES": "Debug;Release;RelWithDebInfo"
+      }
+    },
+    {
+      "name": "macos-clang",
+      "displayName": "macOS (Clang/Ninja)",
+      "description": "High performance Ninja Multi-Config build",
+      "inherits": "base",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      },
+      "generator": "Ninja Multi-Config",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_CONFIGURATION_TYPES": "Debug;Release;RelWithDebInfo"
+      }
+    },
+    {
+      "name": "macos-xcode",
+      "displayName": "macOS (Xcode)",
+      "description": "Generate Xcode project",
+      "inherits": "base",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      },
+      "generator": "Xcode"
+    },
+    {
       "name": "android-base",
       "hidden": true,
       "binaryDir": "${sourceDir}/build/${presetName}",
@@ -44,6 +162,150 @@
     }
   ],
   "buildPresets": [
+    {
+      "name": "vs2022-msvc-debug",
+      "displayName": "MSVC VS 2022 Debug",
+      "configurePreset": "windows-msvc-2022",
+      "configuration": "Debug"
+    },
+    {
+      "name": "vs2022-msvc-release",
+      "displayName": "MSVC VS 2022 Release",
+      "configurePreset": "windows-msvc-2022",
+      "configuration": "Release"
+    },
+    {
+      "name": "vs2022-msvc-relwithdebinfo",
+      "displayName": "MSVC VS 2022 RelWithDebInfo",
+      "configurePreset": "windows-msvc-2022",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "vs2022-clang-vs-debug",
+      "displayName": "Clang VS 2022 Debug",
+      "configurePreset": "windows-clang-cl-2022",
+      "configuration": "Debug"
+    },
+    {
+      "name": "vs2022-clang-vs-release",
+      "displayName": "Clang VS 2022 Release",
+      "configurePreset": "windows-clang-cl-2022",
+      "configuration": "Release"
+    },
+    {
+      "name": "vs2022-clang-vs-relwithdebinfo",
+      "displayName": "Clang VS 2022 RelWithDebInfo",
+      "configurePreset": "windows-clang-cl-2022",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "vs2026-msvc-debug",
+      "displayName": "MSVC VS 2026 Debug",
+      "configurePreset": "windows-msvc-2026",
+      "configuration": "Debug"
+    },
+    {
+      "name": "vs2026-msvc-release",
+      "displayName": "MSVC VS 2026 Release",
+      "configurePreset": "windows-msvc-2026",
+      "configuration": "Release"
+    },
+    {
+      "name": "vs2026-msvc-relwithdebinfo",
+      "displayName": "MSVC VS 2026 RelWithDebInfo",
+      "configurePreset": "windows-msvc-2026",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "vs2026-clang-vs-debug",
+      "displayName": "Clang VS 2026 Debug",
+      "configurePreset": "windows-clang-cl-2026",
+      "configuration": "Debug"
+    },
+    {
+      "name": "vs2026-clang-vs-release",
+      "displayName": "Clang VS 2026 Release",
+      "configurePreset": "windows-clang-cl-2026",
+      "configuration": "Release"
+    },
+    {
+      "name": "vs2026-clang-vs-relwithdebinfo",
+      "displayName": "Clang VS 2026 RelWithDebInfo",
+      "configurePreset": "windows-clang-cl-2026",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "linux-gcc-debug",
+      "displayName": "Linux GCC Debug",
+      "configurePreset": "linux-gcc",
+      "configuration": "Debug"
+    },
+    {
+      "name": "linux-gcc-release",
+      "displayName": "Linux GCC Release",
+      "configurePreset": "linux-gcc",
+      "configuration": "Release"
+    },
+    {
+      "name": "linux-gcc-relwithdebinfo",
+      "displayName": "Linux GCC RelWithDebInfo",
+      "configurePreset": "linux-gcc",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "linux-clang-debug",
+      "displayName": "Linux Clang Debug",
+      "configurePreset": "linux-clang",
+      "configuration": "Debug"
+    },
+    {
+      "name": "linux-clang-release",
+      "displayName": "Linux Clang Release",
+      "configurePreset": "linux-clang",
+      "configuration": "Release"
+    },
+    {
+      "name": "linux-clang-relwithdebinfo",
+      "displayName": "Linux Clang RelWithDebInfo",
+      "configurePreset": "linux-clang",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "macos-clang-debug",
+      "displayName": "macOS Ninja Debug",
+      "configurePreset": "macos-clang",
+      "configuration": "Debug"
+    },
+    {
+      "name": "macos-clang-release",
+      "displayName": "macOS Ninja Release",
+      "configurePreset": "macos-clang",
+      "configuration": "Release"
+    },
+    {
+      "name": "macos-clang-relwithdebinfo",
+      "displayName": "macOS Ninja RelWithDebInfo",
+      "configurePreset": "macos-clang",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "xcode-debug",
+      "displayName": "Xcode Debug",
+      "configurePreset": "macos-xcode",
+      "configuration": "Debug"
+    },
+    {
+      "name": "xcode-release",
+      "displayName": "Xcode Release",
+      "configurePreset": "macos-xcode",
+      "configuration": "Release"
+    },
+    {
+      "name": "xcode-relwithdebinfo",
+      "displayName": "Xcode RelWithDebInfo",
+      "configurePreset": "macos-xcode",
+      "configuration": "RelWithDebInfo"
+    },
     {
       "name": "android-arm64-debug",
       "displayName": "Android ARM64 Debug",

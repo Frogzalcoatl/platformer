@@ -1,5 +1,7 @@
 #include "Platformer.hpp"
+#ifdef SDL_PLATFORM_ANDROID
 #include "Android.hpp"
+#endif
 #include "Colors.hpp"
 #include "DiscordRpcManager.hpp"
 #include "Drawing.hpp"

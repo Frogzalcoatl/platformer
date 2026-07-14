@@ -1,5 +1,5 @@
 #include "DiscordRpcManager.hpp"
-#ifdef DISCORD_RPC_MANAGER
+#ifdef USE_DISCORD_RPC
 #include <SDL3/SDL.h>
 
 static time_t lastConnectionAttempt = 0;

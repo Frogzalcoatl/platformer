@@ -5,7 +5,7 @@
 
 AssetManager::AssetManager(SDL_Renderer* renderer)
     : vfs(std::filesystem::path(SDL_GetBasePath() ? SDL_GetBasePath() : ""),
-          DatFileName,
+          PackFileName,
           GameVersion,
           AssetsFolderName),
       renderer{renderer} {

@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
     SDL_Log("Created ImGui Context");
     ImGuiIO& io = ImGui::GetIO();
     io.IniFilename = nullptr;
-#ifdef DISCORD_RPC_MANAGER
+#ifdef USE_DISCORD_RPC
     // https://discord.com/developers/applications/1521649642360668300/
     DiscordRichPresence presence = {};
     presence.largeImageKey = "icon";
