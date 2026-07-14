@@ -1,0 +1,12 @@
+Store player ids based on joystickid inside InputManager.
+
+Store vectors of necessary assets as str paths in Level class.
+
+MusicPlayer class
+Store in platformer class. Store str array of music file paths in Level class.
+
+Figure out some way to automatically load static entities on exposed solid tiles.
+
+Account for polygon radius in draw func
+
+Use enet lib for online multiplayer
