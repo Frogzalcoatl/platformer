@@ -74,8 +74,8 @@ static void sdlOutput(void* userdata, int category, SDL_LogPriority priority, co
     std::string timeStamp = getTimeStamp();
     std::string categoryStr = categoryToString(category);
     std::string priorityStr = priorityToString(priority);
-    std::string formattedMessage = "[" + getTimeStamp() + "]" + " [" + categoryToString(category) +
-                                   "/" + priorityToString(priority) + "]: " + message;
+    std::string formattedMessage =
+        "[" + timeStamp + "]" + " [" + categoryStr + "/" + priorityStr + "]: " + message;
     if (defaultSdlLogFunc) {
         defaultSdlLogFunc(userdata, category, priority, formattedMessage.c_str());
     }

@@ -32,7 +32,10 @@ int main(int argc, char* argv[]) {
     }
     SDL_Log("Initialized SDL3_mixer");
     IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
+    if (!ImGui::CreateContext()) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to create ImGui Context.");
+        return 1;
+    }
     SDL_Log("Created ImGui Context");
     ImGuiIO& io = ImGui::GetIO();
     io.IniFilename = nullptr;

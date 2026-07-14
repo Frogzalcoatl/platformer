@@ -165,7 +165,6 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 )
 
 if(NOT ANDROID)
-    set(DESKTOP_BIN_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
     if(WIN32)
         set_target_properties(${PROJECT_NAME} PROPERTIES 
             WIN32_EXECUTABLE $<CONFIG:Release>
