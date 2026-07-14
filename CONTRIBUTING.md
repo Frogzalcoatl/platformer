@@ -1,6 +1,6 @@
 # Contributing
 
-If you ever update the app version, make sure to update both vcpkg.json and android-project/app/build.gradle (versionName).
+If you ever update the app version, make sure to update both `vcpkg.json` and `android-project/app/build.gradle` (versionName).
 
 ## Prerequisites
 
