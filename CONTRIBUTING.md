@@ -47,7 +47,7 @@ xcode-select --install
 ## Building the Project
 I tried my best to set this up as straightforwardly as possible. I use CMake and Vcpkg. If you've never installed vcpkg, don't worry. It will automatically clone into the project directory on build. However, if you have vcpkg installed globally with the VCPKG_ROOT environment variable set up, your global installation is used for efficiency.
 
-This project works fine in whatever IDE you want, given you use a preset listed in [CMakePresets.json](https://github.com/Frogzalcoatl/platformer/blob/main/CMakePresets.json). I use vscode with the [ms-vscode.cpptools-extension-pack](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools-extension-pack). I select `Windows Clang-CL VS2026`, `Clang VS 2026 RelWithDebInfo`, then click `Build` in the status bar.
+This project works fine in whatever IDE you want, given you use a preset listed in [CMakePresets.json](https://github.com/Frogzalcoatl/platformer/blob/main/CMakePresets.json). I use vscode with the [ms-vscode.cpptools-extension-pack](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools-extension-pack). I select `Windows (MSVC 2026)`, `MSVC VS 2026 Debug`, then click `Build` in the status bar.
 
 If you do not want to use vscode, the equivalent commands are:
 ```
