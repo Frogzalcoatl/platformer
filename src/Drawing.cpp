@@ -158,8 +158,8 @@ void Drawing::text(
     unscaledTextRect.y =
         (windowHeight - (worldPosition.y * cameraScale - cameraOffsetPixels.y)) / textScale -
         (textHeightPixels / 2.f);
-    unscaledTextRect.w = textWidthPixels;
-    unscaledTextRect.h = textHeightPixels;
+    unscaledTextRect.w = static_cast<float>(textWidthPixels);
+    unscaledTextRect.h = static_cast<float>(textHeightPixels);
     float oldRenderScaleX, oldRenderScaleY;
     SDL_GetRenderScale(renderer, &oldRenderScaleX, &oldRenderScaleY);
     SDL_SetRenderScale(renderer, textScale, textScale);

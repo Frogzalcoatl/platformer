@@ -119,6 +119,10 @@ void Level::draw(WindowManager& window, AssetManager& assets) {
             }
         }
     }
+    float minXFloat = static_cast<float>(minX);
+    float maxXFloat = static_cast<float>(maxX);
+    float minYFloat = static_cast<float>(minY);
+    float maxYFloat = static_cast<float>(maxY);
     for (const auto& entity : entities) {
         bool didDrawEntity = false;
         if (!entity) {
@@ -131,16 +135,15 @@ void Level::draw(WindowManager& window, AssetManager& assets) {
         b2Vec2 entitySize;
         entitySize.x = entityAABB.upperBound.x - entityAABB.lowerBound.x;
         entitySize.y = entityAABB.upperBound.y - entityAABB.lowerBound.y;
-        if (!Drawing::shouldDrawObject(entityAABB.lowerBound, entitySize, minX, maxX, minY, maxY)) {
+        if (!Drawing::shouldDrawObject(
+                entityAABB.lowerBound, entitySize, minXFloat, maxXFloat, minYFloat, maxYFloat
+            )) {
             continue;
         }
         if (entity->draw(window, alpha, cameraScale, cameraOffsetPixels)) {
             didDrawEntity = true;
         }
         if (showFanTriangulation) {
-            b2Transform transform;
-            transform.p = entity->getInterpolatedPosition(alpha);
-            transform.q = entity->getInterpolatedRotation(alpha);
             Drawing::showFanTriangulation(
                 entity->getPolygon(), window, transform, cameraScale, cameraOffsetPixels
             );
@@ -165,7 +168,9 @@ void Level::draw(WindowManager& window, AssetManager& assets) {
         b2Vec2 nametagPosBottomLeft = b2Vec2{
             nametagPosCenter.x - nametagSize.x / 2.f, nametagPosCenter.y - nametagSize.y / 2.f
         };
-        if (Drawing::shouldDrawObject(nametagPosBottomLeft, nametagSize, minX, maxX, minY, maxY)) {
+        if (Drawing::shouldDrawObject(
+                nametagPosBottomLeft, nametagSize, minXFloat, maxXFloat, minYFloat, maxYFloat
+            )) {
             player->drawNameTag(window, assets, cameraScale, cameraOffsetPixels, alpha);
             drawInfo.nametags++;
         }
@@ -213,7 +218,6 @@ const EntitiesVector& Level::getEntities() const {
 }
 
 void Level::addEntity(
-    b2WorldId world,
     b2Polygon polygon,
     b2Vec2 position,
     b2BodyDef bodyDef,
@@ -373,7 +377,6 @@ std::unique_ptr<Level> getTestLevel(AssetManager& assets, WindowManager& window)
     std::unique_ptr<Level> level =
         std::make_unique<Level>("Test", LevelDimensions{100, 40}, window);
     level->showLevelBounds = true;
-    b2WorldId world = level->getWorldId();
     const int GroundWidth = 50;
     const int GroundHeight = 2;
     const int WallHeight = 20;
@@ -381,24 +384,20 @@ std::unique_ptr<Level> getTestLevel(AssetManager& assets, WindowManager& window)
     const int WallPosRight = GroundWidth;
     level->addPlayer(assets, std::nullopt);
     level->addEntity(
-        world,
         b2MakeBox(static_cast<float>(GroundWidth) / 2.f, static_cast<float>(GroundHeight) / 2.f),
         b2Vec2{static_cast<float>(GroundWidth) / 2.f, 1.f}
     );
     level->addEntity(
-        world,
         b2MakeBox(0.5f, static_cast<float>(WallHeight) / 2.f),
         b2Vec2{WallPosLeft + 0.5f, static_cast<float>(WallHeight) / 2.f}
     );
     level->addEntity(
-        world,
         b2MakeBox(0.5f, static_cast<float>(WallHeight) / 2.f),
         b2Vec2{WallPosRight + 0.5f, static_cast<float>(WallHeight) / 2.f}
     );
     b2BodyDef dynamicBodyDef = b2DefaultBodyDef();
     dynamicBodyDef.type = b2_dynamicBody;
     level->addEntity(
-        world,
         b2MakeBox(0.5f, 2.f),
         b2Vec2{28.f, 4.f},
         dynamicBodyDef,
@@ -408,7 +407,6 @@ std::unique_ptr<Level> getTestLevel(AssetManager& assets, WindowManager& window)
         b2Vec2{1.f, 4.f}
     );
     level->addEntity(
-        world,
         b2MakeBox(0.5f, 1.f),
         b2Vec2{8.f, 3.f},
         dynamicBodyDef,

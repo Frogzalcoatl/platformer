@@ -1,4 +1,5 @@
 Store player ids based on joystickid inside InputManager.
+    Make sure keyboardVerbsPressed uses KeyboardID in the same way gamepads use gamepadid
 
 Store vectors of necessary assets as str paths in Level class.
 

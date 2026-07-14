@@ -23,6 +23,11 @@ using GamepadBindings = std::array<
     std::array<SDL_GamepadButton, MaxBindsPerVerb>,
     static_cast<size_t>(InputVerb::VerbCount)>;
 
+struct InputSourceInfo {
+    InputSource type;
+    Uint32 sdlId;
+};
+
 class InputManager {
   private:
     ScancodeBindings scancodeBindings;
@@ -31,8 +36,10 @@ class InputManager {
     // e.g. two buttons bound to the same verb:
     // Prevents release event when one of the buttons is released and the other isnt.
     std::unordered_map<SDL_JoystickID, std::array<int, static_cast<size_t>(InputVerb::VerbCount)>>
-        gamepadsVerbsPressed = {};
-    std::array<int, static_cast<size_t>(InputVerb::VerbCount)> keyboardVerbsPressed = {};
+        gamepadsVerbsPressed;
+    std::array<int, static_cast<size_t>(InputVerb::VerbCount)> keyboardVerbsPressed;
+
+    std::vector<InputSourceInfo> inputSources;
 
   public:
     InputManager();
@@ -46,6 +53,8 @@ class InputManager {
     std::vector<InputVerbInfo> getVerbsFromScancode(SDL_Scancode scancode);
 
     std::array<ScancodeInfo, MaxBindsPerVerb> getScancodesFromVerb(InputVerb verb);
+
+    void handleKeyboardDeviceEvent(SDL_KeyboardDeviceEvent& event);
 
     const ScancodeBindings& getScancodeBindings() const;
 

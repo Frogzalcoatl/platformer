@@ -30,8 +30,8 @@ EntityController::EntityController(
     nametag = assets.getSDLText(nametagStr, AssetPaths::Fonts::Consolas, 20.f);
 }
 
-void EntityController::setEntity(Entity& entity) {
-    this->entity = &entity;
+void EntityController::setEntity(Entity& newEntity) {
+    entity = &newEntity;
 }
 
 void EntityController::clearEntity() {

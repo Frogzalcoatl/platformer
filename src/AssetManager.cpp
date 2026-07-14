@@ -134,8 +134,8 @@ UniqueText AssetManager::getSDLText(
 
 ImFont* AssetManager::getImGuiFont(std::string_view relativePath, float ptSize) {
     std::string pathStr(relativePath);
-    std::vector<std::byte> fontData = vfs.readFile(pathStr);
-    if (fontData.empty()) {
+    std::vector<std::byte> data = vfs.readFile(pathStr);
+    if (data.empty()) {
         SDL_LogError(
             SDL_LOG_CATEGORY_APPLICATION,
             "Unable to get ImGui font from file \"%s\"",
@@ -143,11 +143,11 @@ ImFont* AssetManager::getImGuiFont(std::string_view relativePath, float ptSize) 
         );
         return nullptr;
     }
-    void* imguiOwnedBuffer = ImGui::MemAlloc(fontData.size());
-    std::memcpy(imguiOwnedBuffer, fontData.data(), fontData.size());
+    void* imguiOwnedBuffer = ImGui::MemAlloc(data.size());
+    std::memcpy(imguiOwnedBuffer, data.data(), data.size());
     ImGuiIO& io = ImGui::GetIO();
     ImFont* font =
-        io.Fonts->AddFontFromMemoryTTF(imguiOwnedBuffer, static_cast<int>(fontData.size()), ptSize);
+        io.Fonts->AddFontFromMemoryTTF(imguiOwnedBuffer, static_cast<int>(data.size()), ptSize);
     if (!font) {
         ImGui::MemFree(imguiOwnedBuffer);
         SDL_LogError(

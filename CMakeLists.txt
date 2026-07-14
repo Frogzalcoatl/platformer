@@ -152,9 +152,18 @@ endif()
 
 # I like strict compilers
 if(MSVC)
-    target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX)
+    target_compile_options(${PROJECT_NAME} PRIVATE 
+        /W4
+        $<$<CONFIG:Release>:/WX> # Warnings as errors only in release
+    )
 else()
-    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Werror)
+    target_compile_options(${PROJECT_NAME} PRIVATE 
+        -Wall 
+        -Wextra 
+        -Wshadow 
+        -Wconversion
+        $<$<CONFIG:Release>:-Werror> # Warnings as errors only in release
+    )
 endif()
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE _USE_MATH_DEFINES)

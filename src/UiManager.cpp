@@ -336,7 +336,7 @@ void UiManager::drawSettings(
             }
             ImGui::Dummy(verticalSpacingDummy);
             if (!vsync && !fpsUnlimited) {
-                static int tempFps = window.getTargetFps();
+                static int tempFps = static_cast<int>(window.getTargetFps());
                 ImGui::SliderInt("Target FPS", &tempFps, 10, 300, "%d", sliderFlags);
                 if (ImGui::IsItemDeactivatedAfterEdit()) {
                     window.setTargetFps(tempFps);

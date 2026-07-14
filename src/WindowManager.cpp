@@ -29,7 +29,7 @@ WindowManager::WindowManager(const char* windowName, SDL_Color backgroundColor)
     }
     SDL_Log("Created SDL3 renderer");
     setVsync(vsync);
-    float vsyncFps = getVsyncFps();
+    Uint64 vsyncFps = static_cast<Uint64>(getVsyncFps());
     targetFps = vsyncFps;
     targetFrameTimeNs = 1000000000ULL / targetFps;
     ImGui_ImplSDL3_InitForSDLRenderer(sdlWindow.get(), sdlRenderer.get());
@@ -86,8 +86,8 @@ WindowVec2 WindowManager::getMousePos() const {
 }
 
 void WindowManager::handleMouseMotionEvent(const SDL_MouseMotionEvent& event) {
-    mousePos.x = event.x;
-    mousePos.y = event.y;
+    mousePos.x = static_cast<int>(event.x);
+    mousePos.y = static_cast<int>(event.y);
 }
 
 Uint64 WindowManager::getTargetFps() const {

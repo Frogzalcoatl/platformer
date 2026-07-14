@@ -79,7 +79,6 @@ class Level {
     const EntitiesVector& getEntities() const;
 
     void addEntity(
-        b2WorldId world,
         b2Polygon polygon,
         b2Vec2 position,
         b2BodyDef bodyDef = b2DefaultBodyDef(),
