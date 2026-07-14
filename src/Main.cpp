@@ -60,6 +60,8 @@ int main(int argc, char* argv[]) {
     SDL_Log("Shutdown ImGui SDL3 implementation");
     ImGui::DestroyContext();
     SDL_Log("Destroyed ImGui context");
+    MIX_Quit();
+    SDL_Log("Quit SDL3_mixer");
     TTF_Quit();
     SDL_Log("Quit SDL3_ttf");
     SDL_Quit();
