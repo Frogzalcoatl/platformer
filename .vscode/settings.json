@@ -2,4 +2,7 @@
     "editor.formatOnSave": true,
     "C_Cpp.clang_format_fallbackStyle": "LLVM",
     "java.configuration.updateBuildConfiguration": "automatic",
+    "java.import.exclusions": [
+        "**/android-project/**"
+    ]
 }
