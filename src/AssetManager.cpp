@@ -1,5 +1,6 @@
 #include "AssetManager.hpp"
 #include "AssetPaths.hpp"
+#include <algorithm>
 #include <cstring>
 #include <fstream>
 

@@ -18,11 +18,13 @@ void Drawing::polygon(
         return;
     }
     std::array<SDL_FPoint, B2_MAX_POLYGON_VERTICES> points;
-    int windowHeight = window.getSize().y;
+    float windowHeight = static_cast<float>(window.getSize().y);
+    float cameraOffsetX = static_cast<float>(cameraOffsetPixels.x);
+    float cameraOffsetY = static_cast<float>(cameraOffsetPixels.y);
     for (int i = 0; i < polygon.count; i++) {
         b2Vec2 pos = b2TransformPoint(transform, polygon.vertices[i]);
-        pos.x = pos.x * cameraScale - cameraOffsetPixels.x;
-        pos.y = windowHeight - (pos.y * cameraScale - cameraOffsetPixels.y);
+        pos.x = pos.x * cameraScale - cameraOffsetX;
+        pos.y = windowHeight - (pos.y * cameraScale - cameraOffsetY);
         points[i] = SDL_FPoint{pos.x, pos.y};
     }
     std::array<SDL_Vertex, B2_MAX_POLYGON_VERTICES> vertices;
@@ -62,11 +64,13 @@ void Drawing::polygonBorders(
         return;
     }
     std::array<SDL_FPoint, B2_MAX_POLYGON_VERTICES + 1> points;
-    int windowHeight = window.getSize().y;
+    float windowHeight = static_cast<float>(window.getSize().y);
+    float cameraOffsetX = static_cast<float>(cameraOffsetPixels.x);
+    float cameraOffsetY = static_cast<float>(cameraOffsetPixels.y);
     for (int i = 0; i < polygon.count; i++) {
         b2Vec2 pos = b2TransformPoint(transform, polygon.vertices[i]);
-        points[i].x = pos.x * cameraScale - cameraOffsetPixels.x;
-        points[i].y = windowHeight - (pos.y * cameraScale - cameraOffsetPixels.y);
+        points[i].x = pos.x * cameraScale - cameraOffsetX;
+        points[i].y = windowHeight - (pos.y * cameraScale - cameraOffsetY);
     }
     points[polygon.count] = points[0];
     SDL_SetRenderDrawColorFloat(renderer, color.r, color.g, color.b, color.a);
@@ -87,11 +91,13 @@ void Drawing::showFanTriangulation(
         return;
     }
     std::array<SDL_FPoint, B2_MAX_POLYGON_VERTICES + 1> points;
-    int windowHeight = window.getSize().y;
+    float windowHeight = static_cast<float>(window.getSize().y);
+    float cameraOffsetX = static_cast<float>(cameraOffsetPixels.x);
+    float cameraOffsetY = static_cast<float>(cameraOffsetPixels.y);
     for (int i = 0; i < polygon.count; i++) {
         b2Vec2 pos = b2TransformPoint(transform, polygon.vertices[i]);
-        points[i].x = pos.x * cameraScale - cameraOffsetPixels.x;
-        points[i].y = windowHeight - (pos.y * cameraScale - cameraOffsetPixels.y);
+        points[i].x = pos.x * cameraScale - cameraOffsetX;
+        points[i].y = windowHeight - (pos.y * cameraScale - cameraOffsetY);
     }
     points[polygon.count] = points[0];
     SDL_SetRenderDrawColorFloat(renderer, color.r, color.g, color.b, color.a);
@@ -113,16 +119,18 @@ void Drawing::rectangleBorders(
     if (!renderer) {
         return;
     }
-    int windowHeight = window.getSize().y;
+    float windowHeight = static_cast<float>(window.getSize().y);
+    float cameraOffsetX = static_cast<float>(cameraOffsetPixels.x);
+    float cameraOffsetY = static_cast<float>(cameraOffsetPixels.y);
     SDL_FPoint points[5];
-    points[0].x = min.x * cameraScale - cameraOffsetPixels.x;
-    points[0].y = windowHeight - (min.y * cameraScale - cameraOffsetPixels.y);
-    points[1].x = max.x * cameraScale - cameraOffsetPixels.x;
-    points[1].y = windowHeight - (min.y * cameraScale - cameraOffsetPixels.y);
-    points[2].x = max.x * cameraScale - cameraOffsetPixels.x;
-    points[2].y = windowHeight - (max.y * cameraScale - cameraOffsetPixels.y);
-    points[3].x = min.x * cameraScale - cameraOffsetPixels.x;
-    points[3].y = windowHeight - (max.y * cameraScale - cameraOffsetPixels.y);
+    points[0].x = min.x * cameraScale - cameraOffsetX;
+    points[0].y = windowHeight - (min.y * cameraScale - cameraOffsetY);
+    points[1].x = max.x * cameraScale - cameraOffsetX;
+    points[1].y = windowHeight - (min.y * cameraScale - cameraOffsetY);
+    points[2].x = max.x * cameraScale - cameraOffsetX;
+    points[2].y = windowHeight - (max.y * cameraScale - cameraOffsetY);
+    points[3].x = min.x * cameraScale - cameraOffsetX;
+    points[3].y = windowHeight - (max.y * cameraScale - cameraOffsetY);
     points[4] = points[0];
     SDL_SetRenderDrawColorFloat(renderer, color.r, color.g, color.b, color.a);
     SDL_RenderLines(renderer, points, 5);
@@ -151,13 +159,17 @@ void Drawing::text(
         return;
     }
     float textScale = cameraScale / textRenderScale * textWorldSizeMultiplier;
-    int windowHeight = window.getSize().y;
+    float textHeight = static_cast<float>(textHeightPixels);
+    float textWidth = static_cast<float>(textWidthPixels);
+    float windowHeight = static_cast<float>(window.getSize().y);
+    float cameraOffsetX = static_cast<float>(cameraOffsetPixels.x);
+    float cameraOffsetY = static_cast<float>(cameraOffsetPixels.y);
     SDL_FRect unscaledTextRect;
-    unscaledTextRect.x = (worldPosition.x * cameraScale - cameraOffsetPixels.x) / textScale -
-                         (textWidthPixels / 2.f);
+    unscaledTextRect.x =
+        (worldPosition.x * cameraScale - cameraOffsetX) / textScale - (textWidth / 2.f);
     unscaledTextRect.y =
-        (windowHeight - (worldPosition.y * cameraScale - cameraOffsetPixels.y)) / textScale -
-        (textHeightPixels / 2.f);
+        (windowHeight - (worldPosition.y * cameraScale - cameraOffsetY)) / textScale -
+        (textHeight / 2.f);
     unscaledTextRect.w = static_cast<float>(textWidthPixels);
     unscaledTextRect.h = static_cast<float>(textHeightPixels);
     float oldRenderScaleX, oldRenderScaleY;
@@ -199,12 +211,14 @@ void Drawing::texture(
     if (!renderer) {
         return;
     }
+    float windowHeight = static_cast<float>(window.getSize().y);
+    float cameraOffsetX = static_cast<float>(cameraOffsetPixels.x);
+    float cameraOffsetY = static_cast<float>(cameraOffsetPixels.y);
     SDL_FRect rect;
     rect.w = worldSize.x * cameraScale;
     rect.h = worldSize.y * cameraScale;
-    rect.x = (worldPosition.x - worldSize.x / 2.f) * cameraScale - cameraOffsetPixels.x;
-    rect.y = window.getSize().y -
-             ((worldPosition.y + worldSize.y / 2.f) * cameraScale - cameraOffsetPixels.y);
+    rect.x = (worldPosition.x - worldSize.x / 2.f) * cameraScale - cameraOffsetX;
+    rect.y = windowHeight - ((worldPosition.y + worldSize.y / 2.f) * cameraScale - cameraOffsetY);
     SDL_RenderTextureRotated(renderer, texture, nullptr, &rect, sdlAngle, nullptr, flip);
 }
 

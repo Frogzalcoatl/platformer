@@ -109,10 +109,11 @@ bool AudioManager::playMusic(
         return false;
     }
     MIX_SetTrackFrequencyRatio(musicTrack.get(), pitch);
+    float volumeFloat = static_cast<float>(volume);
     MIX_SetTrackGain(
-        musicTrack.get(), volume / 100.f * tagGain[static_cast<size_t>(AudioCategory::Music)]
+        musicTrack.get(), volumeFloat / 100.f * tagGain[static_cast<size_t>(AudioCategory::Music)]
     );
-    currentMusicVolume = volume / 100.f;
+    currentMusicVolume = volumeFloat / 100.f;
     MIX_SetTrackAudio(musicTrack.get(), currentMusic);
     SDL_PropertiesID properties = SDL_CreateProperties();
     if (loop) {
@@ -137,7 +138,7 @@ void AudioManager::setVolume(AudioCategory category, unsigned int volume) {
     if (category >= AudioCategory::AudioCategoryCount) {
         return;
     }
-    float volumeFloat = volume / 100.f;
+    float volumeFloat = static_cast<float>(volume) / 100.f;
     tagGain[static_cast<size_t>(category)] = volumeFloat;
     if (category == AudioCategory::Master) {
         MIX_SetMixerGain(mixerDevice.get(), volumeFloat);

@@ -160,7 +160,6 @@ else()
     target_compile_options(${PROJECT_NAME} PRIVATE 
         -Wall 
         -Wextra 
-        -Wshadow 
         -Wconversion
         $<$<CONFIG:Release>:-Werror> # Warnings as errors only in release
     )

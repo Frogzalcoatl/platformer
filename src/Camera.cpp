@@ -45,7 +45,7 @@ void Camera::applyViewableLimits(b2Vec2& camPos) {
 }
 
 void Camera::updateScaleFactor(int windowSizeX, int windowSizeY) {
-    int dividend = b2MinInt(windowSizeX, windowSizeY);
+    float dividend = static_cast<float>(b2MinInt(windowSizeX, windowSizeY));
     scaleFactor = dividend / 20.f * scaleMultiplier;
 }
 
@@ -88,7 +88,9 @@ void Camera::run(float alpha) {
 
 b2Vec2 Camera::getSize() const {
     WindowVec2 size = window.getSize();
-    return b2Vec2{size.x / scaleFactor, size.y / scaleFactor};
+    return b2Vec2{
+        static_cast<float>(size.x) / scaleFactor, static_cast<float>(size.y) / scaleFactor
+    };
 }
 
 void Camera::handleWindowResize(int x, int y) {
