@@ -114,7 +114,7 @@ class AssetManager {
 
     UniqueText getSDLText(
         std::string_view text,
-        std::string_view relativePath,
+        std::string_view relativeFontPath,
         float ptSize,
         TTF_FontStyleFlags style = TTF_STYLE_NORMAL
     );

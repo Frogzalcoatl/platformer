@@ -101,15 +101,15 @@ TTF_TextEngine* AssetManager::getTextEngine() const {
 }
 
 UniqueText AssetManager::getSDLText(
-    std::string_view text, std::string_view relativePath, float ptSize, TTF_FontStyleFlags style
+    std::string_view text, std::string_view relativeFontPath, float ptSize, TTF_FontStyleFlags style
 ) {
     if (!textEngine) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Unable to get text. SDL3 text engine is null.");
         return nullptr;
     }
-    TTF_Font* font = getSDLFont(relativePath, ptSize, style);
+    TTF_Font* font = getSDLFont(relativeFontPath, ptSize, style);
     if (!font) {
-        std::string pathStr(relativePath);
+        std::string pathStr(relativeFontPath);
         SDL_LogError(
             SDL_LOG_CATEGORY_APPLICATION,
             "Unable to get SDL3 TTF text \"%.*s\" using font \"%s\"",
