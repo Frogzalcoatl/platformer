@@ -9,15 +9,10 @@
 class EntityController {
   private:
     Entity* entity;
-    UniqueText nametag;
 
   public:
     EntityController() = default;
-    EntityController(
-        Entity& entity,
-        AssetManager& assets,
-        std::optional<SDL_JoystickID> joystickId = std::nullopt
-    );
+    EntityController(Entity& entity);
 
     void setEntity(Entity& entity);
 
@@ -31,27 +26,10 @@ class EntityController {
 
     void respawn();
 
-    void resetMovement();
+    void resetInput();
 
     void handleInput(GameEventTypes::Input event, Camera* camera, float alpha);
 
-    void drawNameTag(
-        WindowManager& window,
-        AssetManager& assets,
-        float cameraScale,
-        WindowVec2 cameraOffsetPixels,
-        float alpha
-    );
-
-    b2Vec2 getNametagWorldSize(
-        // params are consts from AssetManager
-        float textRenderScale,
-        float textWorldSizeMultiplier
-    ) const;
-
-    b2Vec2 getNametagWorldPos(float alpha) const;
-
-    std::optional<SDL_JoystickID> joystickId;
     b2Vec2 spawnPoint = {0.f, 0.f};
     float jumpForceNewtons = 160.f;
     float horizontalSpeed = 10.f;

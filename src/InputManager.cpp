@@ -1,4 +1,5 @@
 #include "InputManager.hpp"
+#include "Events.hpp"
 #include <cassert>
 #include <imgui.h>
 
@@ -132,7 +133,8 @@ std::vector<InputVerbInfo> InputManager::getVerbsFromScancode(SDL_Scancode scanc
     return inputVerbs;
 }
 
-std::array<ScancodeInfo, MaxBindsPerVerb> InputManager::getScancodesFromVerb(InputVerb verb) {
+const std::array<ScancodeInfo, MaxBindsPerVerb>&
+InputManager::getScancodesFromVerb(InputVerb verb) const {
     assert(verb < InputVerb::VerbCount);
     return scancodeBindings[static_cast<size_t>(verb)];
 }
@@ -202,8 +204,8 @@ std::vector<InputVerb> InputManager::getVerbsFromGamepadButton(SDL_GamepadButton
     return verbs;
 }
 
-std::array<SDL_GamepadButton, MaxBindsPerVerb>
-InputManager::getGamepadButtonsFromVerb(InputVerb verb) {
+const std::array<SDL_GamepadButton, MaxBindsPerVerb>&
+InputManager::getGamepadButtonsFromVerb(InputVerb verb) const {
     assert(verb < InputVerb::VerbCount);
     return gamepadBindings[static_cast<size_t>(verb)];
 }
@@ -211,8 +213,15 @@ InputManager::getGamepadButtonsFromVerb(InputVerb verb) {
 void InputManager::handleGamepadDeviceEvent(SDL_GamepadDeviceEvent& event) {
     if (event.type == SDL_EVENT_GAMEPAD_REMOVED) {
         gamepadsVerbsPressed.erase(event.which);
+        for (auto it = playerSources.begin(); it != playerSources.end(); it++) {
+            if (it->type == InputSource::Controller && it->sdlId == event.which) {
+                playerSources.erase(it);
+                break;
+            }
+        }
     } else if (event.type == SDL_EVENT_GAMEPAD_ADDED) {
         gamepadsVerbsPressed[event.which] = {};
+        playerSources.push_back(PlayerSourceInfo{InputSource::Controller, event.which});
     }
 }
 
@@ -224,12 +233,8 @@ size_t InputManager::getGamepadCount() const {
     return gamepadsVerbsPressed.size();
 }
 
-std::vector<SDL_JoystickID> InputManager::getActiveGamepads() const {
-    std::vector<SDL_JoystickID> gamepads;
-    for (const auto& gamepad : gamepadsVerbsPressed) {
-        gamepads.push_back(gamepad.first);
-    }
-    return gamepads;
+const std::vector<PlayerSourceInfo>& InputManager::getPlayerSources() const {
+    return playerSources;
 }
 
 std::vector<GameEventTypes::Input> InputManager::getInputEventsFromSDLEvent(SDL_Event& event) {
@@ -264,10 +269,14 @@ std::vector<GameEventTypes::Input> InputManager::getInputEventsFromSDLEvent(SDL_
         if (event.key.scancode == SDL_SCANCODE_AC_BACK && event.key.type == SDL_EVENT_KEY_DOWN) {
             // Always return input pause and cancel events for android back button.
             inputEvents.push_back(
-                GameEventTypes::Input{InputVerb::Pause, InputState::Pressed, InputSource::Touch}
+                GameEventTypes::Input{
+                    InputVerb::Pause, InputState::Pressed, PlayerSourceInfo{InputSource::Touch, 0}
+                }
             );
             inputEvents.push_back(
-                GameEventTypes::Input{InputVerb::Cancel, InputState::Pressed, InputSource::Touch}
+                GameEventTypes::Input{
+                    InputVerb::Cancel, InputState::Pressed, PlayerSourceInfo{InputSource::Touch, 0}
+                }
             );
             return inputEvents;
         }
@@ -286,16 +295,24 @@ std::vector<GameEventTypes::Input> InputManager::getInputEventsFromSDLEvent(SDL_
                 amountPressed--;
             }
             if (amountPressed == 0) {
+                // Not using event.which bc its somewhat unreliable and who needs to use multiple
+                // keyboards at once
                 inputEvents.push_back(
                     GameEventTypes::Input{
-                        verbs[i].verb, InputState::Released, InputSource::Keyboard
+                        verbs[i].verb,
+                        InputState::Released,
+                        PlayerSourceInfo{InputSource::Keyboard, 0}
                     }
                 );
             }
             if (amountPressed >= 1 && (verbs[i].activateOnRepeat || !event.key.repeat) &&
                 event.type == SDL_EVENT_KEY_DOWN) {
                 inputEvents.push_back(
-                    GameEventTypes::Input{verbs[i].verb, InputState::Pressed, InputSource::Keyboard}
+                    GameEventTypes::Input{
+                        verbs[i].verb,
+                        InputState::Pressed,
+                        PlayerSourceInfo{InputSource::Keyboard, 0}
+                    }
                 );
             }
         }
@@ -306,12 +323,17 @@ std::vector<GameEventTypes::Input> InputManager::getInputEventsFromSDLEvent(SDL_
             break;
         }
         if (event.wheel.integer_y > 0) {
+            // mouse.which is not relevant here
             inputEvents.push_back(
-                GameEventTypes::Input{InputVerb::ZoomIn, InputState::Pressed, InputSource::Mouse}
+                GameEventTypes::Input{
+                    InputVerb::ZoomIn, InputState::Pressed, PlayerSourceInfo{InputSource::Mouse, 0}
+                }
             );
         } else if (event.wheel.integer_y < 0) {
             inputEvents.push_back(
-                GameEventTypes::Input{InputVerb::ZoomOut, InputState::Pressed, InputSource::Mouse}
+                GameEventTypes::Input{
+                    InputVerb::ZoomOut, InputState::Pressed, PlayerSourceInfo{InputSource::Mouse, 0}
+                }
             );
         }
     }; break;
@@ -333,13 +355,17 @@ std::vector<GameEventTypes::Input> InputManager::getInputEventsFromSDLEvent(SDL_
             if (amountPressed == 0) {
                 inputEvents.push_back(
                     GameEventTypes::Input{
-                        verbs[i], InputState::Released, InputSource::Controller, event.gbutton.which
+                        verbs[i],
+                        InputState::Released,
+                        PlayerSourceInfo{InputSource::Controller, event.gbutton.which}
                     }
                 );
             } else if (amountPressed >= 1 && event.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN) {
                 inputEvents.push_back(
                     GameEventTypes::Input{
-                        verbs[i], InputState::Pressed, InputSource::Controller, event.gbutton.which
+                        verbs[i],
+                        InputState::Pressed,
+                        PlayerSourceInfo{InputSource::Controller, event.gbutton.which}
                     }
                 );
             }

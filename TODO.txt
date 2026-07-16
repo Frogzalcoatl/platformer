@@ -1,13 +1,15 @@
 Store player ids based on joystickid inside InputManager.
-    Make sure keyboardVerbsPressed uses KeyboardID in the same way gamepads use gamepadid
+    Fix the updatePlayers function to use the playerSources arr.
+    Stop automatically creating a player with the keyboard on level creation.
+    Figure out some way to determine whether the user is on touch screen and enable touch controls based on that.
+
+Use enet lib for online multiplayer
+
+Account for polygon radius in draw func
+
+Figure out some way to automatically load static entities on exposed solid tiles.
 
 Store vectors of necessary assets as str paths in Level class.
 
 MusicPlayer class
 Store in platformer class. Store str array of music file paths in Level class.
-
-Figure out some way to automatically load static entities on exposed solid tiles.
-
-Account for polygon radius in draw func
-
-Use enet lib for online multiplayer

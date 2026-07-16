@@ -11,7 +11,6 @@ struct LevelDimensions {
 struct LevelDrawInfo {
     size_t tiles = 0;
     size_t entities = 0;
-    size_t nametags = 0;
 };
 
 struct LevelDrawDimensions {
@@ -21,15 +20,19 @@ struct LevelDrawDimensions {
     size_t maxY = 0;
 };
 
+struct Player {
+    PlayerSourceInfo source;
+    std::unique_ptr<EntityController> controller;
+};
+
 using LevelTileVector = std::vector<std::vector<AssetPaths::Textures::TileTypes>>;
 using EntitiesVector = std::vector<std::unique_ptr<Entity>>;
-using PlayersVector = std::vector<std::unique_ptr<EntityController>>;
 
 class Level {
   private:
     LevelTileVector tiles;
     EntitiesVector entities;
-    PlayersVector players;
+    std::vector<Player> players;
     b2WorldId world;
     LevelDimensions size;
     const char* levelName;
@@ -70,7 +73,7 @@ class Level {
 
     LevelDimensions getSize() const;
 
-    Camera& getCamera();
+    Camera* getCamera();
 
     std::string_view getName() const;
 
@@ -94,11 +97,11 @@ class Level {
 
     void removeTile(size_t x, size_t y);
 
-    const PlayersVector& getPlayers() const;
+    const std::vector<Player>& getPlayers() const;
 
-    void addPlayer(AssetManager& assets, std::optional<SDL_JoystickID> joystickId);
+    void addPlayer(PlayerSourceInfo playerSource, AssetManager& assets);
 
-    void updatePlayers(const std::vector<SDL_JoystickID>& activeGamepads, AssetManager& assets);
+    void updatePlayers(const std::vector<PlayerSourceInfo>& playerSources, AssetManager& assets);
 
     const LevelDrawInfo& drawnLastFrame() const;
 };

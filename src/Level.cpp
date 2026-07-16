@@ -65,8 +65,8 @@ void Level::update() {
             }
         }
         for (auto& player : players) {
-            if (player) {
-                player->update();
+            if (player.controller) {
+                player.controller->update();
             }
         }
         b2World_Step(world, physicsStep, 4);
@@ -76,19 +76,15 @@ void Level::update() {
 }
 
 void Level::handleInput(GameEventTypes::Input event) {
-    EntityController* playerForInput = nullptr;
     for (auto& player : players) {
-        if (!player) {
+        if (!player.controller) {
             continue;
         }
-        if (player->joystickId == event.joystickId) {
-            playerForInput = player.get();
+        if (player.source == event.sourceInfo) {
+            player.controller->handleInput(event, &camera, alpha);
+            return;
         }
     }
-    if (!playerForInput) {
-        return;
-    }
-    playerForInput->handleInput(event, &camera, alpha);
 }
 
 void Level::draw(WindowManager& window, AssetManager& assets) {
@@ -140,7 +136,7 @@ void Level::draw(WindowManager& window, AssetManager& assets) {
             )) {
             continue;
         }
-        if (entity->draw(window, alpha, cameraScale, cameraOffsetPixels)) {
+        if (entity->draw(window, alpha, cameraScale, cameraOffsetPixels, assets)) {
             didDrawEntity = true;
         }
         if (showFanTriangulation) {
@@ -155,24 +151,6 @@ void Level::draw(WindowManager& window, AssetManager& assets) {
         }
         if (didDrawEntity) {
             drawInfo.entities++;
-        }
-    }
-    for (const auto& player : players) {
-        if (!player) {
-            continue;
-        }
-        const b2Vec2 nametagPosCenter = player.get()->getNametagWorldPos(alpha);
-        const b2Vec2 nametagSize = player.get()->getNametagWorldSize(
-            assets.TextRenderScale, assets.TextWorldSizeMultiplier
-        );
-        b2Vec2 nametagPosBottomLeft = b2Vec2{
-            nametagPosCenter.x - nametagSize.x / 2.f, nametagPosCenter.y - nametagSize.y / 2.f
-        };
-        if (Drawing::shouldDrawObject(
-                nametagPosBottomLeft, nametagSize, minXFloat, maxXFloat, minYFloat, maxYFloat
-            )) {
-            player->drawNameTag(window, assets, cameraScale, cameraOffsetPixels, alpha);
-            drawInfo.nametags++;
         }
     }
     if (showLevelBounds) {
@@ -201,8 +179,8 @@ LevelDimensions Level::getSize() const {
     return LevelDimensions{width, height};
 }
 
-Camera& Level::getCamera() {
-    return camera;
+Camera* Level::getCamera() {
+    return &camera;
 }
 
 std::string_view Level::getName() const {
@@ -280,32 +258,18 @@ void Level::removeTile(size_t x, size_t y) {
     tiles[x][y] = Textures::TileTypes::Air;
 }
 
-const PlayersVector& Level::getPlayers() const {
+const std::vector<Player>& Level::getPlayers() const {
     return players;
 }
 
-void Level::addPlayer(AssetManager& assets, std::optional<SDL_JoystickID> joystickId) {
-    if (!joystickId.has_value()) {
-        for (const auto& player : players) {
-            if (!player) {
-                continue;
-            }
-            if (player.get()->joystickId == joystickId) {
-                SDL_LogWarn(
-                    SDL_LOG_CATEGORY_APPLICATION,
-                    "Adding a second player with no joystick id is not allowed"
-                );
-                return;
-            }
-        }
-    }
+void Level::addPlayer(PlayerSourceInfo playerSource, AssetManager& assets) {
     b2BodyDef playerBodyDef = b2DefaultBodyDef();
     playerBodyDef.fixedRotation = true;
     playerBodyDef.type = b2_dynamicBody;
     b2ShapeDef playerShapeDef = b2DefaultShapeDef();
     playerShapeDef.material.friction = 0.f;
     playerShapeDef.density = 4.f;
-    auto playerEntity = std::make_unique<Entity>(
+    std::unique_ptr<Entity> playerEntity = std::make_unique<Entity>(
         world,
         b2MakeBox(0.5f, 1.f),
         b2Vec2{10.f, 4.f},
@@ -315,56 +279,60 @@ void Level::addPlayer(AssetManager& assets, std::optional<SDL_JoystickID> joysti
         assets.getTexture(Textures::Player),
         b2Vec2{1.f, 2.f}
     );
-    if (!joystickId.has_value()) {
+    const size_t currentPlayerCount = players.size();
+    if (currentPlayerCount == 0) {
         camera.entityToFollow = playerEntity.get();
     }
-    auto controller = std::make_unique<EntityController>(*playerEntity, assets, joystickId);
-    controller->spawnPoint = b2Vec2{4.f, 4.f};
-    controller->joystickId = joystickId;
-    players.push_back(std::move(controller));
+    std::string nametag = "Player " + std::to_string(currentPlayerCount + 1);
+    playerEntity->setNametag(nametag, assets);
+    std::unique_ptr<EntityController> entityController =
+        std::make_unique<EntityController>(*playerEntity);
+    entityController->spawnPoint = b2Vec2{4.f, 4.f};
+    players.push_back(Player{playerSource, std::move(entityController)});
     entities.push_back(std::move(playerEntity));
     b2World_Step(world, physicsStep, 4);
-    SDL_Log(
-        "Spawned new player with joystickId \"%s\"", std::to_string(joystickId.value_or(1)).c_str()
-    );
+    SDL_Log("Added new player \"%s\" to level \"%s\"", nametag.c_str(), levelName);
 }
 
-void Level::updatePlayers(const std::vector<SDL_JoystickID>& activeGamepads, AssetManager& assets) {
-    auto iterator = players.begin();
-    while (iterator != players.end()) {
-        if ((*iterator)->joystickId.has_value()) {
-            SDL_JoystickID currentId = (*iterator)->joystickId.value();
-            // if currentId is not in activeGamepads type shi
-            if (std::find(activeGamepads.begin(), activeGamepads.end(), currentId) ==
-                activeGamepads.end()) {
-                Entity* entityPtr = (*iterator)->getEntity();
-                if (camera.entityToFollow == entityPtr) {
-                    camera.entityToFollow = nullptr;
-                }
-                if (entityPtr) {
-                    auto entityIterator = std::find_if(
-                        entities.begin(), entities.end(), [entityPtr](const auto& entity) {
-                            return entity.get() == entityPtr;
-                        }
-                    );
-                    if (entityIterator != entities.end()) {
-                        entities.erase(entityIterator);
-                    }
-                }
-                iterator = players.erase(iterator);
-                SDL_Log("Removed player with joystickId %d", static_cast<int>(currentId));
-                continue;
+void Level::updatePlayers(
+    const std::vector<PlayerSourceInfo>& playerSources, AssetManager& assets
+) {
+    auto playerIt = players.begin();
+    while (playerIt != players.end()) {
+        bool stillActive =
+            std::find(playerSources.begin(), playerSources.end(), playerIt->source) !=
+            playerSources.end();
+        if (stillActive) {
+            playerIt++;
+        } else {
+            Entity* entityPtr = playerIt->controller->getEntity();
+            if (camera.entityToFollow == entityPtr) {
+                // TODO: Placeholder logic until camera following is improved
+                camera.entityToFollow = nullptr;
             }
+            std::string nametag = entityPtr->getNametagStr();
+            if (entityPtr) {
+                auto entityIt =
+                    std::find_if(entities.begin(), entities.end(), [entityPtr](const auto& entity) {
+                        return entity.get() == entityPtr;
+                    });
+                if (entityIt != entities.end()) {
+                    entities.erase(entityIt);
+                }
+            }
+            playerIt = players.erase(playerIt); // Returns the next iterator.
+            SDL_Log("Removed player \"%s\"", nametag.c_str());
         }
-        iterator++;
     }
-    for (const auto gamepadId : activeGamepads) {
+    for (const auto playerSource : playerSources) {
+        // In lambda functions [] is the capture clause.
+        // [&] means the lambda can access any variable in its outer scope.
         bool alreadyExists =
-            std::any_of(players.begin(), players.end(), [gamepadId](const auto& controller) {
-                return controller->joystickId == gamepadId;
+            std::any_of(players.begin(), players.end(), [&playerSource](const Player& p) {
+                return playerSource == p.source;
             });
         if (!alreadyExists) {
-            addPlayer(assets, gamepadId);
+            addPlayer(playerSource, assets);
         }
     }
 }
@@ -382,7 +350,6 @@ std::unique_ptr<Level> getTestLevel(AssetManager& assets, WindowManager& window)
     const int WallHeight = 20;
     const int WallPosLeft = 0;
     const int WallPosRight = GroundWidth;
-    level->addPlayer(assets, std::nullopt);
     level->addEntity(
         b2MakeBox(static_cast<float>(GroundWidth) / 2.f, static_cast<float>(GroundHeight) / 2.f),
         b2Vec2{static_cast<float>(GroundWidth) / 2.f, 1.f}

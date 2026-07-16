@@ -23,17 +23,20 @@ void UiManager::draw(
     Level* level,
     UiManager& uiManager
 ) {
-    Entity* player = nullptr;
+    Entity* playerEntity = nullptr;
     Camera* camera = nullptr;
     if (level) {
-        const PlayersVector& players = level->getPlayers();
-        if (players.size() > 0) {
-            player = players[0]->getEntity();
+        const std::vector<Player>& players = level->getPlayers();
+        if (!players.empty()) {
+            EntityController* entityController = players.begin()->controller.get();
+            if (entityController) {
+                playerEntity = entityController->getEntity();
+            }
         }
-        camera = &level->getCamera();
+        camera = level->getCamera();
     }
     if (showDebug) {
-        drawDebug(window, player, camera, input, level, uiManager);
+        drawDebug(window, playerEntity, camera, input, level, uiManager);
     }
     switch (currentState) {
     case UiState::MainMenu: {
@@ -108,7 +111,7 @@ void UiManager::runCancelEvent() {
 void UiManager::passInputToImGui(const GameEventTypes::Input& event) {
     ImGuiIO& io = ImGui::GetIO();
     ImGuiKey imguiKey = ImGuiKey_None;
-    if (event.source == InputSource::Keyboard) {
+    if (event.sourceInfo.type == InputSource::Keyboard) {
         switch (event.verb) {
         case InputVerb::Up:
             imguiKey = ImGuiKey_UpArrow;
@@ -133,7 +136,7 @@ void UiManager::passInputToImGui(const GameEventTypes::Input& event) {
 
 void UiManager::drawDebug(
     WindowManager& window,
-    Entity* player,
+    Entity* playerEntity,
     Camera* camera,
     InputManager& input,
     Level* level,
@@ -161,13 +164,11 @@ void UiManager::drawDebug(
             LevelDrawInfo drawInfo = level->drawnLastFrame();
             size_t tileCount = level->getTileCount();
             size_t entitiesCount = level->getEntities().size();
-            size_t nametagsCount =
-                level->getPlayers().size(); // Assuming every player has a nametag
             ImGui::Text("Level:");
             ImGui::Text(
                 // %.*s tells the func to read exactly N characters, preventing it from running past
                 // the end of a string_view
-                "Name: \"%.*s\"\nSize: (%zu, %zu)\nTiles Drawn: %zu/%zu\nEntities Drawn: %zu/%zu\nNametags Drawn: %zu/%zu",
+                "Name: \"%.*s\"\nSize: (%zu, %zu)\nTiles Drawn: %zu/%zu\nEntities Drawn: %zu/%zu",
                 static_cast<int>(levelName.length()),
                 levelName.data(),
                 levelSize.width,
@@ -175,15 +176,13 @@ void UiManager::drawDebug(
                 drawInfo.tiles,
                 tileCount,
                 drawInfo.entities,
-                entitiesCount,
-                drawInfo.nametags,
-                nametagsCount
+                entitiesCount
             );
             ImGui::Dummy(ImVec2{1.f, 1.f});
         }
-        if (player) {
-            b2Vec2 position = b2Body_GetPosition(player->getBodyId());
-            b2Vec2 velocity = b2Body_GetLinearVelocity(player->getBodyId());
+        if (playerEntity) {
+            b2Vec2 position = b2Body_GetPosition(playerEntity->getBodyId());
+            b2Vec2 velocity = b2Body_GetLinearVelocity(playerEntity->getBodyId());
             ImGui::Text("\nPlayer:");
             ImGui::Text(
                 "Position: %.2f, %.2f\nVelocity: %.2f, %.2f",

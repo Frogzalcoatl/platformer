@@ -1,4 +1,5 @@
 #pragma once
+#include "AssetManager.hpp"
 #include "Colors.hpp"
 #include "WindowManager.hpp"
 #include <SDL3/SDL.h>
@@ -23,6 +24,7 @@ class Entity {
     float angleLastRealFrame;
     SDL_Texture* texture;
     std::optional<b2Vec2> textureSize;
+    UniqueText nametag;
 
   public:
     Entity(
@@ -51,10 +53,22 @@ class Entity {
     void savePreviousState();
 
     bool draw(
-        WindowManager& window, float alpha, float cameraScale, WindowVec2 cameraOffsetPixels
+        WindowManager& window,
+        float alpha,
+        float cameraScale,
+        WindowVec2 cameraOffsetPixels,
+        AssetManager& assets
     ) const;
     void drawHitbox(
         WindowManager& window, float alpha, float cameraScale, WindowVec2 cameraOffsetPixels
     ) const;
     void teleport(b2Vec2 location);
+
+    void setNametag(std::string_view text, AssetManager& assets);
+
+    b2Vec2 getNametagWorldSize(float textRenderScale, float textWorldSizeMultiplier) const;
+
+    b2Vec2 getNametagWorldPos(float alpha) const;
+
+    std::string getNametagStr() const;
 };

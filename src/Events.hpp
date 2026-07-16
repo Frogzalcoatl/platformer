@@ -54,6 +54,12 @@ struct DefaultButtonBinding {
     SDL_GamepadButton button;
 };
 
+struct PlayerSourceInfo {
+    InputSource type;
+    Uint32 sdlId;
+    bool operator==(const PlayerSourceInfo& other) const = default;
+};
+
 enum class AudioCategory : uint8_t {
     Master,
     Sounds,
@@ -82,8 +88,7 @@ struct CloseWindow {};
 struct Input {
     InputVerb verb;
     InputState state;
-    InputSource source;
-    std::optional<SDL_JoystickID> joystickId = std::nullopt;
+    PlayerSourceInfo sourceInfo;
 };
 
 struct PlaySound {

@@ -1,4 +1,5 @@
 #include "Entity.hpp"
+#include "AssetPaths.hpp"
 #include "Colors.hpp"
 #include "Drawing.hpp"
 #include <cmath>
@@ -58,22 +59,39 @@ void Entity::savePreviousState() {
 }
 
 bool Entity::draw(
-    WindowManager& window, float alpha, float cameraScale, WindowVec2 cameraOffsetPixels
+    WindowManager& window,
+    float alpha,
+    float cameraScale,
+    WindowVec2 cameraOffsetPixels,
+    AssetManager& assets
 ) const {
-    if (!texture) {
+    if (!texture && !nametag) {
         return false;
     }
     b2Vec2 pos = getInterpolatedPosition(alpha);
     b2Rot rot = getInterpolatedRotation(alpha);
-    Drawing::texture(
-        texture,
-        window,
-        pos,
-        textureSize.value_or(b2Vec2{1.f, 1.f}),
-        cameraScale,
-        cameraOffsetPixels,
-        Drawing::b2RotToSdlAngle(rot)
-    );
+    if (texture) {
+        Drawing::texture(
+            texture,
+            window,
+            pos,
+            textureSize.value_or(b2Vec2{1.f, 1.f}),
+            cameraScale,
+            cameraOffsetPixels,
+            Drawing::b2RotToSdlAngle(rot)
+        );
+    }
+    if (nametag) {
+        Drawing::text(
+            nametag.get(),
+            window,
+            getNametagWorldPos(alpha),
+            cameraScale,
+            cameraOffsetPixels,
+            assets.TextRenderScale,
+            assets.TextWorldSizeMultiplier
+        );
+    }
     return true;
 }
 
@@ -96,4 +114,32 @@ void Entity::teleport(b2Vec2 location) {
     b2Body_SetAwake(bodyId, true);
     positionLastRealFrame = location;
     angleLastRealFrame = b2Rot_GetAngle(b2Rot_identity);
+}
+
+void Entity::setNametag(std::string_view text, AssetManager& assets) {
+    if (text.empty()) {
+        if (nametag) {
+            nametag = nullptr;
+        }
+        return;
+    }
+    nametag = assets.getSDLText(text, AssetPaths::Fonts::Consolas, 20.f);
+}
+
+b2Vec2 Entity::getNametagWorldSize(float textRenderScale, float textWorldSizeMultiplier) const {
+    return Drawing::getTextWorldSize(nametag.get(), textRenderScale, textWorldSizeMultiplier);
+}
+
+b2Vec2 Entity::getNametagWorldPos(float alpha) const {
+    b2Vec2 pos = getInterpolatedPosition(alpha);
+    b2AABB aabb = b2Body_ComputeAABB(bodyId);
+    pos.y += (aabb.upperBound.y - aabb.lowerBound.y);
+    return pos;
+}
+
+std::string Entity::getNametagStr() const {
+    if (!nametag) {
+        return "";
+    }
+    return std::string{nametag->text};
 }

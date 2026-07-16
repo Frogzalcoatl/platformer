@@ -33,8 +33,10 @@ void Platformer::handleSdlEvent() {
         case SDL_EVENT_WINDOW_RESIZED: {
             window.handleResize(event.window.data1, event.window.data2);
             if (currentLevel) {
-                Camera& camera = currentLevel->getCamera();
-                camera.handleWindowResize(event.window.data1, event.window.data2);
+                Camera* camera = currentLevel->getCamera();
+                if (camera) {
+                    camera->handleWindowResize(event.window.data1, event.window.data2);
+                }
             }
         }; break;
         case SDL_EVENT_MOUSE_MOTION: {
@@ -71,17 +73,26 @@ void Platformer::handleGameEventInput(const GameEventTypes::Input& inputEvent) {
             break;
         case InputVerb::ZoomIn:
             if (currentLevel && uiState == UiState::Playing) {
-                currentLevel->getCamera().incrementScaleMultiplierBy(0.05f);
+                Camera* camera = currentLevel->getCamera();
+                if (camera) {
+                    camera->incrementScaleMultiplierBy(0.05f);
+                }
             }
             break;
         case InputVerb::ZoomOut:
             if (currentLevel && uiState == UiState::Playing) {
-                currentLevel->getCamera().incrementScaleMultiplierBy(-0.05f);
+                Camera* camera = currentLevel->getCamera();
+                if (camera) {
+                    camera->incrementScaleMultiplierBy(-0.05f);
+                }
             }
             break;
         case InputVerb::ZoomReset:
             if (currentLevel && uiState == UiState::Playing) {
-                currentLevel->getCamera().resetScaleMultiplier();
+                Camera* camera = currentLevel->getCamera();
+                if (camera) {
+                    camera->resetScaleMultiplier();
+                }
             }
             break;
         case InputVerb::ToggleDebug:
@@ -102,7 +113,9 @@ void Platformer::handleGameEventInput(const GameEventTypes::Input& inputEvent) {
             if (currentLevel) {
                 const auto& players = currentLevel.get()->getPlayers();
                 for (const auto& player : players) {
-                    player->resetMovement();
+                    if (player.controller) {
+                        player.controller->resetInput();
+                    }
                 }
             }
             break;
@@ -156,7 +169,7 @@ void Platformer::handleGameEvent() {
             }
         } else if (std::holds_alternative<GameEventTypes::UpdateCurrentPlayers>(event)) {
             if (currentLevel) {
-                currentLevel->updatePlayers(input.getActiveGamepads(), assets);
+                currentLevel->updatePlayers(input.getPlayerSources(), assets);
             }
         }
     }
