@@ -1,11 +1,11 @@
 #include "Android.hpp"
 #include <SDL3/SDL.h>
+
 #ifdef SDL_PLATFORM_ANDROID
 #include <jni.h>
 #endif
 
 void Android::quitAndRemoveTask() {
-    SDL_Log("Is this even being called?");
 #ifdef SDL_PLATFORM_ANDROID
     JNIEnv* env = (JNIEnv*)SDL_GetAndroidJNIEnv();
     if (!env) {
