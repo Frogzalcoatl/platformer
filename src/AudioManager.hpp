@@ -33,8 +33,8 @@ class AudioManager {
     std::array<const char*, static_cast<size_t>(AudioCategory::AudioCategoryCount)> TagNames = {
         "Master", "Sounds", "Music"
     };
-    std::array<float, static_cast<size_t>(AudioCategory::AudioCategoryCount)> tagGain;
-    std::array<UniqueTrack, SoundTrackCount> soundTracks;
+    std::array<float, static_cast<size_t>(AudioCategory::AudioCategoryCount)> tagGain = {};
+    std::array<UniqueTrack, SoundTrackCount> soundTracks = {};
     UniqueTrack musicTrack;
     float currentMusicVolume =
         1.f; // Separate volume multiplier, based on volume passed into playMusic func
