@@ -82,6 +82,9 @@ static void sdlOutput(void* userdata, int category, SDL_LogPriority priority, co
 }
 
 void initSdlLogFormatting() {
+    for (int i = 0; i < SDL_LOG_PRIORITY_COUNT; i++) {
+        SDL_SetLogPriorityPrefix(static_cast<SDL_LogPriority>(i), nullptr);
+    }
     defaultSdlLogFunc = SDL_GetDefaultLogOutputFunction();
     SDL_SetLogOutputFunction(sdlOutput, nullptr);
 }
