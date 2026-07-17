@@ -1,3 +1,5 @@
+Fix issues with default cmake build target
+
 Use enet lib for online multiplayer
 
 Account for polygon radius in draw func
