@@ -103,11 +103,9 @@ void UiManager::setState(UiState newState) {
     stateChangedThisFrame = true;
     ImGuiIO& io = ImGui::GetIO();
     if (newState == UiState::Playing) {
-        // Disable keyboard and gamepad UI navigation during active gameplay
         io.ConfigFlags &= ~ImGuiConfigFlags_NavEnableGamepad;
         io.ConfigFlags &= ~ImGuiConfigFlags_NavEnableKeyboard;
     } else {
-        // Re-enable navigation when in menus or setup screens
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     }

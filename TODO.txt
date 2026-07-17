@@ -1,4 +1,5 @@
 Fix issues with default cmake build target
+Fix issues with android studio not rebuilding apk
 
 Use enet lib for online multiplayer
 
