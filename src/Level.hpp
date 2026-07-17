@@ -29,7 +29,8 @@ struct Player {
 
 struct LevelAsset {
     std::string_view relativePath;
-    AssetType type;
+    AssetTypes type;
+    std::optional<FontInfo> fontInfo;
     bool operator==(const LevelAsset& other) const = default;
 };
 

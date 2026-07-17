@@ -82,10 +82,15 @@ using FontCacheVector = std::vector<CachedFont>;
 using AudioCacheMap = std::unordered_map<std::string, UniqueAudio, StringHash, std::equal_to<>>;
 using TextureCacheMap = std::unordered_map<std::string, UniqueTexture, StringHash, std::equal_to<>>;
 
-enum class AssetType : uint8_t {
+enum class AssetTypes : uint8_t {
     Audio,
     Font,
     Texture
+};
+
+struct FontInfo {
+    float ptSize;
+    TTF_FontStyleFlags style;
 };
 
 class AssetManager {

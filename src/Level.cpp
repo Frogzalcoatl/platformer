@@ -25,7 +25,23 @@ Level::Level(
             }
         }
         for (const auto& asset : assetsToUnload) {
-            assets.unload
+            switch (asset.type) {
+            case AssetTypes::Audio: {
+                assets.unloadAudio(asset.relativePath);
+            }; break;
+            case AssetTypes::Font: {
+                if (asset.fontInfo.has_value()) {
+
+                } else {
+                    // TODO: Add length of string view in log
+                    SDL_LogWarn(
+                        SDL_LOG_CATEGORY_APPLICATION,
+                        "Unable to unload font \"%s\": No font info provided.",
+                        asset.relativePath.data()
+                    )
+                }
+            }
+            }
         }
     }
     b2WorldDef worldDef = b2DefaultWorldDef();
