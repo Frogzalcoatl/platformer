@@ -1,3 +1,6 @@
+Store vectors of necessary assets as str paths in Level class.
+    When switching between levels, determine whether any assets are included in both asset vectors and simply leave them loaded.
+
 Fix issues with default cmake build target
 Fix issues with android studio not rebuilding apk
 
@@ -6,9 +9,6 @@ Use enet lib for online multiplayer
 Account for polygon radius in draw func
 
 Figure out some way to automatically load static entities on exposed solid tiles.
-
-Store vectors of necessary assets as str paths in Level class.
-    When switching between levels, determine whether any assets are included in both asset vectors and simply leave them loaded.
 
 MusicPlayer class
 Store in platformer class. Store str array of music file paths in Level class.

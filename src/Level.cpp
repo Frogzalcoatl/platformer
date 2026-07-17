@@ -4,8 +4,30 @@
 
 using namespace AssetPaths;
 
-Level::Level(const char* levelName, LevelDimensions size, WindowManager& window)
-    : levelSize(size), levelName(levelName), camera(nullptr, window) {
+Level::Level(
+    const char* levelName,
+    LevelDimensions size,
+    WindowManager& window,
+    AssetManager& assets,
+    LevelAssets requiredAssets,
+    std::optional<const LevelAssets&> previousAssetsOpt
+)
+    : levelSize(size), levelName(levelName), camera(nullptr, window),
+      requiredAssets(requiredAssets) {
+    if (previousAssetsOpt.has_value()) {
+        const LevelAssets& previousAssets = previousAssetsOpt.value();
+        LevelAssets assetsToUnload;
+        for (const auto& asset : previousAssets) {
+            bool notInCurrent = std::find(previousAssets.begin(), previousAssets.end(), asset) ==
+                                previousAssets.end();
+            if (notInCurrent) {
+                assetsToUnload.push_back(asset);
+            }
+        }
+        for (const auto& asset : assetsToUnload) {
+            assets.unload
+        }
+    }
     b2WorldDef worldDef = b2DefaultWorldDef();
     worldDef.gravity = {0.0f, -60.f};
     world = b2CreateWorld(&worldDef);

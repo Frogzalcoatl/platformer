@@ -27,8 +27,15 @@ struct Player {
     std::unique_ptr<EntityController> controller;
 };
 
+struct LevelAsset {
+    std::string_view relativePath;
+    AssetType type;
+    bool operator==(const LevelAsset& other) const = default;
+};
+
 using LevelTileVector = std::vector<std::vector<AssetPaths::Textures::TileTypes>>;
 using EntitiesVector = std::vector<std::unique_ptr<Entity>>;
+using LevelAssets = std::vector<LevelAsset>;
 
 class Level {
   private:
@@ -37,6 +44,7 @@ class Level {
     std::vector<Player> players;
     b2WorldId world;
     LevelDimensions levelSize;
+    LevelAssets requiredAssets;
     const char* levelName;
     Camera camera;
     LevelDrawInfo drawInfo;
@@ -59,7 +67,14 @@ class Level {
     );
 
   public:
-    Level(const char* levelName, LevelDimensions size, WindowManager& window);
+    Level(
+        const char* levelName,
+        LevelDimensions size,
+        WindowManager& window,
+        AssetManager& assets,
+        LevelAssets requiredAssets,
+        std::optional<const LevelAssets&> previousAssets = std::nullopt
+    );
     ~Level();
     bool showFanTriangulation = false;
     bool showHitBoxes = false;
