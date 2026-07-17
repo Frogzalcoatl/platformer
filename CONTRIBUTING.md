@@ -61,7 +61,7 @@ First command uses a [CMakePresets.json](https://github.com/Frogzalcoatl/platfor
 ## Prerequisites
 ### 1. Android SDK
 
-* Download [here](https://developer.android.com/studio#command-line-tools-only) and extract. I personally extracted to my C: drive for simplicity. Open a terminal in `android-sdk/cmdline-tools/bin` and run `sdkmanager.bat` (Simply sdkmanager on linux/macos) with the following arguments:
+* Download [here](https://developer.android.com/studio#command-line-tools-only) and extract. I personally extracted to my C: drive for simplicity. Open a terminal in `android-sdk/cmdline-tools/bin` and run `sdkmanager.bat` (or `sdkmanager` on linux/macos) with the following arguments:
 
 ```
 ./sdkmanager.bat "platform-tools" "build-tools;34.0.0" "platforms;android-28"
