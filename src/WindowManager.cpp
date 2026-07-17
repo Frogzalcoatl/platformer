@@ -113,7 +113,7 @@ std::string WindowManager::targetFpsStr() const {
     } else if (fpsUnlimited) {
         return "Unlimited";
     } else {
-        return std::to_string(targetFps);
+        return std::to_string(targetFps) + ".0";
     }
 }
 
