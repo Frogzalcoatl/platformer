@@ -11,7 +11,7 @@ class UiManager {
   private:
     UiState currentState = UiState::MainMenu;
     bool stateChangedThisFrame = false;
-    bool playerSourceAddedThisFrame = false;
+    bool playerSourceAddedThisFrame = false; // temporary fix probably
 
     ImFont* fontExtraSmall = nullptr;
     ImFont* fontSmall = nullptr;

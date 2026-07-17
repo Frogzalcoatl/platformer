@@ -87,20 +87,30 @@ std::string UiManager::getStateStr() const {
     }
 }
 
-void UiManager::setState(UiState state) {
-    if (state >= UiState::UiStateCount || stateChangedThisFrame || state == currentState) {
+void UiManager::setState(UiState newState) {
+    if (newState >= UiState::UiStateCount || stateChangedThisFrame || newState == currentState) {
         return;
     }
     if (currentState == UiState::PlayerSourceSetup) {
         // Switching off setup screen
         GameEvents::Push(GameEventTypes::ShouldDetectNewPlayerSources{false});
     }
-    if (state == UiState::PlayerSourceSetup) {
+    if (newState == UiState::PlayerSourceSetup) {
         // Switching to player source setup screen
         GameEvents::Push(GameEventTypes::ShouldDetectNewPlayerSources{true});
     }
-    currentState = state;
+    currentState = newState;
     stateChangedThisFrame = true;
+    ImGuiIO& io = ImGui::GetIO();
+    if (newState == UiState::Playing) {
+        // Disable keyboard and gamepad UI navigation during active gameplay
+        io.ConfigFlags &= ~ImGuiConfigFlags_NavEnableGamepad;
+        io.ConfigFlags &= ~ImGuiConfigFlags_NavEnableKeyboard;
+    } else {
+        // Re-enable navigation when in menus or setup screens
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    }
 }
 
 void UiManager::runCancelEvent() {
@@ -482,7 +492,8 @@ void UiManager::drawPlayerSourceSetup(InputManager& input) {
         if (playerSources[i].has_value()) {
             ImGui::SameLine();
             std::string buttonId = "Remove##" + std::to_string(i + 1);
-            if (ImGui::Button(buttonId.c_str(), ImVec2{150.f, 50.f})) {
+            if (ImGui::Button(buttonId.c_str(), ImVec2{150.f, 50.f}) &&
+                !playerSourceAddedThisFrame) {
                 input.removePlayerSourceAtIndex(i);
             }
         }
