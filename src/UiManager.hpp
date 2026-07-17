@@ -11,6 +11,7 @@ class UiManager {
   private:
     UiState currentState = UiState::MainMenu;
     bool stateChangedThisFrame = false;
+    bool playerSourceAddedThisFrame = false;
 
     ImFont* fontExtraSmall = nullptr;
     ImFont* fontSmall = nullptr;
@@ -26,6 +27,12 @@ class UiManager {
 
     ImGuiSliderFlags sliderFlags = ImGuiSliderFlags_NoInput;
 
+    void setNextWindowFullscreen();
+
+    void drawLargeLogo();
+
+    void fpsText(WindowManager& window);
+
     void drawDebug(
         WindowManager& window,
         Entity* player,
@@ -35,12 +42,12 @@ class UiManager {
         UiManager& uiManager
     );
 
-    void drawLargeLogo();
-
     void drawMainMenu();
 
     void
     drawSettings(WindowManager& window, AudioManager& audio, InputManager& input, Level* level);
+
+    void drawPlayerSourceSetup(InputManager& input);
 
     void drawPauseMenu();
 
@@ -66,6 +73,13 @@ class UiManager {
     void runCancelEvent();
 
     void passInputToImGui(const GameEventTypes::Input& event);
+
+    void setPlayerSourceAddedThisFrame(bool value) {
+        playerSourceAddedThisFrame = value;
+    }
+    bool isPlayerSourceAddedThisFrame() const {
+        return playerSourceAddedThisFrame;
+    }
 
     bool showDebug = false;
 };

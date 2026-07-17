@@ -53,10 +53,8 @@ void Platformer::handleSdlEvent() {
                 GameEvents::Push(inputEvent);
             }
         }; break;
-        case SDL_EVENT_GAMEPAD_ADDED:
         case SDL_EVENT_GAMEPAD_REMOVED: {
-            input.handleGamepadDeviceEvent(event.gdevice);
-            GameEvents::Push(GameEventTypes::UpdateCurrentPlayers{});
+            input.handleGamepadRemoved(event.gdevice);
         }; break;
         };
     }
@@ -159,17 +157,47 @@ void Platformer::handleGameEvent() {
         } else if (const auto* setUiState = std::get_if<GameEventTypes::SetUiState>(&event)) {
             ui.setState(setUiState->state);
         } else if (const auto* setLevelName = std::get_if<GameEventTypes::SetLevelName>(&event)) {
-            if (setLevelName->level == LevelName::Template) {
-                currentLevel = getTestLevel(assets, window);
-                GameEvents::Push(GameEventTypes::UpdateCurrentPlayers{});
-                window.backgroundColor = Colors::SkyBlue;
-            } else if (setLevelName->level == LevelName::None) {
+            if (setLevelName->level == LevelName::None) {
                 currentLevel = nullptr;
                 window.backgroundColor = Colors::Background;
+                continue;
+            } else if (setLevelName->level == LevelName::Test) {
+                currentLevel = getTestLevel(assets, window);
             }
-        } else if (std::holds_alternative<GameEventTypes::UpdateCurrentPlayers>(event)) {
+            currentLevel->updatePlayers(input.getPlayerSources(), assets);
+            window.backgroundColor = currentLevel->backgroundColor;
+        } else if (
+            const auto* playerSourceAdded = std::get_if<GameEventTypes::PlayerSourceAdded>(&event)
+        ) {
+            // TODO: Some sort of ui stating a player has been added
+            (void)playerSourceAdded;
             if (currentLevel) {
                 currentLevel->updatePlayers(input.getPlayerSources(), assets);
+            }
+            ui.setPlayerSourceAddedThisFrame(true);
+        } else if (
+            const auto* playerSourceRemoved =
+                std::get_if<GameEventTypes::PlayerSourceRemoved>(&event)
+        ) {
+            // TODO: some sort of ui stating a player has been disconnected.
+            // Maybe a reconnect input source prompt
+            (void)playerSourceRemoved;
+            if (currentLevel) {
+                currentLevel->updatePlayers(input.getPlayerSources(), assets);
+            }
+        } else if (
+            const auto* detectNewPlayers =
+                std::get_if<GameEventTypes::ShouldDetectNewPlayerSources>(&event)
+        ) {
+            if (detectNewPlayers->value) {
+                SDL_Log("Enabled input detection for adding new player sources.");
+                input.listenForValidKeyboard = true;
+                input.listenForNewGamepad = true;
+                input.enableTouchPlayer();
+            } else {
+                SDL_Log("Disabled input detection for adding new player sources.");
+                input.listenForValidKeyboard = false;
+                input.listenForNewGamepad = false;
             }
         }
     }

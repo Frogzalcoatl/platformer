@@ -1,8 +1,3 @@
-Store player ids based on joystickid inside InputManager.
-    Fix the updatePlayers function to use the playerSources arr.
-    Stop automatically creating a player with the keyboard on level creation.
-    Figure out some way to determine whether the user is on touch screen and enable touch controls based on that.
-
 Use enet lib for online multiplayer
 
 Account for polygon radius in draw func
@@ -10,6 +5,7 @@ Account for polygon radius in draw func
 Figure out some way to automatically load static entities on exposed solid tiles.
 
 Store vectors of necessary assets as str paths in Level class.
+    When switching between levels, determine whether any assets are included in both asset vectors and simply leave them loaded.
 
 MusicPlayer class
 Store in platformer class. Store str array of music file paths in Level class.

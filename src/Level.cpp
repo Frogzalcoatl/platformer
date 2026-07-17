@@ -5,7 +5,7 @@
 using namespace AssetPaths;
 
 Level::Level(const char* levelName, LevelDimensions size, WindowManager& window)
-    : size(size), levelName(levelName), camera(nullptr, window) {
+    : levelSize(size), levelName(levelName), camera(nullptr, window) {
     b2WorldDef worldDef = b2DefaultWorldDef();
     worldDef.gravity = {0.0f, -60.f};
     world = b2CreateWorld(&worldDef);
@@ -92,19 +92,17 @@ void Level::draw(WindowManager& window, AssetManager& assets) {
     if (tiles.empty()) {
         return;
     }
-    const size_t worldHeight = tiles[0].size();
-    const size_t worldWidth = tiles.size();
     const float cameraScale = camera.getScaleFactor();
     const WindowVec2 cameraOffsetPixels = camera.getOffsetPixels();
     const b2Vec2 cameraSizeWorld = camera.getSize();
     const b2Vec2 cameraOffsetWorld = camera.getOffsetWorld();
     const size_t minX = static_cast<size_t>(SDL_max(SDL_floorf(cameraOffsetWorld.x), 0.f));
     const size_t maxX = static_cast<size_t>(
-        SDL_min(SDL_ceilf(cameraOffsetWorld.x + cameraSizeWorld.x), worldWidth - 1)
+        SDL_min(SDL_ceilf(cameraOffsetWorld.x + cameraSizeWorld.x), levelSize.width - 1)
     );
     const size_t minY = static_cast<size_t>(SDL_max(SDL_floorf(cameraOffsetWorld.y), 0.f));
     const size_t maxY = static_cast<size_t>(
-        SDL_min(SDL_ceilf(cameraOffsetWorld.y + cameraSizeWorld.y), worldHeight - 1)
+        SDL_min(SDL_ceilf(cameraOffsetWorld.y + cameraSizeWorld.y), levelSize.height - 1)
     );
     drawInfo = LevelDrawInfo{};
     for (size_t x = minX; x <= maxX; x++) {
@@ -221,7 +219,7 @@ void Level::addTile(Textures::TileTypes tileId, size_t x, size_t y) {
         return;
     }
     std::string_view relativePathStr = Textures::TilePaths[static_cast<size_t>(tileId)];
-    if (x >= size.width || y >= size.height) {
+    if (x >= levelSize.width || y >= levelSize.height) {
         std::filesystem::path relativePath = relativePathStr;
         SDL_LogError(
             SDL_LOG_CATEGORY_APPLICATION,
@@ -229,8 +227,8 @@ void Level::addTile(Textures::TileTypes tileId, size_t x, size_t y) {
             relativePath.filename().string().c_str(),
             x,
             y,
-            size.width,
-            size.height
+            levelSize.width,
+            levelSize.height
         );
         return;
     }
@@ -244,14 +242,14 @@ void Level::addTile(Textures::TileTypes tileId, size_t x, size_t y) {
 }
 
 void Level::removeTile(size_t x, size_t y) {
-    if (x >= size.width || y >= size.height) {
+    if (x >= levelSize.width || y >= levelSize.height) {
         SDL_LogError(
             SDL_LOG_CATEGORY_APPLICATION,
             "Unable to remove tile at position (%zu, %zu). Level size is (%zu, %zu)",
             x,
             y,
-            size.width,
-            size.height
+            levelSize.width,
+            levelSize.height
         );
         return;
     }
@@ -262,7 +260,7 @@ const std::vector<Player>& Level::getPlayers() const {
     return players;
 }
 
-void Level::addPlayer(PlayerSourceInfo playerSource, AssetManager& assets) {
+void Level::addPlayer(InputSource playerSource, AssetManager& assets) {
     b2BodyDef playerBodyDef = b2DefaultBodyDef();
     playerBodyDef.fixedRotation = true;
     playerBodyDef.type = b2_dynamicBody;
@@ -294,9 +292,7 @@ void Level::addPlayer(PlayerSourceInfo playerSource, AssetManager& assets) {
     SDL_Log("Added new player \"%s\" to level \"%s\"", nametag.c_str(), levelName);
 }
 
-void Level::updatePlayers(
-    const std::vector<PlayerSourceInfo>& playerSources, AssetManager& assets
-) {
+void Level::updatePlayers(const PlayerSources& playerSources, AssetManager& assets) {
     auto playerIt = players.begin();
     while (playerIt != players.end()) {
         bool stillActive =
@@ -324,7 +320,20 @@ void Level::updatePlayers(
             SDL_Log("Removed player \"%s\"", nametag.c_str());
         }
     }
-    for (const auto playerSource : playerSources) {
+    // Update nametags in case indices were shifted.
+    for (size_t i = 0; i < players.size(); i++) {
+        Entity* playerEntity = players[i].controller->getEntity();
+        if (playerEntity) {
+            std::string nametag = "Player " + std::to_string(i + 1);
+            playerEntity->setNametag(nametag, assets);
+        }
+    }
+    // Add players for new player sources
+    for (const auto playerSourceOpt : playerSources) {
+        if (!playerSourceOpt.has_value()) {
+            continue;
+        }
+        const InputSource& playerSource = playerSourceOpt.value();
         // In lambda functions [] is the capture clause.
         // [&] means the lambda can access any variable in its outer scope.
         bool alreadyExists =
@@ -334,6 +343,9 @@ void Level::updatePlayers(
         if (!alreadyExists) {
             addPlayer(playerSource, assets);
         }
+    }
+    if (!players.empty()) {
+        camera.entityToFollow = players[0].controller->getEntity();
     }
 }
 

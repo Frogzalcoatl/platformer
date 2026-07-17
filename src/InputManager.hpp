@@ -10,6 +10,7 @@
 inline constexpr int MaxBindsPerVerb = 3;
 
 std::string inputVerbToString(InputVerb verb);
+std::string inputTypeToString(InputType type);
 
 struct ScancodeInfo {
     SDL_Scancode scancode = SDL_SCANCODE_UNKNOWN;
@@ -23,57 +24,83 @@ using GamepadBindings = std::array<
     std::array<SDL_GamepadButton, MaxBindsPerVerb>,
     static_cast<size_t>(InputVerb::VerbCount)>;
 
+inline constexpr size_t MaxPlayerSources = 4;
+using PlayerSources = std::array<std::optional<InputSource>, MaxPlayerSources>;
+
 class InputManager {
   private:
-    ScancodeBindings scancodeBindings;
-    GamepadBindings gamepadBindings;
+    ScancodeBindings scancodeBindings = {};
+    GamepadBindings gamepadBindings = {};
     // Arrays of the amount a verb is pressed
     // e.g. two buttons bound to the same verb:
     // Prevents release event when one of the buttons is released and the other isnt.
     std::unordered_map<SDL_JoystickID, std::array<int, static_cast<size_t>(InputVerb::VerbCount)>>
         gamepadsVerbsPressed;
 
-    std::array<int, static_cast<size_t>(InputVerb::VerbCount)> keyboardVerbsPressed;
+    std::array<int, static_cast<size_t>(InputVerb::VerbCount)> keyboardVerbsPressed = {};
 
-    std::vector<PlayerSourceInfo> playerSources;
+    PlayerSources playerSources = {};
+    size_t playerSourceCount = 0;
+
+    const InputSource DefaultTouchSource = InputSource{InputType::Touch, 0};
+    const InputSource DefaultKeyboardSource = InputSource{InputType::Keyboard, 0};
+    const InputSource DefaultMouseSource = InputSource{InputType::Mouse, 0};
+
+    // Returns true if player source is added/removed
+    bool addPlayerSource(const InputSource& source);
+    bool removePlayerSource(const InputSource& source);
+
+    std::vector<GameEventTypes::Input> handleKeyboardEvent(SDL_KeyboardEvent& event);
+    std::vector<GameEventTypes::Input> handleMouseWheelEvent(SDL_MouseWheelEvent& event);
+    std::vector<GameEventTypes::Input> handleGamepadButtonEvent(SDL_GamepadButtonEvent& event);
+
+    bool hasTouchScreen();
 
   public:
     InputManager();
 
     void bindScancodeToVerb(InputVerb verb, ScancodeInfo binding, std::optional<int> atIndexOpt);
-
     void unbindScancodeFromVerb(InputVerb verb, SDL_Scancode scancode);
-
     void clearScancodeBindingAtIndex(InputVerb verb, int index);
-
     std::vector<InputVerbInfo> getVerbsFromScancode(SDL_Scancode scancode);
-
     const std::array<ScancodeInfo, MaxBindsPerVerb>& getScancodesFromVerb(InputVerb verb) const;
-
     const ScancodeBindings& getScancodeBindings() const;
 
     void bindGamepadButtonToVerb(
         InputVerb verb, SDL_GamepadButton button, std::optional<int> atIndexOpt
     );
-
     void unbindGamepadButtonFromVerb(InputVerb verb, SDL_GamepadButton button);
-
     void clearGamepadButtonBindingAtIndex(InputVerb verb, int index);
-
     std::vector<InputVerb> getVerbsFromGamepadButton(SDL_GamepadButton button);
-
     const std::array<SDL_GamepadButton, MaxBindsPerVerb>&
     getGamepadButtonsFromVerb(InputVerb verb) const;
-
-    void handleGamepadDeviceEvent(SDL_GamepadDeviceEvent& event);
-
     const GamepadBindings& getGamepadBindings() const;
 
-    size_t getGamepadCount() const;
+    const PlayerSources& getPlayerSources() const;
 
-    const std::vector<PlayerSourceInfo>& getPlayerSources() const;
+    size_t getPlayerSourceCount() const;
+
+    int sdlGamepadsDetected() const;
+
+    std::string getSourceName(const InputSource& source);
+
+    bool listenForNewGamepad = false;
+    bool listenForValidKeyboard = false;
+
+    void handleGamepadRemoved(SDL_GamepadDeviceEvent& event);
+
+    // returns true if touch player is enabled/disabled.
+    // only one touch player allowed on device at a time.
+    bool enableTouchPlayer();
+    bool disableTouchPlayer();
+
+    void removePlayerSourceAtIndex(size_t index);
 
     std::vector<GameEventTypes::Input> getInputEventsFromSDLEvent(SDL_Event& event);
+
+    // void listenForScancodeBinding(InputVerb forVerb, size_t atIndex);
+
+    // void listenForGamepadBinding(InputVerb forVerb, size_t atIndex);
 
     // Will probably remove default bindings vectors later, currently here for convenience
     const std::vector<DefaultScancodeBinding> defaultVerbBindings = {

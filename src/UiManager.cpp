@@ -6,7 +6,7 @@ UiManager::UiManager(AssetManager& assets, UiState startingState) : currentState
     fontSmall = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 18.f);
     fontMedium = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 24.f);
     fontLarge = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 36.f);
-    fontExtraLarge = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 72.f);
+    fontExtraLarge = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 48.f);
     fontTitle = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 128.f);
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
@@ -45,6 +45,9 @@ void UiManager::draw(
     case UiState::Settings: {
         drawSettings(window, audio, input, level);
     }; break;
+    case UiState::PlayerSourceSetup: {
+        drawPlayerSourceSetup(input);
+    }; break;
     case UiState::Paused: {
         drawPauseMenu();
     }; break;
@@ -54,6 +57,7 @@ void UiManager::draw(
     default:
         break;
     }
+    playerSourceAddedThisFrame = false;
 }
 
 void UiManager::update() {
@@ -70,6 +74,8 @@ std::string UiManager::getStateStr() const {
         return "Main Menu";
     case UiState::Settings:
         return "Settings";
+    case UiState::PlayerSourceSetup:
+        return "Player Source Setup";
     case UiState::Playing:
         return "Playing";
     case UiState::Paused:
@@ -85,6 +91,14 @@ void UiManager::setState(UiState state) {
     if (state >= UiState::UiStateCount || stateChangedThisFrame || state == currentState) {
         return;
     }
+    if (currentState == UiState::PlayerSourceSetup) {
+        // Switching off setup screen
+        GameEvents::Push(GameEventTypes::ShouldDetectNewPlayerSources{false});
+    }
+    if (state == UiState::PlayerSourceSetup) {
+        // Switching to player source setup screen
+        GameEvents::Push(GameEventTypes::ShouldDetectNewPlayerSources{true});
+    }
     currentState = state;
     stateChangedThisFrame = true;
 }
@@ -92,6 +106,9 @@ void UiManager::setState(UiState state) {
 void UiManager::runCancelEvent() {
     switch (currentState) {
     case UiState::Settings:
+        setState(UiState::MainMenu);
+        break;
+    case UiState::PlayerSourceSetup:
         setState(UiState::MainMenu);
         break;
     case UiState::Playing:
@@ -111,7 +128,7 @@ void UiManager::runCancelEvent() {
 void UiManager::passInputToImGui(const GameEventTypes::Input& event) {
     ImGuiIO& io = ImGui::GetIO();
     ImGuiKey imguiKey = ImGuiKey_None;
-    if (event.sourceInfo.type == InputSource::Keyboard) {
+    if (event.sourceInfo.type == InputType::Keyboard) {
         switch (event.verb) {
         case InputVerb::Up:
             imguiKey = ImGuiKey_UpArrow;
@@ -134,6 +151,42 @@ void UiManager::passInputToImGui(const GameEventTypes::Input& event) {
     }
 }
 
+void UiManager::setNextWindowFullscreen() {
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImVec2 workPos = viewport->WorkPos;
+    ImVec2 workSize = viewport->WorkSize;
+    ImVec2 menuPos = ImVec2{workPos.x + workSize.x * 0.5f, workPos.y + workSize.y * 0.5f};
+    ImGui::SetNextWindowPos(menuPos, ImGuiCond_Always, ImVec2{0.5, 0.5});
+    ImGui::SetNextWindowSize(workSize);
+}
+
+void UiManager::drawLargeLogo() {
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImVec2 workPos = viewport->WorkPos;
+    ImVec2 workSize = viewport->WorkSize;
+    ImVec2 centerPos = ImVec2{workPos.x + workSize.x * 0.5f, workPos.y + workSize.y * 0.5f};
+    ImGui::SetNextWindowPos(ImVec2{centerPos.x, 50.f}, ImGuiCond_Always, ImVec2{0.5, 0.f});
+    if (ImGui::Begin("Main Menu Title", nullptr, staticFlags)) {
+        ImGui::PushFont(fontTitle);
+        ImGui::Text("Platformer");
+        ImGui::PopFont();
+    }
+    ImGui::End();
+}
+
+void UiManager::fpsText(WindowManager& window) {
+    float fps = ImGui::GetIO().Framerate;
+    if (fps >= 1000) {
+        ImGui::Text(
+            "%07.1f/%s FPS (%.3f ms/frame)", fps, window.targetFpsStr().c_str(), 1000.0f / fps
+        );
+    } else {
+        ImGui::Text(
+            "%.1f/%s FPS (%.3f ms/frame)", fps, window.targetFpsStr().c_str(), 1000.0f / fps
+        );
+    }
+}
+
 void UiManager::drawDebug(
     WindowManager& window,
     Entity* playerEntity,
@@ -147,16 +200,12 @@ void UiManager::drawDebug(
     if (ImGui::Begin("Debug Menu", nullptr, staticFlags | ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::Text("Window:");
         WindowVec2 windowSize = window.getSize();
-        ImGui::Text(
-            "Size: %d, %d\nFPS: %.1f/%s (%.3f ms/frame)",
-            windowSize.x,
-            windowSize.y,
-            ImGui::GetIO().Framerate,
-            window.targetFpsStr().c_str(),
-            1000.0f / ImGui::GetIO().Framerate
-        );
+        ImGui::Text("Size: %d, %d", windowSize.x, windowSize.y);
+        ImGui::Text("Framerate:");
+        ImGui::SameLine();
+        fpsText(window);
         ImGui::Dummy(ImVec2{1.f, 1.f});
-        ImGui::Text("UI State: %s", uiManager.getStateStr().c_str());
+        ImGui::Text("\nUI State: %s", uiManager.getStateStr().c_str());
         ImGui::Dummy(ImVec2{1.f, 1.f});
         if (level) {
             std::string_view levelName = level->getName();
@@ -164,7 +213,7 @@ void UiManager::drawDebug(
             LevelDrawInfo drawInfo = level->drawnLastFrame();
             size_t tileCount = level->getTileCount();
             size_t entitiesCount = level->getEntities().size();
-            ImGui::Text("Level:");
+            ImGui::Text("\nLevel:");
             ImGui::Text(
                 // %.*s tells the func to read exactly N characters, preventing it from running past
                 // the end of a string_view
@@ -183,7 +232,7 @@ void UiManager::drawDebug(
         if (playerEntity) {
             b2Vec2 position = b2Body_GetPosition(playerEntity->getBodyId());
             b2Vec2 velocity = b2Body_GetLinearVelocity(playerEntity->getBodyId());
-            ImGui::Text("\nPlayer:");
+            ImGui::Text("\nPlayer 1:");
             ImGui::Text(
                 "Position: %.2f, %.2f\nVelocity: %.2f, %.2f",
                 position.x,
@@ -193,7 +242,7 @@ void UiManager::drawDebug(
             );
             ImGui::Dummy(ImVec2{1.f, 1.f});
         }
-        if (camera && camera->entityToFollow) {
+        if (camera) {
             const b2Vec2 offsetWorld = camera->getOffsetWorld();
             const WindowVec2 offsetPixels = camera->getOffsetPixels();
             const b2Vec2 size = camera->getSize();
@@ -218,22 +267,11 @@ void UiManager::drawDebug(
             );
             ImGui::Dummy(ImVec2{1.f, 1.f});
         }
-        size_t controllersConnected = input.getGamepadCount();
-        ImGui::Text("\nControllers Connected: %zu", controllersConnected);
-        ImGui::PopFont();
-    }
-    ImGui::End();
-}
-
-void UiManager::drawLargeLogo() {
-    const ImGuiViewport* viewport = ImGui::GetMainViewport();
-    ImVec2 workPos = viewport->WorkPos;
-    ImVec2 workSize = viewport->WorkSize;
-    ImVec2 centerPos = ImVec2{workPos.x + workSize.x * 0.5f, workPos.y + workSize.y * 0.5f};
-    ImGui::SetNextWindowPos(ImVec2{centerPos.x, 50.f}, ImGuiCond_Always, ImVec2{0.5, 0.f});
-    if (ImGui::Begin("Main Menu Title", nullptr, staticFlags)) {
-        ImGui::PushFont(fontTitle);
-        ImGui::Text("Platformer");
+        int sdlGamepadCount = input.sdlGamepadsDetected();
+        ImGui::Text("\nSDL Gamepads Detected: %d", sdlGamepadCount);
+        size_t playerSourceCount = input.getPlayerSourceCount();
+        size_t maxPlayerSourceCount = input.getPlayerSources().size();
+        ImGui::Text("Player Sources Connected: %zu/%zu", playerSourceCount, maxPlayerSourceCount);
         ImGui::PopFont();
     }
     ImGui::End();
@@ -258,8 +296,7 @@ void UiManager::drawMainMenu() {
         ImGui::SetCursorPosY(50.f);
         ImGui::SetCursorPosX(cursorX);
         if (ImGui::Button("Test Game", ImVec2{buttonWidth, buttonHeight})) {
-            GameEvents::Push(GameEventTypes::SetLevelName{LevelName::Template});
-            setState(UiState::Playing);
+            setState(UiState::PlayerSourceSetup);
         }
         ImGui::SetItemDefaultFocus();
         ImGui::Dummy(ImVec2(0, verticalSpacing));
@@ -281,12 +318,7 @@ void UiManager::drawMainMenu() {
 void UiManager::drawSettings(
     WindowManager& window, AudioManager& audio, InputManager& input, Level* level
 ) {
-    const ImGuiViewport* viewport = ImGui::GetMainViewport();
-    ImVec2 workPos = viewport->WorkPos;
-    ImVec2 workSize = viewport->WorkSize;
-    ImVec2 menuPos = ImVec2{workPos.x + workSize.x * 0.5f, workPos.y + workSize.y * 0.5f};
-    ImGui::SetNextWindowPos(menuPos, ImGuiCond_Always, ImVec2{0.5, 0.5});
-    ImGui::SetNextWindowSize(workSize);
+    setNextWindowFullscreen();
     const ImVec2 verticalSpacingDummy{0.f, 10.f};
     const ImVec2 horizontalSpacingDummy{10.f, 0.f};
     if (ImGui::Begin("Settings", nullptr, staticFlags)) {
@@ -307,22 +339,7 @@ void UiManager::drawSettings(
             ImGui::Text("Display");
             ImGui::PushFont(fontMedium);
             ImGui::Dummy(verticalSpacingDummy);
-            int framerate = static_cast<int>(ImGui::GetIO().Framerate);
-            if (framerate >= 1000) {
-                ImGui::Text(
-                    "%05d/%s FPS (%.3f ms/frame)",
-                    framerate,
-                    window.targetFpsStr().c_str(),
-                    1000.0f / framerate
-                );
-            } else {
-                ImGui::Text(
-                    "%d/%s FPS (%.3f ms/frame)",
-                    framerate,
-                    window.targetFpsStr().c_str(),
-                    1000.0f / framerate
-                );
-            }
+            fpsText(window);
             ImGui::Dummy(verticalSpacingDummy);
             bool vsync = window.isVsyncEnabled();
             if (ImGui::Checkbox("VSync", &vsync)) {
@@ -438,6 +455,53 @@ void UiManager::drawSettings(
         ImGui::PopFont();
     }
     ImGui::EndTabBar();
+    ImGui::PopFont();
+    ImGui::End();
+}
+
+void UiManager::drawPlayerSourceSetup(InputManager& input) {
+    setNextWindowFullscreen();
+    ImGui::Begin("Player Source Setup", nullptr, staticFlags);
+    ImGui::PushFont(fontExtraLarge);
+    ImGui::Text("Player Source Setup:");
+    ImGui::PopFont();
+    ImGui::PushFont(fontLarge);
+    ImGui::Dummy(ImVec2{0.f, 10.f});
+    ImGui::Text("Press any button to join!");
+    ImGui::Dummy(ImVec2{0.f, 25.f});
+    const PlayerSources& playerSources = input.getPlayerSources();
+    for (size_t i = 0; i < playerSources.size(); i++) {
+        std::string childId = "Player " + std::to_string(i + 1);
+        std::string sourceName;
+        if (playerSources[i].has_value()) {
+            sourceName = input.getSourceName(playerSources[i].value());
+        } else {
+            sourceName = "Empty";
+        }
+        ImGui::Text("%s: %s", childId.c_str(), sourceName.c_str());
+        if (playerSources[i].has_value()) {
+            ImGui::SameLine();
+            std::string buttonId = "Remove##" + std::to_string(i + 1);
+            if (ImGui::Button(buttonId.c_str(), ImVec2{150.f, 50.f})) {
+                input.removePlayerSourceAtIndex(i);
+            }
+        }
+        ImGui::Dummy(ImVec2{0.f, 50.f});
+    }
+    ImGui::PushFont(fontExtraLarge);
+    if (ImGui::Button("Play", ImVec2{200.f, 60.f})) {
+        const size_t playerSourceCount = input.getPlayerSourceCount();
+        if (playerSourceCount > 0 && !playerSourceAddedThisFrame) {
+            GameEvents::Push(GameEventTypes::SetLevelName{LevelName::Test});
+            // To make sure the ui screen is switched after the level is loaded.
+            GameEvents::Push(GameEventTypes::SetUiState{UiState::Playing});
+        }
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Back", ImVec2{200.f, 60.f})) {
+        runCancelEvent();
+    }
+    ImGui::PopFont();
     ImGui::PopFont();
     ImGui::End();
 }

@@ -1,6 +1,8 @@
 #pragma once
 #include "AssetPaths.hpp"
+#include "Colors.hpp"
 #include "EntityController.hpp"
+#include "InputManager.hpp"
 #include <box2d/box2d.h>
 
 struct LevelDimensions {
@@ -21,7 +23,7 @@ struct LevelDrawDimensions {
 };
 
 struct Player {
-    PlayerSourceInfo source;
+    InputSource source;
     std::unique_ptr<EntityController> controller;
 };
 
@@ -34,7 +36,7 @@ class Level {
     EntitiesVector entities;
     std::vector<Player> players;
     b2WorldId world;
-    LevelDimensions size;
+    LevelDimensions levelSize;
     const char* levelName;
     Camera camera;
     LevelDrawInfo drawInfo;
@@ -62,6 +64,7 @@ class Level {
     bool showFanTriangulation = false;
     bool showHitBoxes = false;
     bool showLevelBounds = false;
+    SDL_Color backgroundColor = Colors::SkyBlue;
 
     void update();
 
@@ -99,9 +102,9 @@ class Level {
 
     const std::vector<Player>& getPlayers() const;
 
-    void addPlayer(PlayerSourceInfo playerSource, AssetManager& assets);
+    void addPlayer(InputSource playerSource, AssetManager& assets);
 
-    void updatePlayers(const std::vector<PlayerSourceInfo>& playerSources, AssetManager& assets);
+    void updatePlayers(const PlayerSources& playerSources, AssetManager& assets);
 
     const LevelDrawInfo& drawnLastFrame() const;
 };

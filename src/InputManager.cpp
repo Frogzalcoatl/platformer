@@ -1,5 +1,6 @@
 #include "InputManager.hpp"
 #include "Events.hpp"
+#include <algorithm>
 #include <cassert>
 #include <imgui.h>
 
@@ -39,6 +40,21 @@ std::string inputVerbToString(InputVerb verb) {
         return "Show Hitboxes";
     default:
         return "";
+    }
+}
+
+std::string inputTypeToString(InputType type) {
+    switch (type) {
+    case InputType::Controller:
+        return "Controller";
+    case InputType::Keyboard:
+        return "Keyboard";
+    case InputType::Mouse:
+        return "Mouse";
+    case InputType::Touch:
+        return "Touch";
+    default:
+        return "Unknown Input Type";
     }
 }
 
@@ -210,167 +226,274 @@ InputManager::getGamepadButtonsFromVerb(InputVerb verb) const {
     return gamepadBindings[static_cast<size_t>(verb)];
 }
 
-void InputManager::handleGamepadDeviceEvent(SDL_GamepadDeviceEvent& event) {
-    if (event.type == SDL_EVENT_GAMEPAD_REMOVED) {
-        gamepadsVerbsPressed.erase(event.which);
-        for (auto it = playerSources.begin(); it != playerSources.end(); it++) {
-            if (it->type == InputSource::Controller && it->sdlId == event.which) {
-                playerSources.erase(it);
-                break;
-            }
-        }
-    } else if (event.type == SDL_EVENT_GAMEPAD_ADDED) {
-        gamepadsVerbsPressed[event.which] = {};
-        playerSources.push_back(PlayerSourceInfo{InputSource::Controller, event.which});
-    }
-}
-
 const GamepadBindings& InputManager::getGamepadBindings() const {
     return gamepadBindings;
 }
 
-size_t InputManager::getGamepadCount() const {
-    return gamepadsVerbsPressed.size();
-}
-
-const std::vector<PlayerSourceInfo>& InputManager::getPlayerSources() const {
+const PlayerSources& InputManager::getPlayerSources() const {
     return playerSources;
 }
 
-std::vector<GameEventTypes::Input> InputManager::getInputEventsFromSDLEvent(SDL_Event& event) {
+size_t InputManager::getPlayerSourceCount() const {
+    return playerSourceCount;
+}
+
+int InputManager::sdlGamepadsDetected() const {
+    int count = 0;
+    SDL_GetGamepads(&count);
+    return count;
+}
+
+std::string InputManager::getSourceName(const InputSource& source) {
+    std::string inputSourceName;
+    if (source.type == InputType::Controller) {
+        inputSourceName = SDL_GetGamepadNameForID(source.sdlId);
+        if (inputSourceName.empty()) {
+            inputSourceName = "Controller " + std::to_string(source.sdlId);
+        }
+    } else {
+        inputSourceName = inputTypeToString(source.type);
+    }
+    return inputSourceName;
+}
+
+bool InputManager::addPlayerSource(const InputSource& source) {
+    assert(source.type < InputType::InputTypeCount);
+    if (playerSourceCount == MaxPlayerSources) {
+        return false;
+    }
+    bool alreadyAdded = std::any_of(
+        playerSources.begin(),
+        playerSources.end(),
+        [&source](const std::optional<InputSource>& playerSource) { return source == playerSource; }
+    );
+    if (alreadyAdded) {
+        return false;
+    }
+    auto emptyIt = std::find_if(
+        playerSources.begin(),
+        playerSources.end(),
+        [](const std::optional<InputSource>& playerSource) { return !playerSource.has_value(); }
+    );
+    std::string sourceName = getSourceName(source);
+    if (emptyIt == playerSources.end()) {
+        SDL_LogWarn(
+            SDL_LOG_CATEGORY_APPLICATION,
+            "Ignoring attempt to add input source \"%s\": No null index found on playerSources array.",
+            sourceName.c_str()
+        );
+        return false;
+    }
+    *emptyIt = source;
+    playerSourceCount++;
+    size_t index = std::distance(playerSources.begin(), emptyIt);
+    GameEvents::Push(GameEventTypes::PlayerSourceAdded{source, index});
+    SDL_Log("Added player source \"%s\" at index %zu", sourceName.c_str(), index);
+    return true;
+}
+
+bool InputManager::removePlayerSource(const InputSource& source) {
+    auto sourceIt = std::find(playerSources.begin(), playerSources.end(), source);
+    std::string sourceName = getSourceName(source);
+    if (sourceIt == playerSources.end()) {
+        SDL_LogWarn(
+            SDL_LOG_CATEGORY_APPLICATION,
+            "Ignoring request to remove input source \"%s\": They are not currently on playerSources array.",
+            sourceName.c_str()
+        );
+        return false;
+    }
+    *sourceIt = std::nullopt;
+    if (playerSourceCount == 0) {
+        SDL_LogWarn(
+            SDL_LOG_CATEGORY_APPLICATION,
+            "Ignored attempt decrement an unsigned playerSourceCount of 0. May be out of sync."
+        );
+    } else {
+        playerSourceCount--;
+    }
+    // Learned about std::stable_partition from AI
+    // stable partition shifts all values that return true to the starting indices
+    // shifts all values that return false to the indices after.
+    std::stable_partition(
+        playerSources.begin(), playerSources.end(), [](const std::optional<InputSource>& source) {
+            return source.has_value();
+        }
+    );
+    size_t index = std::distance(playerSources.begin(), sourceIt);
+    GameEvents::Push(GameEventTypes::PlayerSourceRemoved{source, index});
+    SDL_Log("Removed player source \"%s\" at index %zu", sourceName.c_str(), index);
+    return true;
+}
+
+void InputManager::handleGamepadRemoved(SDL_GamepadDeviceEvent& event) {
+    if (event.type != SDL_EVENT_GAMEPAD_REMOVED) {
+        return;
+    }
+    InputSource gamepadSource{InputType::Controller, event.which};
+    removePlayerSource(gamepadSource);
+}
+
+bool InputManager::hasTouchScreen() {
+    int touchDeviceCount;
+    SDL_TouchID* touchDevices = SDL_GetTouchDevices(&touchDeviceCount);
+    if (touchDeviceCount == 0) {
+        return false;
+    }
+    for (int i = 0; i < touchDeviceCount; i++) {
+        SDL_TouchDeviceType deviceType = SDL_GetTouchDeviceType(touchDevices[i]);
+        if (deviceType == SDL_TOUCH_DEVICE_DIRECT) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool InputManager::enableTouchPlayer() {
+    if (!hasTouchScreen()) {
+        SDL_Log("Not enabling touch player. No touch screen detected");
+        return false;
+    }
+    return addPlayerSource(DefaultTouchSource);
+}
+
+bool InputManager::disableTouchPlayer() {
+    return removePlayerSource(DefaultTouchSource);
+}
+
+void InputManager::removePlayerSourceAtIndex(size_t index) {
+    if (index >= playerSources.size()) {
+        SDL_Log("Unable to remove player at invalid index %zu.", index);
+        return;
+    }
+    if (!playerSources[index].has_value()) {
+        return;
+    }
+    // This is technically inefficient, but since theres only 4 players it does not matter.
+    // Just so i dont have to worry about keeping the logic for removing players in check at two
+    // different places.
+    removePlayerSource(playerSources[index].value());
+}
+
+std::vector<GameEventTypes::Input> InputManager::handleKeyboardEvent(SDL_KeyboardEvent& event) {
+    if (listenForValidKeyboard && event.type == SDL_EVENT_KEY_DOWN) {
+        bool addResult = addPlayerSource(DefaultKeyboardSource);
+        if (addResult) {
+            return {};
+        }
+    }
     std::vector<GameEventTypes::Input> inputEvents;
+    if (event.scancode == SDL_SCANCODE_AC_BACK && event.type == SDL_EVENT_KEY_DOWN) {
+        // Always return input pause and cancel events for android back button.
+        inputEvents.push_back(
+            GameEventTypes::Input{InputVerb::Pause, InputState::Pressed, DefaultTouchSource}
+        );
+        inputEvents.push_back(
+            GameEventTypes::Input{InputVerb::Cancel, InputState::Pressed, DefaultTouchSource}
+        );
+        return inputEvents;
+    }
+    std::vector<InputVerbInfo> verbs = getVerbsFromScancode(event.scancode);
+    if (verbs.size() == 0) {
+        return {};
+    }
+    for (size_t i = 0; i < verbs.size(); i++) {
+        auto& amountPressed = keyboardVerbsPressed[static_cast<size_t>(verbs[i].verb)];
+        if (event.type == SDL_EVENT_KEY_DOWN && !event.repeat) {
+            amountPressed++;
+        } else if (event.type == SDL_EVENT_KEY_UP) {
+            if (amountPressed == 0) {
+                continue;
+            }
+            amountPressed--;
+        }
+        if (amountPressed == 0) {
+            inputEvents.push_back(
+                GameEventTypes::Input{verbs[i].verb, InputState::Released, DefaultKeyboardSource}
+                // Not using event.which bc its somewhat unrekable and who
+                // needs to use multiple keyboards at once anyways
+            );
+        }
+        if (event.type == SDL_EVENT_KEY_DOWN && amountPressed >= 1 &&
+            (verbs[i].activateOnRepeat || !event.repeat)) {
+            inputEvents.push_back(
+                GameEventTypes::Input{verbs[i].verb, InputState::Pressed, DefaultKeyboardSource}
+            );
+        }
+    }
+    return inputEvents;
+}
+
+std::vector<GameEventTypes::Input> InputManager::handleMouseWheelEvent(SDL_MouseWheelEvent& event) {
+    ImGuiIO& io = ImGui::GetIO();
+    if (io.WantCaptureMouse) {
+        return {};
+    }
+    if (event.integer_y > 0) {
+        // mouse.which is not relevant here
+        return {GameEventTypes::Input{InputVerb::ZoomIn, InputState::Pressed, DefaultMouseSource}};
+    } else if (event.integer_y < 0) {
+        return {GameEventTypes::Input{InputVerb::ZoomOut, InputState::Pressed, DefaultMouseSource}};
+    } else {
+        return {};
+    }
+}
+
+std::vector<GameEventTypes::Input>
+InputManager::handleGamepadButtonEvent(SDL_GamepadButtonEvent& event) {
+    if (listenForNewGamepad && event.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN) {
+        InputSource eventSource{InputType::Controller, event.which};
+        bool addResult = addPlayerSource(eventSource);
+        if (addResult) {
+            return {};
+        }
+    }
+    std::vector<InputVerb> verbs =
+        getVerbsFromGamepadButton(static_cast<SDL_GamepadButton>(event.button));
+    if (verbs.empty()) {
+        return {};
+    }
+    std::vector<GameEventTypes::Input> inputEvents;
+    auto& amountPressedArr = gamepadsVerbsPressed[event.which];
+    for (size_t i = 0; i < verbs.size(); i++) {
+        auto& amountPressed = amountPressedArr[static_cast<size_t>(verbs[i])];
+        if (event.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN) {
+            amountPressed++;
+        } else if (event.type == SDL_EVENT_GAMEPAD_BUTTON_UP) {
+            amountPressed--;
+        }
+        if (amountPressed == 0) {
+            inputEvents.push_back(
+                GameEventTypes::Input{
+                    verbs[i], InputState::Released, InputSource{InputType::Controller, event.which}
+                }
+            );
+        } else if (amountPressed >= 1 && event.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN) {
+            inputEvents.push_back(
+                GameEventTypes::Input{
+                    verbs[i], InputState::Pressed, InputSource{InputType::Controller, event.which}
+                }
+            );
+        }
+    }
+    return inputEvents;
+}
+
+std::vector<GameEventTypes::Input> InputManager::getInputEventsFromSDLEvent(SDL_Event& event) {
     switch (event.type) {
     case SDL_EVENT_KEY_DOWN:
     case SDL_EVENT_KEY_UP: {
-        /* Not needed atm
-        ImGuiIO& io = ImGui::GetIO();
-        if (io.WantCaptureKeyboard != isImGuiCapturingKeyboard) {
-            isImGuiCapturingKeyboard = io.WantCaptureKeyboard;
-            if (isImGuiCapturingKeyboard) {
-                for (size_t i = 0; i < keyboardVerbsPressed.size(); i++) {
-                    int& amountPressed = keyboardVerbsPressed[i];
-                    if (amountPressed > 0) {
-                        amountPressed = 0;
-                        inputEvents.push_back(
-                            GameEventTypes::Input{
-                                static_cast<InputVerb>(i),
-                                InputState::Released,
-                                InputSource::Keyboard
-                            }
-                        );
-                    }
-                }
-            }
-        }
-        if (isImGuiCapturingKeyboard) {
-            break;
-        }
-        */
-        if (event.key.scancode == SDL_SCANCODE_AC_BACK && event.key.type == SDL_EVENT_KEY_DOWN) {
-            // Always return input pause and cancel events for android back button.
-            inputEvents.push_back(
-                GameEventTypes::Input{
-                    InputVerb::Pause, InputState::Pressed, PlayerSourceInfo{InputSource::Touch, 0}
-                }
-            );
-            inputEvents.push_back(
-                GameEventTypes::Input{
-                    InputVerb::Cancel, InputState::Pressed, PlayerSourceInfo{InputSource::Touch, 0}
-                }
-            );
-            return inputEvents;
-        }
-        std::vector<InputVerbInfo> verbs = getVerbsFromScancode(event.key.scancode);
-        if (verbs.size() == 0) {
-            break;
-        }
-        for (size_t i = 0; i < verbs.size(); i++) {
-            auto& amountPressed = keyboardVerbsPressed[static_cast<size_t>(verbs[i].verb)];
-            if (event.type == SDL_EVENT_KEY_DOWN && !event.key.repeat) {
-                amountPressed++;
-            } else if (event.type == SDL_EVENT_KEY_UP) {
-                if (amountPressed == 0) {
-                    continue;
-                }
-                amountPressed--;
-            }
-            if (amountPressed == 0) {
-                // Not using event.which bc its somewhat unreliable and who needs to use multiple
-                // keyboards at once
-                inputEvents.push_back(
-                    GameEventTypes::Input{
-                        verbs[i].verb,
-                        InputState::Released,
-                        PlayerSourceInfo{InputSource::Keyboard, 0}
-                    }
-                );
-            }
-            if (amountPressed >= 1 && (verbs[i].activateOnRepeat || !event.key.repeat) &&
-                event.type == SDL_EVENT_KEY_DOWN) {
-                inputEvents.push_back(
-                    GameEventTypes::Input{
-                        verbs[i].verb,
-                        InputState::Pressed,
-                        PlayerSourceInfo{InputSource::Keyboard, 0}
-                    }
-                );
-            }
-        }
+        return handleKeyboardEvent(event.key);
     }; break;
     case SDL_EVENT_MOUSE_WHEEL: {
-        ImGuiIO& io = ImGui::GetIO();
-        if (io.WantCaptureMouse) {
-            break;
-        }
-        if (event.wheel.integer_y > 0) {
-            // mouse.which is not relevant here
-            inputEvents.push_back(
-                GameEventTypes::Input{
-                    InputVerb::ZoomIn, InputState::Pressed, PlayerSourceInfo{InputSource::Mouse, 0}
-                }
-            );
-        } else if (event.wheel.integer_y < 0) {
-            inputEvents.push_back(
-                GameEventTypes::Input{
-                    InputVerb::ZoomOut, InputState::Pressed, PlayerSourceInfo{InputSource::Mouse, 0}
-                }
-            );
-        }
+        return handleMouseWheelEvent(event.wheel);
     }; break;
     case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
     case SDL_EVENT_GAMEPAD_BUTTON_UP: {
-        std::vector<InputVerb> verbs =
-            getVerbsFromGamepadButton(static_cast<SDL_GamepadButton>(event.gbutton.button));
-        if (verbs.size() == 0) {
-            break;
-        }
-        auto& amountPressedArr = gamepadsVerbsPressed[event.gbutton.which];
-        for (size_t i = 0; i < verbs.size(); i++) {
-            auto& amountPressed = amountPressedArr[static_cast<size_t>(verbs[i])];
-            if (event.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN) {
-                amountPressed++;
-            } else if (event.type == SDL_EVENT_GAMEPAD_BUTTON_UP) {
-                amountPressed--;
-            }
-            if (amountPressed == 0) {
-                inputEvents.push_back(
-                    GameEventTypes::Input{
-                        verbs[i],
-                        InputState::Released,
-                        PlayerSourceInfo{InputSource::Controller, event.gbutton.which}
-                    }
-                );
-            } else if (amountPressed >= 1 && event.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN) {
-                inputEvents.push_back(
-                    GameEventTypes::Input{
-                        verbs[i],
-                        InputState::Pressed,
-                        PlayerSourceInfo{InputSource::Controller, event.gbutton.which}
-                    }
-                );
-            }
-        }
+        return handleGamepadButtonEvent(event.gbutton);
     }; break;
+    default: {
+        return {};
     }
-    return inputEvents;
+    }
 }

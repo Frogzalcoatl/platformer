@@ -35,12 +35,12 @@ enum class InputState : uint8_t {
     InputStateCount
 };
 
-enum class InputSource : uint8_t {
+enum class InputType : uint8_t {
     Keyboard,
     Mouse,
     Controller,
     Touch,
-    InputSourceCount
+    InputTypeCount
 };
 
 struct DefaultScancodeBinding {
@@ -54,10 +54,13 @@ struct DefaultButtonBinding {
     SDL_GamepadButton button;
 };
 
-struct PlayerSourceInfo {
-    InputSource type;
+struct InputSource {
+    InputType type;
     Uint32 sdlId;
-    bool operator==(const PlayerSourceInfo& other) const = default;
+    // operator == is a suggestion from AI.
+    // Means i can simply compare inputSources with ==
+    // instead of having to compare the two individual properties.
+    bool operator==(const InputSource& other) const = default;
 };
 
 enum class AudioCategory : uint8_t {
@@ -70,6 +73,7 @@ enum class AudioCategory : uint8_t {
 enum class UiState : uint8_t {
     MainMenu,
     Settings,
+    PlayerSourceSetup,
     Playing,
     Paused,
     PausedSettings,
@@ -78,7 +82,7 @@ enum class UiState : uint8_t {
 
 enum class LevelName : uint8_t {
     None,
-    Template,
+    Test,
     LevelNameCount
 };
 
@@ -88,7 +92,7 @@ struct CloseWindow {};
 struct Input {
     InputVerb verb;
     InputState state;
-    PlayerSourceInfo sourceInfo;
+    InputSource sourceInfo;
 };
 
 struct PlaySound {
@@ -126,7 +130,19 @@ struct SetLevelName {
     LevelName level;
 };
 
-struct UpdateCurrentPlayers {};
+struct PlayerSourceAdded {
+    InputSource source;
+    size_t atIndex;
+};
+
+struct PlayerSourceRemoved {
+    InputSource source;
+    size_t atIndex;
+};
+
+struct ShouldDetectNewPlayerSources {
+    bool value;
+};
 }
 
 // Learned about std::variant from AI. Seems like a reasonable choice here.
@@ -138,7 +154,9 @@ using GameEvent = std::variant<
     GameEventTypes::Input,
     GameEventTypes::SetUiState,
     GameEventTypes::SetLevelName,
-    GameEventTypes::UpdateCurrentPlayers>;
+    GameEventTypes::PlayerSourceAdded,
+    GameEventTypes::PlayerSourceRemoved,
+    GameEventTypes::ShouldDetectNewPlayerSources>;
 
 namespace GameEvents {
 bool Poll(GameEvent& event);
