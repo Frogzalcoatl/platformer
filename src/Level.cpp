@@ -8,42 +8,17 @@ Level::Level(
     const char* levelName,
     LevelDimensions size,
     WindowManager& window,
-    AssetManager& assets,
-    LevelAssets requiredAssets,
-    std::optional<const LevelAssets&> previousAssetsOpt
+    AssetManager& assetManager,
+    AudioManager& audioManager,
+    LevelAssetsVector requiredAssets,
+    std::optional<const LevelAssetsVector> previousAssetsOpt
 )
-    : levelSize(size), levelName(levelName), camera(nullptr, window),
-      requiredAssets(requiredAssets) {
+    : levelSize(size), levelName(levelName), requiredAssets(requiredAssets),
+      camera(nullptr, window) {
     if (previousAssetsOpt.has_value()) {
-        const LevelAssets& previousAssets = previousAssetsOpt.value();
-        LevelAssets assetsToUnload;
-        for (const auto& asset : previousAssets) {
-            bool notInCurrent = std::find(previousAssets.begin(), previousAssets.end(), asset) ==
-                                previousAssets.end();
-            if (notInCurrent) {
-                assetsToUnload.push_back(asset);
-            }
-        }
-        for (const auto& asset : assetsToUnload) {
-            switch (asset.type) {
-            case AssetTypes::Audio: {
-                assets.unloadAudio(asset.relativePath);
-            }; break;
-            case AssetTypes::Font: {
-                if (asset.fontInfo.has_value()) {
-
-                } else {
-                    // TODO: Add length of string view in log
-                    SDL_LogWarn(
-                        SDL_LOG_CATEGORY_APPLICATION,
-                        "Unable to unload font \"%s\": No font info provided.",
-                        asset.relativePath.data()
-                    )
-                }
-            }
-            }
-        }
+        handlePreviousAssetsVector(previousAssetsOpt.value(), assetManager);
     }
+    loadRequiredAssets(assetManager, audioManager);
     b2WorldDef worldDef = b2DefaultWorldDef();
     worldDef.gravity = {0.0f, -60.f};
     world = b2CreateWorld(&worldDef);
@@ -59,6 +34,87 @@ Level::~Level() {
     players.clear();
     b2DestroyWorld(world);
     SDL_Log("Destroyed box2d world for level \"%s\"", levelName);
+}
+
+void Level::loadLevelAsset(
+    const LevelAsset& asset, AssetManager& assetManager, AudioManager& audioManager
+) {
+    switch (asset.type) {
+    case AssetTypes::Audio: {
+        MIX_Mixer* mixerDevice = audioManager.getMixerDevice();
+        if (mixerDevice) {
+            assetManager.getAudio(asset.relativePath, mixerDevice, asset.shouldBePredecodedAudio);
+        }
+    }; break;
+    case AssetTypes::FontSdl: {
+        if (asset.fontInfo.has_value()) {
+            const FontInfo& fontInfo = asset.fontInfo.value();
+            assetManager.getSDLFont(asset.relativePath, fontInfo.ptSize, fontInfo.style);
+        } else {
+            SDL_LogWarn(
+                SDL_LOG_CATEGORY_APPLICATION,
+                "Unable to unload font \"%.*s\": No font info provided.",
+                static_cast<int>(asset.relativePath.length()),
+                asset.relativePath.data()
+            );
+        }
+    }; break;
+    case AssetTypes::Texture: {
+        assetManager.getTexture(asset.relativePath);
+    }; break;
+    }
+}
+
+void Level::unloadLevelAsset(const LevelAsset& asset, AssetManager& assetManager) {
+    switch (asset.type) {
+    case AssetTypes::Audio: {
+        assetManager.unloadAudio(asset.relativePath, asset.shouldBePredecodedAudio);
+    }; break;
+    case AssetTypes::FontSdl: {
+        if (asset.fontInfo.has_value()) {
+            const FontInfo& fontInfo = asset.fontInfo.value();
+            assetManager.unloadSDLFont(asset.relativePath, fontInfo.ptSize, fontInfo.style);
+        } else {
+            SDL_LogWarn(
+                SDL_LOG_CATEGORY_APPLICATION,
+                "Unable to unload font \"%.*s\": No font info provided.",
+                static_cast<int>(asset.relativePath.length()),
+                asset.relativePath.data()
+            );
+        }
+    }; break;
+    case AssetTypes::Texture: {
+        assetManager.unloadTexture(asset.relativePath);
+    }; break;
+    }
+}
+
+void Level::loadRequiredAssets(AssetManager& assetManager, AudioManager& audioManager) {
+    for (const auto& asset : requiredAssets) {
+        loadLevelAsset(asset, assetManager, audioManager);
+    }
+}
+
+void Level::unloadRequiredAssets(AssetManager& assetManager) {
+    for (const auto& asset : requiredAssets) {
+        unloadLevelAsset(asset, assetManager);
+    }
+}
+
+void Level::handlePreviousAssetsVector(
+    const LevelAssetsVector& previousAssets, AssetManager& assetManager
+) {
+    LevelAssetsVector assetsToUnload;
+    for (const auto& asset : previousAssets) {
+        bool notInRequiredAssets =
+            std::find(requiredAssets.begin(), requiredAssets.end(), asset) == requiredAssets.end();
+        if (notInRequiredAssets) {
+            assetsToUnload.push_back(asset);
+        }
+    }
+    for (const auto& asset : assetsToUnload) {
+        unloadLevelAsset(asset, assetManager);
+    }
 }
 
 void Level::drawTile(
@@ -391,9 +447,21 @@ const LevelDrawInfo& Level::drawnLastFrame() const {
     return drawInfo;
 }
 
-std::unique_ptr<Level> getTestLevel(AssetManager& assets, WindowManager& window) {
-    std::unique_ptr<Level> level =
-        std::make_unique<Level>("Test", LevelDimensions{100, 40}, window);
+std::unique_ptr<Level> getTestLevel(
+    AssetManager& assetManager,
+    WindowManager& window,
+    AudioManager& audioManager,
+    const LevelAssetsVector& previousAssets
+) {
+    std::unique_ptr<Level> level = std::make_unique<Level>(
+        "Test",
+        LevelDimensions{100, 40},
+        window,
+        assetManager,
+        audioManager,
+        LevelAssets::Template,
+        previousAssets
+    );
     level->showLevelBounds = true;
     const int GroundWidth = 50;
     const int GroundHeight = 2;
@@ -420,7 +488,7 @@ std::unique_ptr<Level> getTestLevel(AssetManager& assets, WindowManager& window)
         dynamicBodyDef,
         b2DefaultShapeDef(),
         colorToFColor(Colors::Yellow),
-        assets.getTexture(Textures::Log),
+        assetManager.getTexture(Textures::Log),
         b2Vec2{1.f, 4.f}
     );
     level->addEntity(
@@ -429,7 +497,7 @@ std::unique_ptr<Level> getTestLevel(AssetManager& assets, WindowManager& window)
         dynamicBodyDef,
         b2DefaultShapeDef(),
         colorToFColor(Colors::Yellow),
-        assets.getTexture(Textures::Log),
+        assetManager.getTexture(Textures::Log),
         b2Vec2{1.f, 2.f}
     );
     for (int i = 1; i < GroundWidth; i++) {

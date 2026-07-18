@@ -181,7 +181,7 @@ void AudioManager::clearCurrentMusic() {
     MIX_PauseTrack(musicTrack.get());
     MIX_SetTrackAudio(musicTrack.get(), nullptr);
     if (assetManager) {
-        assetManager->unloadAudio(currentMusicRelativePath.generic_string());
+        assetManager->unloadAudio(currentMusicRelativePath.generic_string(), false);
     }
     currentMusic = nullptr;
     currentMusicName = "";

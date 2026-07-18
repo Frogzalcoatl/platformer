@@ -157,12 +157,15 @@ void Platformer::handleGameEvent() {
         } else if (const auto* setUiState = std::get_if<GameEventTypes::SetUiState>(&event)) {
             ui.setState(setUiState->state);
         } else if (const auto* setLevelName = std::get_if<GameEventTypes::SetLevelName>(&event)) {
+            const LevelAssetsVector& previousLevelAssets =
+                currentLevel ? currentLevel->getRequiredAssets() : LevelAssetsVector{};
             if (setLevelName->level == LevelName::None) {
+                currentLevel->unloadRequiredAssets(assets);
                 currentLevel = nullptr;
                 window.backgroundColor = Colors::Background;
                 continue;
             } else if (setLevelName->level == LevelName::Test) {
-                currentLevel = getTestLevel(assets, window);
+                currentLevel = getTestLevel(assets, window, audio, previousLevelAssets);
             }
             currentLevel->updatePlayers(input.getPlayerSources(), assets);
             window.backgroundColor = currentLevel->backgroundColor;
@@ -190,14 +193,17 @@ void Platformer::handleGameEvent() {
                 std::get_if<GameEventTypes::ShouldDetectNewPlayerSources>(&event)
         ) {
             if (detectNewPlayers->value) {
-                SDL_Log("Enabled input detection for adding new player sources.");
                 input.listenForValidKeyboard = true;
                 input.listenForNewGamepad = true;
-                input.enableTouchPlayer();
+                input.enableTouchPlayer(); // Is ignored if user does not have touch screen
+                SDL_Log("Enabled input detection for adding new player sources.");
             } else {
-                SDL_Log("Disabled input detection for adding new player sources.");
+                bool valueWillBeChanged = input.listenForValidKeyboard || input.listenForNewGamepad;
                 input.listenForValidKeyboard = false;
                 input.listenForNewGamepad = false;
+                if (valueWillBeChanged) {
+                    SDL_Log("Disabled input detection for adding new player sources.");
+                }
             }
         }
     }

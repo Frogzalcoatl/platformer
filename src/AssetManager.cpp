@@ -308,22 +308,19 @@ bool AssetManager::unloadSDLFont(
     return wasUnloaded;
 }
 
-bool AssetManager::unloadAudio(std::string_view relativePath) {
+bool AssetManager::unloadAudio(std::string_view relativePath, bool predecoded) {
     std::string pathStr(relativePath);
-    bool wasUnloaded = false;
-    auto iteratorNon = audioCacheNonPredecoded.find(pathStr);
-    if (iteratorNon != audioCacheNonPredecoded.end()) {
-        audioCacheNonPredecoded.erase(iteratorNon);
-        SDL_Log("Destroyed non-predecoded MIX_Audio from file \"%s\"", pathStr.c_str());
-        wasUnloaded = true;
+    AudioCacheMap& cacheMap = predecoded ? audioCachePredecoded : audioCacheNonPredecoded;
+    auto it = cacheMap.find(pathStr);
+    if (it != cacheMap.end()) {
+        cacheMap.erase(it);
+        std::string message = "Destroyed ";
+        message += predecoded ? "predecoded" : "non-predecoded";
+        message += " MIX_Audio from file \"" + pathStr + "\"";
+        SDL_Log("%s", message.c_str());
+        return true;
     }
-    auto iteratorPre = audioCachePredecoded.find(pathStr);
-    if (iteratorPre != audioCachePredecoded.end()) {
-        audioCachePredecoded.erase(iteratorPre);
-        SDL_Log("Destroyed predecoded MIX_Audio from file \"%s\"", pathStr.c_str());
-        wasUnloaded = true;
-    }
-    return wasUnloaded;
+    return false;
 }
 
 bool AssetManager::unloadTexture(std::string_view relativePath) {

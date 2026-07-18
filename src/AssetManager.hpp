@@ -84,13 +84,14 @@ using TextureCacheMap = std::unordered_map<std::string, UniqueTexture, StringHas
 
 enum class AssetTypes : uint8_t {
     Audio,
-    Font,
+    FontSdl,
     Texture
 };
 
 struct FontInfo {
     float ptSize;
-    TTF_FontStyleFlags style;
+    TTF_FontStyleFlags style = TTF_STYLE_NORMAL;
+    bool operator==(const FontInfo& other) const = default;
 };
 
 class AssetManager {
@@ -146,7 +147,7 @@ class AssetManager {
         std::string_view relativePath, float ptSize, TTF_FontStyleFlags style = TTF_STYLE_NORMAL
     );
 
-    bool unloadAudio(std::string_view relativePath);
+    bool unloadAudio(std::string_view relativePath, bool predecoded);
 
     bool unloadTexture(std::string_view relativePath);
 };

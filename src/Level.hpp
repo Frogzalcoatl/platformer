@@ -1,9 +1,12 @@
 #pragma once
 #include "AssetPaths.hpp"
+#include "AudioManager.hpp"
 #include "Colors.hpp"
 #include "EntityController.hpp"
 #include "InputManager.hpp"
+#include "LevelAssets.hpp"
 #include <box2d/box2d.h>
+#include <optional>
 
 struct LevelDimensions {
     size_t width;
@@ -27,16 +30,8 @@ struct Player {
     std::unique_ptr<EntityController> controller;
 };
 
-struct LevelAsset {
-    std::string_view relativePath;
-    AssetTypes type;
-    std::optional<FontInfo> fontInfo;
-    bool operator==(const LevelAsset& other) const = default;
-};
-
 using LevelTileVector = std::vector<std::vector<AssetPaths::Textures::TileTypes>>;
 using EntitiesVector = std::vector<std::unique_ptr<Entity>>;
-using LevelAssets = std::vector<LevelAsset>;
 
 class Level {
   private:
@@ -45,8 +40,8 @@ class Level {
     std::vector<Player> players;
     b2WorldId world;
     LevelDimensions levelSize;
-    LevelAssets requiredAssets;
     const char* levelName;
+    LevelAssetsVector requiredAssets;
     Camera camera;
     LevelDrawInfo drawInfo;
     size_t tileCount = 0; // Incremented when addTile is run
@@ -67,14 +62,23 @@ class Level {
         float cameraScale
     );
 
+    void
+    loadLevelAsset(const LevelAsset& asset, AssetManager& assetManager, AudioManager& audioManager);
+
+    void unloadLevelAsset(const LevelAsset& asset, AssetManager& assetManager);
+
+    void
+    handlePreviousAssetsVector(const LevelAssetsVector& previousAssets, AssetManager& assetManager);
+
   public:
     Level(
         const char* levelName,
         LevelDimensions size,
         WindowManager& window,
-        AssetManager& assets,
-        LevelAssets requiredAssets,
-        std::optional<const LevelAssets&> previousAssets = std::nullopt
+        AssetManager& assetManager,
+        AudioManager& audioManager,
+        LevelAssetsVector requiredAssets,
+        std::optional<const LevelAssetsVector> previousAssets = std::nullopt
     );
     ~Level();
     bool showFanTriangulation = false;
@@ -123,6 +127,19 @@ class Level {
     void updatePlayers(const PlayerSources& playerSources, AssetManager& assets);
 
     const LevelDrawInfo& drawnLastFrame() const;
+
+    void loadRequiredAssets(AssetManager& assetManager, AudioManager& audioManager);
+
+    void unloadRequiredAssets(AssetManager& assetManager);
+
+    const LevelAssetsVector& getRequiredAssets() const {
+        return requiredAssets;
+    }
 };
 
-std::unique_ptr<Level> getTestLevel(AssetManager& assets, WindowManager& window);
+std::unique_ptr<Level> getTestLevel(
+    AssetManager& assetManager,
+    WindowManager& window,
+    AudioManager& audioManager,
+    const LevelAssetsVector& previousAssets
+);

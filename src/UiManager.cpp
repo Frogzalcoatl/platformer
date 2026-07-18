@@ -501,6 +501,7 @@ void UiManager::drawPlayerSourceSetup(InputManager& input) {
     if (ImGui::Button("Play", ImVec2{200.f, 60.f})) {
         const size_t playerSourceCount = input.getPlayerSourceCount();
         if (playerSourceCount > 0 && !playerSourceAddedThisFrame) {
+            GameEvents::Push(GameEventTypes::ShouldDetectNewPlayerSources{false});
             GameEvents::Push(GameEventTypes::SetLevelName{LevelName::Test});
             // To make sure the ui screen is switched after the level is loaded.
             GameEvents::Push(GameEventTypes::SetUiState{UiState::Playing});

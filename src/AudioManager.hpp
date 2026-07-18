@@ -54,6 +54,10 @@ class AudioManager {
         bool loop = false
     );
 
+    MIX_Mixer* getMixerDevice() const {
+        return mixerDevice.get();
+    }
+
     unsigned int getVolume(AudioCategory category);
 
     void setVolume(AudioCategory category, unsigned int volume);
