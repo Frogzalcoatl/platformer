@@ -13,7 +13,6 @@ struct PackerTask {
     std::string relativePath;
 };
 
-// Pack files into .dat
 int main(int argc, char* argv[]) {
     if (argc < 4) {
         printf("Usage: vfs <input_path> <output_file> <header_version>\n");

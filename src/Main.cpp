@@ -39,6 +39,11 @@ int main(int argc, char* argv[]) {
     SDL_Log("Created ImGui Context");
     ImGuiIO& io = ImGui::GetIO();
     io.IniFilename = nullptr;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+    io.BackendFlags |= ImGuiBackendFlags_HasGamepad;
+    io.ConfigNavSwapGamepadButtons = true; // Matches my controller. Will enable/disable this based
+                                           // on controller type properly in the future
 #ifdef USE_DISCORD_RPC
     // https://discord.com/developers/applications/1521649642360668300/
     DiscordRichPresence presence = {};

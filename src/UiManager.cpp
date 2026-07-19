@@ -8,12 +8,6 @@ UiManager::UiManager(AssetManager& assets, UiState startingState) : currentState
     fontLarge = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 36.f);
     fontExtraLarge = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 48.f);
     fontTitle = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 128.f);
-    ImGuiIO& io = ImGui::GetIO();
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
-    io.BackendFlags |= ImGuiBackendFlags_HasGamepad;
-    io.ConfigNavSwapGamepadButtons = true; // Matches my controller. Will enable/disable this based
-                                           // on controlelr type properly in the future
 }
 
 void UiManager::draw(

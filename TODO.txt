@@ -6,6 +6,3 @@ Use enet lib for online multiplayer
 Account for polygon radius in draw func
 
 Figure out some way to automatically load static entities on exposed solid tiles.
-
-MusicPlayer class
-Store in platformer class. Store str array of music file paths in Level class.
