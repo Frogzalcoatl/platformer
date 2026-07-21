@@ -92,8 +92,9 @@ void VirtualFileSystem::constructorSDL(std::string_view expectedVersion) {
             return;
         }
         throw std::runtime_error(
-            "Missing pack file.\n" + packFilePath.filename().string() +
-            "\nAssets folder with name \"" + std::string(assetsFolderName) + "\"was also not found."
+            "Missing pack file: " + packFilePath.filename().string() +
+            "\nAssets folder with name \"" + std::string(assetsFolderName) +
+            "\" was also not found."
         );
     }
     VFS_Header header{};
