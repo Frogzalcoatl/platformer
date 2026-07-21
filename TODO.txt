@@ -1,11 +1,7 @@
-Use safe area
-
-Add UI Scaling
-
-Determine why android is drawing the level incorrectly
-
-Use enet lib for online multiplayer
+Add touch controls
 
 Account for polygon radius in draw func
+
+Use enet lib for online multiplayer
 
 Figure out some way to automatically load static entities on exposed solid tiles.

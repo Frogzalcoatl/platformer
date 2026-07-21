@@ -53,6 +53,8 @@ class WindowManager {
 
     WindowVec2 getSize() const;
 
+    SDL_Rect getSafeArea() const;
+
     void handleResize(int sizeX, int sizeY);
 
     WindowVec2 getMousePos() const;

@@ -76,6 +76,14 @@ WindowVec2 WindowManager::getSize() const {
     return size;
 }
 
+SDL_Rect WindowManager::getSafeArea() const {
+    SDL_Rect safeArea;
+    if (!SDL_GetWindowSafeArea(sdlWindow.get(), &safeArea)) {
+        return SDL_Rect{0, 0, size.x, size.y};
+    }
+    return safeArea;
+}
+
 void WindowManager::handleResize(int sizeX, int sizeY) {
     size.x = sizeX;
     size.y = sizeY;

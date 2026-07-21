@@ -13,6 +13,16 @@ class UiManager {
     bool stateChangedThisFrame = false;
     bool playerSourceAddedThisFrame = false; // temporary fix probably
 
+    float userPreferredScale = 1.f;
+    float uiScale = 1.f;
+
+    ImGuiStyle defaultStyle;
+    float logoHeight = 0.f;
+    float logoTopPadding = 0.f;
+
+    void updateActiveScale(WindowManager& window);
+    void updateStyleScale(float scale);
+
     ImFont* fontExtraSmall = nullptr;
     ImFont* fontSmall = nullptr;
     ImFont* fontMedium = nullptr;
@@ -28,8 +38,10 @@ class UiManager {
     ImGuiSliderFlags sliderFlags = ImGuiSliderFlags_NoInput;
 
     void setNextWindowFullscreen();
+    void setNextWindowSafeArea(WindowManager& window);
+    void setNextWindowYOnlySafeArea(WindowManager& window);
 
-    void drawLargeLogo();
+    void drawLargeLogo(WindowManager& window, float menuHeight);
 
     void fpsText(WindowManager& window);
 
@@ -42,17 +54,19 @@ class UiManager {
         UiManager& uiManager
     );
 
-    void drawMainMenu();
+    void drawMainMenu(WindowManager& window);
 
     void
     drawSettings(WindowManager& window, AudioManager& audio, InputManager& input, Level* level);
 
-    void drawPlayerSourceSetup(InputManager& input);
+    void drawPlayerSourceSetup(WindowManager& window, InputManager& input);
 
-    void drawPauseMenu();
+    void drawPauseMenu(WindowManager& window);
 
   public:
     UiManager(AssetManager& assets, UiState startingState = UiState::MainMenu);
+
+    bool showDebug = false;
 
     void draw(
         WindowManager& window,
@@ -80,6 +94,4 @@ class UiManager {
     bool isPlayerSourceAddedThisFrame() const {
         return playerSourceAddedThisFrame;
     }
-
-    bool showDebug = false;
 };
