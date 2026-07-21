@@ -22,6 +22,12 @@ WindowManager::WindowManager(const char* windowName, SDL_Color backgroundColor)
         return;
     }
     SDL_Log("Created SDL3 Window with name \"%s\"", windowName);
+    int actualWidth = 0;
+    int actualHeight = 0;
+    SDL_GetWindowSize(sdlWindow.get(), &actualWidth, &actualHeight);
+    size.x = actualWidth;
+    size.y = actualHeight;
+    SDL_Log("Initialized window size to: %d, %d", size.x, size.y);
     sdlRenderer = UniqueRenderer(SDL_CreateRenderer(sdlWindow.get(), nullptr));
     if (!sdlRenderer) {
         SDL_LogError(SDL_LOG_CATEGORY_RENDER, "Unable to create SDL3 renderer: %s", SDL_GetError());
