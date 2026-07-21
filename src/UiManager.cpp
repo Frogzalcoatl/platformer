@@ -401,6 +401,7 @@ void UiManager::drawSettings(
     setNextWindowSafeArea(window);
     const ImVec2 verticalSpacingDummy{0.f, 10.f * uiScale};
     const ImVec2 horizontalSpacingDummy{10.f * uiScale, 0.f};
+    ImVec2 resetButtonSize{100 * uiScale, 30 * uiScale};
     if (ImGui::Begin("Settings", nullptr, staticFlags | ImGuiWindowFlags_NoBackground)) {
         ImGui::PushFont(fontLarge);
         if (ImGui::Button("Back", ImVec2{100.f * uiScale, 45.f * uiScale})) {
@@ -440,6 +441,13 @@ void UiManager::drawSettings(
             }
             ImGui::Dummy(verticalSpacingDummy);
             static float tempPreferredScale = userPreferredScale;
+            if (ImGui::Button("Reset##ResetUIScale", resetButtonSize)) {
+                tempPreferredScale = 1.f;
+                userPreferredScale = 1.f;
+            }
+            ImGui::SameLine();
+            ImGui::Dummy(horizontalSpacingDummy);
+            ImGui::SameLine();
             ImGui::SliderFloat("UI Scale", &tempPreferredScale, 0.5f, 2.f, "%.2f");
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 userPreferredScale = tempPreferredScale;
@@ -462,7 +470,6 @@ void UiManager::drawSettings(
             int soundVolume = audio.getVolume(AudioCategory::Sounds);
             int musicVolume = audio.getVolume(AudioCategory::Music);
             float pitch = audio.getMusicPitch();
-            ImVec2 resetButtonSize{100 * uiScale, 30 * uiScale};
             ImGui::Dummy(verticalSpacingDummy);
             if (ImGui::Button("Reset##ResetMaster", resetButtonSize)) {
                 audio.setVolume(AudioCategory::Master, 100);
