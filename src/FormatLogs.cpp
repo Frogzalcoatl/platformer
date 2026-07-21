@@ -6,6 +6,7 @@
 
 static SDL_LogOutputFunction defaultSdlLogFunc = nullptr;
 
+#ifndef SDL_PLATFORM_ANDROID
 static std::string getTimeStamp() {
     SDL_Time ticks;
     SDL_DateTime dt;
@@ -15,6 +16,7 @@ static std::string getTimeStamp() {
         return "00:00:00";
     }
 }
+#endif
 
 static std::string priorityToString(SDL_LogPriority priority) {
     switch (priority) {
