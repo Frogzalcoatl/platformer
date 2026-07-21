@@ -21,6 +21,17 @@ WindowManager::WindowManager(const char* windowName, SDL_Color backgroundColor)
         );
         return;
     }
+    SDL_DisplayID display = SDL_GetDisplayForWindow(sdlWindow.get());
+    SDL_Rect displayBounds;
+    if (SDL_GetDisplayBounds(display, &displayBounds)) {
+        // Just in case the user has a screen smaller than 720p for whatever reason.
+        if (size.x > displayBounds.w) {
+            size.x = displayBounds.w;
+        }
+        if (size.y > displayBounds.h) {
+            size.y = displayBounds.h;
+        }
+    }
     SDL_Log("Created SDL3 Window with name \"%s\"", windowName);
     int actualWidth = 0;
     int actualHeight = 0;
@@ -35,7 +46,7 @@ WindowManager::WindowManager(const char* windowName, SDL_Color backgroundColor)
     }
     SDL_Log("Created SDL3 renderer");
     setVsync(vsync);
-    Uint64 vsyncFps = static_cast<Uint64>(getVsyncFps());
+    Uint64 vsyncFps = static_cast<Uint64>(SDL_roundf(getVsyncFps()));
     targetFps = vsyncFps;
     targetFrameTimeNs = 1000000000ULL / targetFps;
     ImGui_ImplSDL3_InitForSDLRenderer(sdlWindow.get(), sdlRenderer.get());
