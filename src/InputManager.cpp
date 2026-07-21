@@ -376,6 +376,19 @@ void InputManager::removePlayerSourceAtIndex(size_t index) {
 }
 
 std::vector<GameEventTypes::Input> InputManager::handleKeyboardEvent(SDL_KeyboardEvent& event) {
+    if (event.scancode == SDL_SCANCODE_AC_BACK) {
+        std::vector<GameEventTypes::Input> androidInputEvents;
+        InputState inputState =
+            event.type == SDL_EVENT_KEY_DOWN ? InputState::Pressed : InputState::Released;
+        // Always return input pause and cancel events for android back button.
+        androidInputEvents.push_back(
+            GameEventTypes::Input{InputVerb::Pause, inputState, DefaultTouchSource}
+        );
+        androidInputEvents.push_back(
+            GameEventTypes::Input{InputVerb::Cancel, inputState, DefaultTouchSource}
+        );
+        return androidInputEvents;
+    }
     if (listenForValidKeyboard && event.type == SDL_EVENT_KEY_DOWN) {
         bool addResult = addPlayerSource(DefaultKeyboardSource);
         if (addResult) {
@@ -383,16 +396,6 @@ std::vector<GameEventTypes::Input> InputManager::handleKeyboardEvent(SDL_Keyboar
         }
     }
     std::vector<GameEventTypes::Input> inputEvents;
-    if (event.scancode == SDL_SCANCODE_AC_BACK && event.type == SDL_EVENT_KEY_DOWN) {
-        // Always return input pause and cancel events for android back button.
-        inputEvents.push_back(
-            GameEventTypes::Input{InputVerb::Pause, InputState::Pressed, DefaultTouchSource}
-        );
-        inputEvents.push_back(
-            GameEventTypes::Input{InputVerb::Cancel, InputState::Pressed, DefaultTouchSource}
-        );
-        return inputEvents;
-    }
     std::vector<InputVerbInfo> verbs = getVerbsFromScancode(event.scancode);
     if (verbs.size() == 0) {
         return {};
