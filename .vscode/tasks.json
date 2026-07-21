@@ -1,0 +1,39 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Android: Install and Run",
+            "type": "shell",
+            "command": "cmake --build --preset android-arm64-debug --target install_and_run",
+            "problemMatcher": [],
+            "group": "none"
+        },
+        {
+            "label": "Android: Stream Logs",
+            "type": "shell",
+            "command": "adb logcat -c && adb logcat SDL/APP:V SDL:I *:S",
+            "windows": {
+                "command": "adb logcat -c; adb logcat SDL/APP:V SDL:I *:S"
+            },
+            "group": "none",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new",
+                "focus": true
+            }
+        },
+        {
+            "label": "Android: Install, Run, and Stream Logs",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "Android: Install and Run",
+                "Android: Stream Logs"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}

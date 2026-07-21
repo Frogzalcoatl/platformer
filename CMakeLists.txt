@@ -204,6 +204,16 @@ else()
     set(ANDROID_PROJ_DIR_MAIN "${ANDROID_PROJ_DIR}/app/src/main")
     set(ANDROID_JNILIBS_DIR "${ANDROID_PROJ_DIR_MAIN}/jniLibs/${CMAKE_ANDROID_ARCH_ABI}")
     set(ANDROID_ASSETS_DIR "${ANDROID_PROJ_DIR_MAIN}/assets")
+    # Map CMAKE_ANDROID_ARCH_ABI to the corresponding output directory name
+    if(CMAKE_ANDROID_ARCH_ABI STREQUAL "arm64-v8a")
+        set(ANDROID_OUTPUT_DIR "android-arm64")
+    elseif(CMAKE_ANDROID_ARCH_ABI STREQUAL "x86_64")
+        set(ANDROID_OUTPUT_DIR "android-x86_64")
+    else()
+        set(ANDROID_OUTPUT_DIR "android-${CMAKE_ANDROID_ARCH_ABI}")
+    endif()
+    # Explicitly direct the output folder to be inside the build/<arch>/bin directory
+    set(ANDROID_BIN_DEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/build/${ANDROID_OUTPUT_DIR}/bin")
     if(CMAKE_HOST_WIN32)
         set(GRADLE_CMD "gradlew.bat")
     else()
@@ -224,10 +234,10 @@ else()
     set(GRADLE_COMMANDS
         ${CHMOD_COMMAND}
         COMMAND "${ANDROID_PROJ_DIR}/${GRADLE_CMD}" "assemble$<IF:$<CONFIG:Debug>,Debug,Release>"
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/bin"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${ANDROID_BIN_DEST_DIR}"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
                 "${ANDROID_PROJ_DIR}/app/build/outputs/apk/$<IF:$<CONFIG:Debug>,debug/app-debug.apk,release/app-release-unsigned.apk>"
-                "${CMAKE_BINARY_DIR}/bin/$<IF:$<CONFIG:Debug>,app-debug.apk,app-release-unsigned.apk>"
+                "${ANDROID_BIN_DEST_DIR}/$<IF:$<CONFIG:Debug>,app-debug.apk,app-release-unsigned.apk>"
     )
     include(ExternalProject)
     set(HOST_BUILD_DIR "${CMAKE_BINARY_DIR}/host_packer_build")
@@ -284,11 +294,10 @@ else()
         VERBATIM
     )
     add_custom_target(install_and_run
-        COMMAND adb install -r "${CMAKE_BINARY_DIR}/bin/$<IF:$<CONFIG:Debug>,app-debug.apk,app-release-unsigned.apk>"
+        COMMAND adb install -r "${ANDROID_BIN_DEST_DIR}/$<IF:$<CONFIG:Debug>,app-debug.apk,app-release-unsigned.apk>"
         COMMAND adb shell am start -n "com.frogzalcoatl.platformer/org.libsdl.app.SDLActivity"
-        COMMAND adb logcat -c
-        COMMAND adb logcat SDL/APP:V SDL:I *:S
-        COMMENT "VFS: Deploying APK, launching, and streaming logs (Press Ctrl+C to exit)..."
+        DEPENDS pack_assets
+        COMMENT "VFS: Deploying APK and launching..."
         USES_TERMINAL
         VERBATIM
     )

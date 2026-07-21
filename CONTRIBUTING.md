@@ -104,7 +104,7 @@ Define the `ANDROID_HOME` environment variable pointing to your SDK root.
 * Enable USB Debugging and plug your phone in to your computer.
 
 ## Building the Project
-You can build for android the same way as described above using vscode or in the terminal with an android preset listed in [CMakePresets.json](https://github.com/Frogzalcoatl/platformer/blob/main/CMakePresets.json).
+You can build for android the same way as described above using vscode or in the terminal with an android preset listed in [CMakePresets.json](https://github.com/Frogzalcoatl/platformer/blob/main/CMakePresets.json). On vscode, check tasks.json for android debugging options.
 
 I also added a install_and_run target which will open the built apk file using usb debugging and a debug console on your computer.
 
