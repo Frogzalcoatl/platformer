@@ -71,11 +71,16 @@ static void sdlOutput(void* userdata, int category, SDL_LogPriority priority, co
     if (!message) {
         return;
     }
-    std::string timeStamp = getTimeStamp();
     std::string categoryStr = categoryToString(category);
     std::string priorityStr = priorityToString(priority);
+#ifdef SDL_PLATFORM_ANDROID
+    // Dont add timestamp on android since its already included by logcat
+    std::string formattedMessage = "[" + categoryStr + "/" + priorityStr + "]: " + message;
+#else
+    std::string timeStamp = getTimeStamp();
     std::string formattedMessage =
         "[" + timeStamp + "]" + " [" + categoryStr + "/" + priorityStr + "]: " + message;
+#endif
     if (defaultSdlLogFunc) {
         defaultSdlLogFunc(userdata, category, priority, formattedMessage.c_str());
     }
