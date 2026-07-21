@@ -1,5 +1,8 @@
-Fix issues with default cmake build target
-Fix issues with android studio not rebuilding apk
+Use safe area
+
+Add UI Scaling
+
+Determine why android is drawing the level incorrectly
 
 Use enet lib for online multiplayer
 

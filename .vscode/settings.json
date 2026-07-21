@@ -4,5 +4,8 @@
     "java.configuration.updateBuildConfiguration": "automatic",
     "java.import.exclusions": [
         "**/android-project/**"
+    ],
+    "java.diagnostic.filter": [
+        "**/android-project/**"
     ]
 }

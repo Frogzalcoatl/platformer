@@ -98,14 +98,18 @@ Define the `ANDROID_HOME` environment variable pointing to your SDK root.
 * Install [here](https://adoptium.net/temurin/releases/?version=17). Required for gradle to build the apk file.
   - During the installation you must click the red X dropdown next to "Set JAVA_HOME variable" and change it to "Will be installed on local hard drive". If you forget you can also manually set the environment variable to the jdk directory after installing.
 
+## 4. Enable USB Debugging (To debug using your android phone)
+
+* [Enable developer options](https://developer.android.com/studio/debug/dev-options) if you haven't already.
+* Enable USB Debugging and plug your phone in to your computer.
+
 ## Building the Project
 You can build for android the same way as described above using vscode or in the terminal with an android preset listed in [CMakePresets.json](https://github.com/Frogzalcoatl/platformer/blob/main/CMakePresets.json).
 
-Android Crosscompilation Process: When you crosscompile for android, CMake builds the .so file and copies the assets, then copies them both to the android-project directory. Then gradle runs to turn the assets and .so file into a runnable .apk file. You'll find the outputted apk copied to `${ProjectRoot}/build/configurePresetName/bin`.
+I also added a install_and_run target which will open the built apk file using usb debugging and a debug console on your computer.
 
-## Debugging with Android Studio
-If you want to debug the android build, I suggest downloading [Android Studio](https://developer.android.com/studio). I plug my android phone into my computer and use USB debugging, which I had to enable in my phone's developer options. SDL_Logs are visible in the logcat tab (Looks like a little cat icon in the bottom left as of July 2026 when I run the debugger).
-
-Make sure to filter by `package:mine` or `tag:SDL/APP`, otherwise you'll see a bunch of logs from processes not related to this project. If you're on Windows, you need to install the [Google USB Driver](https://developer.android.com/studio/run/win-usb) to use USB debugging.
-
-I include the extensions rainbow brackets for proper cpp text coloring and clang format for formatting on save while in Android Studio.
+Commands:
+```
+cmake --preset android-arm64
+cmake --build --preset android-arm64-debug --target install_and_run
+```

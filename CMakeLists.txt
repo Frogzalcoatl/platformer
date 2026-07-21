@@ -283,4 +283,13 @@ else()
         COMMENT "VFS: Building host Packer, packing assets bundle, and compiling APK..."
         VERBATIM
     )
+    add_custom_target(install_and_run
+        COMMAND adb install -r "${CMAKE_BINARY_DIR}/bin/$<IF:$<CONFIG:Debug>,app-debug.apk,app-release-unsigned.apk>"
+        COMMAND adb shell am start -n "com.frogzalcoatl.platformer/org.libsdl.app.SDLActivity"
+        COMMAND adb logcat -c
+        COMMAND adb logcat SDL/APP:V SDL:I *:S
+        COMMENT "VFS: Deploying APK, launching, and streaming logs (Press Ctrl+C to exit)..."
+        USES_TERMINAL
+        VERBATIM
+    )
 endif()
