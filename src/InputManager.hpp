@@ -102,6 +102,8 @@ class InputManager {
 
     // void listenForGamepadBinding(InputVerb forVerb, size_t atIndex);
 
+    void handlePinchEvent(SDL_PinchFingerEvent& event);
+
     // Will probably remove default bindings vectors later, currently here for convenience
     const std::vector<DefaultScancodeBinding> defaultVerbBindings = {
         {InputVerb::Up, SDL_SCANCODE_UP},

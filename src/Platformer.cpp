@@ -56,11 +56,16 @@ void Platformer::handleSdlEvent() {
         case SDL_EVENT_GAMEPAD_REMOVED: {
             input.handleGamepadRemoved(event.gdevice);
         }; break;
+        case SDL_EVENT_PINCH_BEGIN:
+        case SDL_EVENT_PINCH_UPDATE:
+        case SDL_EVENT_PINCH_END: {
+            input.handlePinchEvent(event.pinch);
+        }
         };
     }
 }
 
-void Platformer::handleGameEventInput(const GameEventTypes::Input& inputEvent) {
+void Platformer::handleInputGameEvent(const GameEventTypes::Input& inputEvent) {
     UiState uiState = ui.getState();
     if (inputEvent.state == InputState::Pressed) {
         switch (inputEvent.verb) {
@@ -153,7 +158,7 @@ void Platformer::handleGameEvent() {
         } else if (const auto* setVolume = std::get_if<GameEventTypes::SetVolume>(&event)) {
             audio.setVolume(setVolume->category, setVolume->volume);
         } else if (const auto* inputEvent = std::get_if<GameEventTypes::Input>(&event)) {
-            handleGameEventInput(*inputEvent);
+            handleInputGameEvent(*inputEvent);
         } else if (const auto* setUiState = std::get_if<GameEventTypes::SetUiState>(&event)) {
             ui.setState(setUiState->state);
         } else if (const auto* setLevelName = std::get_if<GameEventTypes::SetLevelName>(&event)) {
@@ -203,6 +208,15 @@ void Platformer::handleGameEvent() {
                 input.listenForNewGamepad = false;
                 if (valueWillBeChanged) {
                     SDL_Log("Disabled input detection for adding new player sources.");
+                }
+            }
+        } else if (
+            const auto* changeLevelZoom = std::get_if<GameEventTypes::ChangeLevelZoom>(&event)
+        ) {
+            if (currentLevel && ui.getState() == UiState::Playing) {
+                Camera* camera = currentLevel->getCamera();
+                if (camera) {
+                    camera->incrementScaleMultiplierBy(changeLevelZoom->amount);
                 }
             }
         }

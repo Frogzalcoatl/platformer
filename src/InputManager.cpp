@@ -500,3 +500,10 @@ std::vector<GameEventTypes::Input> InputManager::getInputEventsFromSDLEvent(SDL_
     }
     }
 }
+
+void InputManager::handlePinchEvent(SDL_PinchFingerEvent& event) {
+    if (event.type == SDL_EVENT_PINCH_UPDATE) {
+        float scaleIncrementor = event.scale - 1.f;
+        GameEvents::Push(GameEventTypes::ChangeLevelZoom{scaleIncrementor});
+    }
+}

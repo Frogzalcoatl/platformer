@@ -20,7 +20,7 @@ class Platformer {
 
     void handleSdlEvent();
 
-    void handleGameEventInput(const GameEventTypes::Input& inputEvent);
+    void handleInputGameEvent(const GameEventTypes::Input& inputEvent);
 
     void handleGameEvent();
 
