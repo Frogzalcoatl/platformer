@@ -70,7 +70,7 @@ First command uses a [CMakePresets.json](https://github.com/Frogzalcoatl/platfor
 ## Prerequisites
 ### 1. Android SDK
 
-* Download [here](https://developer.android.com/studio#command-line-tools-only) and extract. I personally extracted to my C: drive for simplicity. Open a terminal in `android-sdk/cmdline-tools/bin` and run `sdkmanager.bat` (or `sdkmanager` on linux/macos) with the following arguments:
+* Download [here](https://developer.android.com/studio#command-line-tools-only) and extract. I personally extracted to my `C:\` directory for simplicity. Open a terminal in `android-sdk/cmdline-tools/bin` and run `sdkmanager.bat` (or `sdkmanager` on linux/macos) with the following arguments:
 
 ```
 ./sdkmanager.bat "platform-tools" "build-tools;34.0.0" "platforms;android-28"
@@ -98,10 +98,11 @@ Define the `ANDROID_HOME` environment variable pointing to your SDK root.
 * Install [here](https://adoptium.net/temurin/releases/?version=17). Required for gradle to build the apk file.
   - During the installation you must click the red X dropdown next to "Set JAVA_HOME variable" and change it to "Will be installed on local hard drive". If you forget you can also manually set the environment variable to the jdk directory after installing.
 
-## 4. Enable USB Debugging (To debug using your android phone)
+### 4. Enable USB Debugging (To debug using your android phone)
 
 * [Enable developer options](https://developer.android.com/studio/debug/dev-options) if you haven't already.
 * Enable USB Debugging and plug your phone in to your computer.
+* If you're on windows, install the [Google USB Driver](https://developer.android.com/studio/run/win-usb).
 
 ## Building the Project
 You can build for android the same way as described above using vscode or in the terminal with an android preset listed in [CMakePresets.json](https://github.com/Frogzalcoatl/platformer/blob/main/CMakePresets.json). On vscode, check tasks.json for android debugging options.
