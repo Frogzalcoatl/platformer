@@ -4,7 +4,7 @@ If you ever update the app version, make sure to update both `vcpkg.json` and `a
 
 ## Prerequisites
 
-### 1. Clang Format
+### 1. Clang Format (Suggested if not using VS Code)
 
 * I use LLVM's clang-format to format C++ files on save. There are a few different download sources for this. To install clang-format without any of LLVM's other tools you can use Node.js or python.
 
@@ -33,10 +33,19 @@ pip install clang-format
 
 **MacOS:**
 
-* Install Xcode Command Line Tools:
-
+1. Install Xcode Command Line Tools:
 ```bash
 xcode-select --install
+```
+
+2. Install Homebrew (if you don't have it already):
+```
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+3. Install `cmake` and `ninja`:
+```
+brew install cmake ninja
 ```
 
 **Linux:**
@@ -67,7 +76,7 @@ First command uses a [CMakePresets.json](https://github.com/Frogzalcoatl/platfor
 ./sdkmanager.bat "platform-tools" "build-tools;34.0.0" "platforms;android-28"
 ```
 
-It also wont work unless you accept the licenses after:
+It also won't work unless you accept the licenses after:
 
 ```
 ./sdkmanager.bat --licenses

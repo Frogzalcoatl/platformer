@@ -24,27 +24,29 @@
       },
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": "x64-windows-static"
-      }
+      },
+      "generator": "Ninja Multi-Config"
     },
     {
       "name": "windows-clang-base",
       "hidden": true,
       "inherits": "windows-base",
-      "toolset": "ClangCL"
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang-cl",
+        "CMAKE_CXX_COMPILER": "clang-cl"
+      }
     },
     {
       "name": "windows-msvc-2022",
       "displayName": "Windows (MSVC 2022)",
       "description": "Visual Studio 2022",
-      "inherits": "windows-base",
-      "generator": "Visual Studio 17 2022"
+      "inherits": "windows-base"
     },
     {
       "name": "windows-msvc-2026",
       "displayName": "Windows (MSVC 2026)",
       "description": "Visual Studio 2026",
-      "inherits": "windows-base",
-      "generator": "Visual Studio 18 2026"
+      "inherits": "windows-base"
     },
     {
       "name": "windows-clang-cl-2022",
@@ -57,8 +59,7 @@
       "name": "windows-clang-cl-2026",
       "displayName": "Windows (Clang-CL VS2026)",
       "description": "Clang via Visual Studio 2026",
-      "inherits": "windows-clang-base",
-      "generator": "Visual Studio 18 2026"
+      "inherits": "windows-clang-base"
     },
     {
       "name": "linux-gcc",
@@ -110,18 +111,6 @@
         "CMAKE_CXX_COMPILER": "clang++",
         "CMAKE_CONFIGURATION_TYPES": "Debug;Release;RelWithDebInfo"
       }
-    },
-    {
-      "name": "macos-xcode",
-      "displayName": "macOS (Xcode)",
-      "description": "Generate Xcode project",
-      "inherits": "base",
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Darwin"
-      },
-      "generator": "Xcode"
     },
     {
       "name": "android-base",
@@ -286,24 +275,6 @@
       "name": "macos-clang-relwithdebinfo",
       "displayName": "macOS Ninja RelWithDebInfo",
       "configurePreset": "macos-clang",
-      "configuration": "RelWithDebInfo"
-    },
-    {
-      "name": "xcode-debug",
-      "displayName": "Xcode Debug",
-      "configurePreset": "macos-xcode",
-      "configuration": "Debug"
-    },
-    {
-      "name": "xcode-release",
-      "displayName": "Xcode Release",
-      "configurePreset": "macos-xcode",
-      "configuration": "Release"
-    },
-    {
-      "name": "xcode-relwithdebinfo",
-      "displayName": "Xcode RelWithDebInfo",
-      "configurePreset": "macos-xcode",
       "configuration": "RelWithDebInfo"
     },
     {
