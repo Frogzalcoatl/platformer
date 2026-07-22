@@ -135,6 +135,8 @@ class Level {
     const LevelAssetsVector& getRequiredAssets() const {
         return requiredAssets;
     }
+
+    Entity* getPlayerEntity(size_t playerIndex);
 };
 
 std::unique_ptr<Level> getTestLevel(

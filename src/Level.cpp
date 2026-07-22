@@ -101,6 +101,17 @@ void Level::unloadRequiredAssets(AssetManager& assetManager) {
     }
 }
 
+Entity* Level::getPlayerEntity(size_t playerIndex) {
+    if (playerIndex >= players.size()) {
+        return nullptr;
+    }
+    Player& player = players[playerIndex];
+    if (!player.controller) {
+        return nullptr;
+    }
+    return player.controller->getEntity();
+}
+
 void Level::handlePreviousAssetsVector(
     const LevelAssetsVector& previousAssets, AssetManager& assetManager
 ) {

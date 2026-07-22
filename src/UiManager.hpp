@@ -3,8 +3,10 @@
 #include "Events.hpp"
 #include "InputManager.hpp"
 #include "Level.hpp"
+#include "TouchController.hpp"
 #include "WindowManager.hpp"
 #include <imgui.h>
+#include <memory>
 #include <numeric>
 
 class UiManager {
@@ -36,6 +38,8 @@ class UiManager {
         ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings;
 
     ImGuiSliderFlags sliderFlags = ImGuiSliderFlags_NoInput;
+
+    std::unique_ptr<TouchController> touchController = nullptr;
 
     void setNextWindowFullscreen();
     void setNextWindowSafeArea(WindowManager& window);
@@ -94,4 +98,8 @@ class UiManager {
     bool isPlayerSourceAddedThisFrame() const {
         return playerSourceAddedThisFrame;
     }
+
+    void enableTouchController(Entity& entity);
+
+    void disableTouchController();
 };

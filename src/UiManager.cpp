@@ -53,6 +53,9 @@ void UiManager::draw(
     default:
         break;
     }
+    if (touchController && currentState == UiState::Playing) {
+        touchController->draw(window, uiScale);
+    }
     playerSourceAddedThisFrame = false;
 }
 
@@ -153,6 +156,14 @@ void UiManager::passInputToImGui(const GameEventTypes::Input& event) {
     if (imguiKey != ImGuiKey_None) {
         io.AddKeyEvent(imguiKey, event.state == InputState::Pressed);
     }
+}
+
+void UiManager::enableTouchController(Entity& entity) {
+    touchController = std::make_unique<TouchController>(entity);
+}
+
+void UiManager::disableTouchController() {
+    touchController.reset();
 }
 
 void UiManager::setNextWindowFullscreen() {
@@ -402,7 +413,11 @@ void UiManager::drawSettings(
     const ImVec2 verticalSpacingDummy{0.f, 10.f * uiScale};
     const ImVec2 horizontalSpacingDummy{10.f * uiScale, 0.f};
     ImVec2 resetButtonSize{100 * uiScale, 30 * uiScale};
-    if (ImGui::Begin("Settings", nullptr, staticFlags | ImGuiWindowFlags_NoBackground)) {
+    if (ImGui::Begin(
+            "Settings",
+            nullptr,
+            staticFlags | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_AlwaysVerticalScrollbar
+        )) {
         ImGui::PushFont(fontLarge);
         if (ImGui::Button("Back", ImVec2{100.f * uiScale, 45.f * uiScale})) {
             runCancelEvent();

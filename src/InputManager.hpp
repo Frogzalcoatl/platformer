@@ -96,6 +96,8 @@ class InputManager {
 
     void removePlayerSourceAtIndex(size_t index);
 
+    bool isTouchPlayerEnabled(size_t* atIndex);
+
     std::vector<GameEventTypes::Input> getInputEventsFromSDLEvent(SDL_Event& event);
 
     // void listenForScancodeBinding(InputVerb forVerb, size_t atIndex);

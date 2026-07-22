@@ -1,0 +1,106 @@
+#include "TouchController.hpp"
+#include "AssetPaths.hpp"
+#include "Events.hpp"
+#include "ImGuiDrawing.hpp"
+#include <vector>
+
+TouchController::TouchController() {
+    entityController.isSprinting = true;
+}
+
+TouchController::TouchController(Entity& entity) : entityController(entity) {
+    entityController.isSprinting = true;
+}
+
+bool TouchController::isLastItemTouched(const std::vector<ImVec2>& touchPositions) {
+    ImVec2 min = ImGui::GetItemRectMin();
+    ImVec2 max = ImGui::GetItemRectMax();
+    for (const ImVec2& pos : touchPositions) {
+        if (pos.x >= min.x && pos.x <= max.x && pos.y >= min.y && pos.y <= max.y) {
+            return true;
+        }
+    }
+    if (touchPositions.empty()) {
+        // For testing with mouse input
+        return ImGui::IsItemActive();
+    }
+    return false;
+}
+
+void TouchController::draw(WindowManager& window, float uiScale) {
+    ImGui::Begin(
+        "Touch Controls",
+        nullptr,
+        ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings |
+            ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_AlwaysAutoResize
+    );
+    WindowVec2 windowSize = window.getSize();
+    std::vector<ImVec2> activeTouchPositions;
+    int touchDeviceCount = 0;
+    SDL_TouchID* touchDevices = SDL_GetTouchDevices(&touchDeviceCount);
+    if (touchDevices) {
+        for (int i = 0; i < touchDeviceCount; i++) {
+            SDL_TouchDeviceType type = SDL_GetTouchDeviceType(touchDevices[i]);
+            if (type != SDL_TOUCH_DEVICE_DIRECT) {
+                continue;
+            }
+            int fingerCount;
+            SDL_Finger** fingers = SDL_GetTouchFingers(touchDevices[i], &fingerCount);
+            if (fingers) {
+                for (int j = 0; j < fingerCount; j++) {
+                    // Multiply by window size since the coordinates are from 0.0-1.0
+                    activeTouchPositions.push_back(
+                        ImVec2{fingers[j]->x * windowSize.x, fingers[j]->y * windowSize.y}
+                    );
+                }
+                SDL_free(fingers);
+            }
+        }
+        SDL_free(touchDevices);
+    }
+    SDL_Rect safeArea = window.getSafeArea();
+    ImVec2 pauseButtonSize{100.f * uiScale, 100.f * uiScale};
+    ImVec2 pauseButtonPos{windowSize.x / 2.f - pauseButtonSize.x, 0.f};
+    ImGui::SetCursorPos(pauseButtonPos);
+    Drawing::CustomPauseButton("##Pause", pauseButtonSize);
+    bool isPauseTouched = isLastItemTouched(activeTouchPositions);
+    if (isPauseTouched && !wasPauseTouched) {
+        GameEvents::Push(
+            GameEventTypes::Input{
+                InputVerb::Pause, InputState::Pressed, InputSource{InputType::Touch, 0}
+            }
+        );
+    }
+    wasPauseTouched = isPauseTouched;
+    ImVec2 buttonSize = ImVec2{200.f * uiScale, 200.f * uiScale};
+    ImVec2 upButtonPos{safeArea.w - buttonSize.x, safeArea.y + safeArea.h - buttonSize.y * 2.f};
+    ImGui::SetCursorPos(upButtonPos);
+    Drawing::CustomArrowButton("##Up", ImGuiDir_Up, buttonSize);
+    bool isUpTouched = isLastItemTouched(activeTouchPositions);
+    if (isUpTouched && !wasUpTouched) {
+        entityController.movement[static_cast<size_t>(EntityMovement::Up)] = true;
+        entityController.jump();
+        float pitch = SDL_randf() * (1.25f - 1.f) + 1.f;
+        GameEvents::Push(GameEventTypes::PlaySound{AssetPaths::Sounds::Jump, 100, pitch});
+    } else if (!isUpTouched && wasUpTouched) {
+        entityController.movement[static_cast<size_t>(EntityMovement::Up)] = false;
+    }
+    wasUpTouched = isUpTouched;
+    ImVec2 downButtonPos{upButtonPos.x, upButtonPos.y + buttonSize.y};
+    ImGui::SetCursorPos(downButtonPos);
+    Drawing::CustomArrowButton("##Down", ImGuiDir_Down, buttonSize);
+    entityController.movement[static_cast<size_t>(EntityMovement::Down)] =
+        isLastItemTouched(activeTouchPositions);
+    ImVec2 leftButtonPos{static_cast<float>(safeArea.x), downButtonPos.y};
+    ImGui::SetCursorPos(leftButtonPos);
+    Drawing::CustomArrowButton("##Left", ImGuiDir_Left, buttonSize);
+    entityController.movement[static_cast<size_t>(EntityMovement::Left)] =
+        isLastItemTouched(activeTouchPositions);
+    ImVec2 rightButtonPos{leftButtonPos.x + buttonSize.x, leftButtonPos.y};
+    ImGui::SetCursorPos(rightButtonPos);
+    Drawing::CustomArrowButton("##Right", ImGuiDir_Right, buttonSize);
+    entityController.movement[static_cast<size_t>(EntityMovement::Right)] =
+        isLastItemTouched(activeTouchPositions);
+    ImGui::End();
+    entityController.update();
+}

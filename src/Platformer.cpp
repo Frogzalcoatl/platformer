@@ -173,6 +173,17 @@ void Platformer::handleGameEvent() {
                 currentLevel = getTestLevel(assets, window, audio, previousLevelAssets);
             }
             currentLevel->updatePlayers(input.getPlayerSources(), assets);
+            size_t touchPlayerIndex;
+            if (!input.isTouchPlayerEnabled(&touchPlayerIndex)) {
+                ui.disableTouchController();
+            } else {
+                Entity* touchEntity = currentLevel->getPlayerEntity(touchPlayerIndex);
+                if (touchEntity) {
+                    ui.enableTouchController(*touchEntity);
+                } else {
+                    ui.disableTouchController();
+                }
+            }
             window.backgroundColor = currentLevel->backgroundColor;
         } else if (
             const auto* playerSourceAdded = std::get_if<GameEventTypes::PlayerSourceAdded>(&event)

@@ -1,4 +1,6 @@
-Add touch controls
+Move pinch event handling to touchcontroller class to avoid conflicts with pressing multiple controls at once
+
+Save settings between reopens
 
 Account for polygon radius in draw func
 

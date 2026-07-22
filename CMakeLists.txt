@@ -118,10 +118,12 @@ set(SOURCES
     src/EntityController.cpp
     src/Events.cpp
     src/FormatLogs.cpp
+    src/ImGuiDrawing.cpp
     src/InputManager.cpp
     src/Level.cpp
     src/Main.cpp
     src/Platformer.cpp
+    src/TouchController.cpp
     src/UiManager.cpp
     src/WindowManager.cpp
 )
