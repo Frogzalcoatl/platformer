@@ -35,6 +35,7 @@ void TouchController::draw(WindowManager& window, float uiScale) {
             ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_AlwaysAutoResize
     );
     WindowVec2 windowSize = window.getSize();
+    ImVec2 windowSizeF{static_cast<float>(windowSize.x), static_cast<float>(windowSize.y)};
     std::vector<ImVec2> activeTouchPositions;
     int touchDeviceCount = 0;
     SDL_TouchID* touchDevices = SDL_GetTouchDevices(&touchDeviceCount);
@@ -50,7 +51,7 @@ void TouchController::draw(WindowManager& window, float uiScale) {
                 for (int j = 0; j < fingerCount; j++) {
                     // Multiply by window size since the coordinates are from 0.0-1.0
                     activeTouchPositions.push_back(
-                        ImVec2{fingers[j]->x * windowSize.x, fingers[j]->y * windowSize.y}
+                        ImVec2{fingers[j]->x * windowSizeF.x, fingers[j]->y * windowSizeF.y}
                     );
                 }
                 SDL_free(fingers);
@@ -59,8 +60,14 @@ void TouchController::draw(WindowManager& window, float uiScale) {
         SDL_free(touchDevices);
     }
     SDL_Rect safeArea = window.getSafeArea();
+    SDL_FRect safeAreaF{
+        static_cast<float>(safeArea.x),
+        static_cast<float>(safeArea.y),
+        static_cast<float>(safeArea.w),
+        static_cast<float>(safeArea.h)
+    };
     ImVec2 pauseButtonSize{100.f * uiScale, 100.f * uiScale};
-    ImVec2 pauseButtonPos{windowSize.x / 2.f - pauseButtonSize.x, 0.f};
+    ImVec2 pauseButtonPos{windowSizeF.x / 2.f - pauseButtonSize.x, 0.f};
     ImGui::SetCursorPos(pauseButtonPos);
     Drawing::CustomPauseButton("##Pause", pauseButtonSize);
     bool isPauseTouched = isLastItemTouched(activeTouchPositions);
@@ -73,7 +80,7 @@ void TouchController::draw(WindowManager& window, float uiScale) {
     }
     wasPauseTouched = isPauseTouched;
     ImVec2 buttonSize = ImVec2{200.f * uiScale, 200.f * uiScale};
-    ImVec2 upButtonPos{safeArea.w - buttonSize.x, safeArea.y + safeArea.h - buttonSize.y * 2.f};
+    ImVec2 upButtonPos{safeAreaF.w - buttonSize.x, safeAreaF.y + safeAreaF.h - buttonSize.y * 2.f};
     ImGui::SetCursorPos(upButtonPos);
     Drawing::CustomArrowButton("##Up", ImGuiDir_Up, buttonSize);
     bool isUpTouched = isLastItemTouched(activeTouchPositions);

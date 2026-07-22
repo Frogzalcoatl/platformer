@@ -202,13 +202,15 @@ void Level::draw(WindowManager& window, AssetManager& assets) {
     const b2Vec2 cameraSizeWorld = camera.getSize();
     const b2Vec2 cameraOffsetWorld = camera.getOffsetWorld();
     const size_t minX = static_cast<size_t>(SDL_max(SDL_floorf(cameraOffsetWorld.x), 0.f));
-    const size_t maxX = static_cast<size_t>(
-        SDL_min(SDL_ceilf(cameraOffsetWorld.x + cameraSizeWorld.x), levelSize.width - 1)
-    );
+    const size_t maxX = static_cast<size_t>(SDL_min(
+        SDL_ceilf(cameraOffsetWorld.x + cameraSizeWorld.x),
+        static_cast<float>(levelSize.width) - 1.f
+    ));
     const size_t minY = static_cast<size_t>(SDL_max(SDL_floorf(cameraOffsetWorld.y), 0.f));
-    const size_t maxY = static_cast<size_t>(
-        SDL_min(SDL_ceilf(cameraOffsetWorld.y + cameraSizeWorld.y), levelSize.height - 1)
-    );
+    const size_t maxY = static_cast<size_t>(SDL_min(
+        SDL_ceilf(cameraOffsetWorld.y + cameraSizeWorld.y),
+        static_cast<float>(levelSize.height) - 1.f
+    ));
     drawInfo = LevelDrawInfo{};
     for (size_t x = minX; x <= maxX; x++) {
         for (size_t y = minY; y <= maxY; y++) {
@@ -522,11 +524,11 @@ std::unique_ptr<Level> getTestLevel(
         assetManager.getTexture(Textures::Log),
         b2Vec2{1.f, 2.f}
     );
-    for (int i = 1; i < GroundWidth; i++) {
+    for (size_t i = 1; i < GroundWidth; i++) {
         level->addTile(Textures::TileTypes::Dirt, i, 0);
         level->addTile(Textures::TileTypes::Grass, i, 1);
     }
-    for (int i = 0; i < WallHeight; i++) {
+    for (size_t i = 0; i < WallHeight; i++) {
         level->addTile(Textures::TileTypes::Stone, WallPosLeft, i);
         level->addTile(Textures::TileTypes::Stone, WallPosRight, i);
     }

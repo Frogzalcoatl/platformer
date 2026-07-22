@@ -59,7 +59,7 @@ std::string inputTypeToString(InputType type) {
 }
 
 InputManager::InputManager() {
-    for (int i = 0; i < static_cast<int>(InputVerb::VerbCount); i++) {
+    for (size_t i = 0; i < static_cast<size_t>(InputVerb::VerbCount); i++) {
         gamepadBindings[i].fill(SDL_GAMEPAD_BUTTON_INVALID); // Invalid represents empty.
     }
     for (const auto& binding : defaultVerbBindings) {
@@ -73,7 +73,7 @@ InputManager::InputManager() {
 }
 
 void InputManager::bindScancodeToVerb(
-    InputVerb verb, ScancodeInfo scancodeInfo, std::optional<int> atIndexOpt
+    InputVerb verb, ScancodeInfo scancodeInfo, std::optional<size_t> atIndexOpt
 ) {
     assert(verb < InputVerb::VerbCount);
     if (scancodeInfo.scancode <= SDL_SCANCODE_UNKNOWN ||
@@ -91,18 +91,18 @@ void InputManager::bindScancodeToVerb(
     */
     auto& bindings = scancodeBindings[static_cast<size_t>(verb)];
     if (atIndexOpt.has_value()) {
-        const int& atIndex = atIndexOpt.value();
+        const size_t& atIndex = atIndexOpt.value();
         assert(atIndex >= 0 && atIndex < MaxBindsPerVerb);
         bindings[atIndex] = scancodeInfo;
         return;
     }
-    for (int i = 0; i < MaxBindsPerVerb; i++) {
+    for (size_t i = 0; i < MaxBindsPerVerb; i++) {
         if (bindings[i].scancode == scancodeInfo.scancode) {
             bindings[i].activateOnRepeat = scancodeInfo.activateOnRepeat;
             return;
         }
     }
-    for (int i = 0; i < MaxBindsPerVerb; i++) {
+    for (size_t i = 0; i < MaxBindsPerVerb; i++) {
         if (bindings[i].scancode == SDL_SCANCODE_UNKNOWN) {
             bindings[i] = scancodeInfo;
             return;
@@ -116,7 +116,7 @@ void InputManager::unbindScancodeFromVerb(InputVerb verb, SDL_Scancode scancode)
         return;
     }
     auto& bindings = scancodeBindings[static_cast<size_t>(verb)];
-    for (int i = 0; i < MaxBindsPerVerb; i++) {
+    for (size_t i = 0; i < MaxBindsPerVerb; i++) {
         if (bindings[i].scancode == scancode) {
             bindings[i].scancode = SDL_SCANCODE_UNKNOWN;
             bindings[i].activateOnRepeat = false;
@@ -124,7 +124,7 @@ void InputManager::unbindScancodeFromVerb(InputVerb verb, SDL_Scancode scancode)
     }
 }
 
-void InputManager::clearScancodeBindingAtIndex(InputVerb verb, int index) {
+void InputManager::clearScancodeBindingAtIndex(InputVerb verb, size_t index) {
     assert(verb < InputVerb::VerbCount);
     assert(index >= 0 && index < MaxBindsPerVerb);
     auto& bindings = scancodeBindings[static_cast<size_t>(verb)];
@@ -137,7 +137,7 @@ std::vector<InputVerbInfo> InputManager::getVerbsFromScancode(SDL_Scancode scanc
     if (scancode <= SDL_SCANCODE_UNKNOWN || scancode >= SDL_SCANCODE_COUNT) {
         return inputVerbs;
     }
-    for (int i = 0; i < static_cast<int>(InputVerb::VerbCount); i++) {
+    for (size_t i = 0; i < static_cast<int>(InputVerb::VerbCount); i++) {
         for (ScancodeInfo& binding : scancodeBindings[i]) {
             if (binding.scancode == scancode) {
                 inputVerbs.push_back(
@@ -160,7 +160,7 @@ const ScancodeBindings& InputManager::getScancodeBindings() const {
 }
 
 void InputManager::bindGamepadButtonToVerb(
-    InputVerb verb, SDL_GamepadButton button, std::optional<int> atIndexOpt
+    InputVerb verb, SDL_GamepadButton button, std::optional<size_t> atIndexOpt
 ) {
     assert(verb < InputVerb::VerbCount);
     if (button <= SDL_GAMEPAD_BUTTON_INVALID || button >= SDL_GAMEPAD_BUTTON_COUNT) {
@@ -168,16 +168,16 @@ void InputManager::bindGamepadButtonToVerb(
     }
     auto& bindings = gamepadBindings[static_cast<size_t>(verb)];
     if (atIndexOpt.has_value()) {
-        const int& atIndex = atIndexOpt.value();
+        const size_t& atIndex = atIndexOpt.value();
         assert(atIndex >= 0 && atIndex < MaxBindsPerVerb);
         bindings[atIndex] = button;
     }
-    for (int i = 0; i < MaxBindsPerVerb; i++) {
+    for (size_t i = 0; i < MaxBindsPerVerb; i++) {
         if (bindings[i] == button) {
             return;
         }
     }
-    for (int i = 0; i < MaxBindsPerVerb; i++) {
+    for (size_t i = 0; i < MaxBindsPerVerb; i++) {
         if (bindings[i] == SDL_GAMEPAD_BUTTON_INVALID) {
             bindings[i] = button;
             return;
@@ -191,14 +191,14 @@ void InputManager::unbindGamepadButtonFromVerb(InputVerb verb, SDL_GamepadButton
         return;
     }
     auto& bindings = gamepadBindings[static_cast<size_t>(verb)];
-    for (int i = 0; i < MaxBindsPerVerb; i++) {
+    for (size_t i = 0; i < MaxBindsPerVerb; i++) {
         if (bindings[i] == button) {
             bindings[i] = SDL_GAMEPAD_BUTTON_INVALID; // Invalid represents empty
         }
     }
 }
 
-void InputManager::clearGamepadButtonBindingAtIndex(InputVerb verb, int index) {
+void InputManager::clearGamepadButtonBindingAtIndex(InputVerb verb, size_t index) {
     assert(verb < InputVerb::VerbCount);
     assert(index >= 0 && index < MaxBindsPerVerb);
     auto& bindings = gamepadBindings[static_cast<size_t>(verb)];
@@ -210,7 +210,7 @@ std::vector<InputVerb> InputManager::getVerbsFromGamepadButton(SDL_GamepadButton
     if (button <= SDL_GAMEPAD_BUTTON_INVALID || button >= SDL_GAMEPAD_BUTTON_COUNT) {
         return verbs;
     }
-    for (int i = 0; i < static_cast<int>(InputVerb::VerbCount); i++) {
+    for (size_t i = 0; i < static_cast<int>(InputVerb::VerbCount); i++) {
         for (SDL_GamepadButton& buttonBinding : gamepadBindings[i]) {
             if (buttonBinding == button) {
                 verbs.push_back(static_cast<InputVerb>(i));
@@ -286,7 +286,7 @@ bool InputManager::addPlayerSource(const InputSource& source) {
     }
     *emptyIt = source;
     playerSourceCount++;
-    size_t index = std::distance(playerSources.begin(), emptyIt);
+    size_t index = static_cast<size_t>(std::distance(playerSources.begin(), emptyIt));
     GameEvents::Push(GameEventTypes::PlayerSourceAdded{source, index});
     SDL_Log("Added player source \"%s\" at index %zu", sourceName.c_str(), index);
     return true;
@@ -320,7 +320,7 @@ bool InputManager::removePlayerSource(const InputSource& source) {
             return source.has_value();
         }
     );
-    size_t index = std::distance(playerSources.begin(), sourceIt);
+    size_t index = static_cast<size_t>(std::distance(playerSources.begin(), sourceIt));
     GameEvents::Push(GameEventTypes::PlayerSourceRemoved{source, index});
     SDL_Log("Removed player source \"%s\" at index %zu", sourceName.c_str(), index);
     return true;

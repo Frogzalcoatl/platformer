@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <vector>
 
-inline constexpr int MaxBindsPerVerb = 3;
+inline constexpr size_t MaxBindsPerVerb = 3;
 
 std::string inputVerbToString(InputVerb verb);
 std::string inputTypeToString(InputType type);
@@ -59,18 +59,18 @@ class InputManager {
   public:
     InputManager();
 
-    void bindScancodeToVerb(InputVerb verb, ScancodeInfo binding, std::optional<int> atIndexOpt);
+    void bindScancodeToVerb(InputVerb verb, ScancodeInfo binding, std::optional<size_t> atIndexOpt);
     void unbindScancodeFromVerb(InputVerb verb, SDL_Scancode scancode);
-    void clearScancodeBindingAtIndex(InputVerb verb, int index);
+    void clearScancodeBindingAtIndex(InputVerb verb, size_t index);
     std::vector<InputVerbInfo> getVerbsFromScancode(SDL_Scancode scancode);
     const std::array<ScancodeInfo, MaxBindsPerVerb>& getScancodesFromVerb(InputVerb verb) const;
     const ScancodeBindings& getScancodeBindings() const;
 
     void bindGamepadButtonToVerb(
-        InputVerb verb, SDL_GamepadButton button, std::optional<int> atIndexOpt
+        InputVerb verb, SDL_GamepadButton button, std::optional<size_t> atIndexOpt
     );
     void unbindGamepadButtonFromVerb(InputVerb verb, SDL_GamepadButton button);
-    void clearGamepadButtonBindingAtIndex(InputVerb verb, int index);
+    void clearGamepadButtonBindingAtIndex(InputVerb verb, size_t index);
     std::vector<InputVerb> getVerbsFromGamepadButton(SDL_GamepadButton button);
     const std::array<SDL_GamepadButton, MaxBindsPerVerb>&
     getGamepadButtonsFromVerb(InputVerb verb) const;

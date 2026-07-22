@@ -223,11 +223,17 @@ void UiManager::updateStyleScale(float scale) {
 
 void UiManager::drawLargeLogo(WindowManager& window, float menuHeight) {
     SDL_Rect safeArea = window.getSafeArea();
-    float absoluteCenterX = window.getSize().x * 0.5f;
+    SDL_FRect safeAreaF{
+        static_cast<float>(safeArea.x),
+        static_cast<float>(safeArea.y),
+        static_cast<float>(safeArea.w),
+        static_cast<float>(safeArea.h)
+    };
+    float absoluteCenterX = static_cast<float>(window.getSize().x) * 0.5f;
     float idealPadding = 50.f * uiScale;
     float logoMenuSpacing = 20.f * uiScale;
     float totalRequiredHeight = logoHeight + logoMenuSpacing + menuHeight;
-    float maxAllowedPadding = static_cast<float>(safeArea.h) - totalRequiredHeight;
+    float maxAllowedPadding = safeAreaF.h - totalRequiredHeight;
     float actualLogoTopPadding =
         (maxAllowedPadding < idealPadding) ? maxAllowedPadding : idealPadding;
     if (actualLogoTopPadding < 0.f) {
@@ -235,7 +241,7 @@ void UiManager::drawLargeLogo(WindowManager& window, float menuHeight) {
     }
     logoTopPadding = actualLogoTopPadding;
     ImGui::SetNextWindowPos(
-        ImVec2{absoluteCenterX, safeArea.y + logoTopPadding}, ImGuiCond_Always, ImVec2{0.5f, 0.f}
+        ImVec2{absoluteCenterX, safeAreaF.y + logoTopPadding}, ImGuiCond_Always, ImVec2{0.5f, 0.f}
     );
     if (ImGui::Begin("Main Menu Title", nullptr, staticFlags | ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::PushFont(fontTitle);
@@ -356,12 +362,19 @@ void UiManager::drawMainMenu(WindowManager& window) {
     float menuHeight = 375.f * uiScale;
     drawLargeLogo(window, menuHeight);
     SDL_Rect safeArea = window.getSafeArea();
+    SDL_FRect safeAreaF{
+        static_cast<float>(safeArea.x),
+        static_cast<float>(safeArea.y),
+        static_cast<float>(safeArea.w),
+        static_cast<float>(safeArea.h)
+    };
     WindowVec2 windowSize = window.getSize();
-    float absoluteCenterX = windowSize.x * 0.5f;
-    float centerY = safeArea.y + safeArea.h * 0.5f;
+    ImVec2 windowSizeF{static_cast<float>(windowSize.x), static_cast<float>(windowSize.y)};
+    float absoluteCenterX = windowSizeF.x * 0.5f;
+    float centerY = safeAreaF.y + safeAreaF.h * 0.5f;
     ImVec2 menuSize = ImVec2{425.f * uiScale, menuHeight};
     float centeredMenuTop = centerY - (menuSize.y * 0.5f);
-    float logoTop = safeArea.y + 50.f * uiScale;
+    float logoTop = safeAreaF.y + 50.f * uiScale;
     float logoBottom = logoTop + logoHeight;
     float logoMenuSpacing = 20.f * uiScale;
     float minMenuTop = logoBottom + logoMenuSpacing;
@@ -451,7 +464,7 @@ void UiManager::drawSettings(
                 static int tempFps = static_cast<int>(window.getTargetFps());
                 ImGui::SliderInt("Target FPS", &tempFps, 10, 300, "%d", sliderFlags);
                 if (ImGui::IsItemDeactivatedAfterEdit()) {
-                    window.setTargetFps(tempFps);
+                    window.setTargetFps(static_cast<Uint64>(tempFps));
                 }
             }
             ImGui::Dummy(verticalSpacingDummy);
@@ -481,9 +494,9 @@ void UiManager::drawSettings(
         if (ImGui::BeginTabItem("Audio")) {
             ImGui::Text("Audio");
             ImGui::PushFont(fontMedium);
-            int masterVolume = audio.getVolume(AudioCategory::Master);
-            int soundVolume = audio.getVolume(AudioCategory::Sounds);
-            int musicVolume = audio.getVolume(AudioCategory::Music);
+            int masterVolume = static_cast<int>(audio.getVolume(AudioCategory::Master));
+            int soundVolume = static_cast<int>(audio.getVolume(AudioCategory::Sounds));
+            int musicVolume = static_cast<int>(audio.getVolume(AudioCategory::Music));
             float pitch = audio.getMusicPitch();
             ImGui::Dummy(verticalSpacingDummy);
             if (ImGui::Button("Reset##ResetMaster", resetButtonSize)) {
@@ -493,7 +506,7 @@ void UiManager::drawSettings(
             ImGui::Dummy(horizontalSpacingDummy);
             ImGui::SameLine();
             if (ImGui::SliderInt("Master", &masterVolume, 0, MaxVolume, "%d", sliderFlags)) {
-                audio.setVolume(AudioCategory::Master, masterVolume);
+                audio.setVolume(AudioCategory::Master, static_cast<unsigned int>(masterVolume));
             }
             ImGui::Dummy(verticalSpacingDummy);
             if (ImGui::Button("Reset##ResetSounds", resetButtonSize)) {
@@ -503,7 +516,7 @@ void UiManager::drawSettings(
             ImGui::Dummy(horizontalSpacingDummy);
             ImGui::SameLine();
             if (ImGui::SliderInt("Sounds", &soundVolume, 0, MaxVolume, "%d", sliderFlags)) {
-                audio.setVolume(AudioCategory::Sounds, soundVolume);
+                audio.setVolume(AudioCategory::Sounds, static_cast<unsigned int>(soundVolume));
             }
             ImGui::Dummy(verticalSpacingDummy);
             if (ImGui::Button("Reset##ResetMusic", resetButtonSize)) {
@@ -513,7 +526,7 @@ void UiManager::drawSettings(
             ImGui::Dummy(horizontalSpacingDummy);
             ImGui::SameLine();
             if (ImGui::SliderInt("Music", &musicVolume, 0, MaxVolume, "%d", sliderFlags)) {
-                audio.setVolume(AudioCategory::Music, musicVolume);
+                audio.setVolume(AudioCategory::Music, static_cast<unsigned int>(musicVolume));
             }
             ImGui::Dummy(verticalSpacingDummy);
             if (ImGui::Button("Reset##ResetMusicPitch", resetButtonSize)) {
@@ -549,7 +562,7 @@ void UiManager::drawSettings(
                 ImGui::Dummy(ImVec2{0.f, 25.f * uiScale});
                 std::string currentVerb = inputVerbToString(static_cast<InputVerb>(i)).c_str();
                 ImGui::Text("%s: ", currentVerb.c_str());
-                for (int j = 0; j < MaxBindsPerVerb; j++) {
+                for (size_t j = 0; j < MaxBindsPerVerb; j++) {
                     std::string current = SDL_GetScancodeName(scancodeBidings[i][j].scancode);
                     current += "##" + currentVerb + "Index" + std::to_string(j);
                     ImGui::Button(current.c_str(), ImVec2{200.f * uiScale, 50.f * uiScale});
@@ -629,12 +642,19 @@ void UiManager::drawPauseMenu(WindowManager& window) {
     float menuHeight = 450.f * uiScale;
     drawLargeLogo(window, menuHeight);
     SDL_Rect safeArea = window.getSafeArea();
+    SDL_FRect safeAreaF{
+        static_cast<float>(safeArea.x),
+        static_cast<float>(safeArea.y),
+        static_cast<float>(safeArea.w),
+        static_cast<float>(safeArea.h)
+    };
     WindowVec2 windowSize = window.getSize();
-    float absoluteCenterX = windowSize.x * 0.5f;
-    float centerY = safeArea.y + safeArea.h * 0.5f;
+    ImVec2 windowSizeF{static_cast<float>(windowSize.x), static_cast<float>(windowSize.y)};
+    float absoluteCenterX = windowSizeF.x * 0.5f;
+    float centerY = safeAreaF.y + safeAreaF.h * 0.5f;
     ImVec2 menuSize = ImVec2{425.f * uiScale, menuHeight};
     float centeredMenuTop = centerY - (menuSize.y * 0.5f);
-    float logoTop = safeArea.y + 50.f * uiScale;
+    float logoTop = safeAreaF.y + 50.f * uiScale;
     float logoBottom = logoTop + logoHeight;
     float logoMenuSpacing = 20.f * uiScale;
     float minMenuTop = logoBottom + logoMenuSpacing;

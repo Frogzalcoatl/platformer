@@ -259,8 +259,9 @@ void Platformer::run() {
     running = true;
     while (running) {
         if (!audio.isMusicPlaying() && !playMusicFailed) {
-            size_t randomSongId =
-                static_cast<size_t>(SDL_floorf(MusicFileNames.size() * SDL_randf()));
+            size_t randomSongId = static_cast<size_t>(
+                SDL_floorf(static_cast<float>(MusicFileNames.size()) * SDL_randf())
+            );
             std::string relativePath = "music/";
             relativePath += MusicFileNames[randomSongId];
             if (!audio.playMusic(relativePath, 100, audio.getMusicPitch(), false)) {
