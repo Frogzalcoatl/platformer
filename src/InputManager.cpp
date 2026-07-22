@@ -337,16 +337,19 @@ void InputManager::handleGamepadRemoved(SDL_GamepadDeviceEvent& event) {
 bool InputManager::hasTouchScreen() {
     int touchDeviceCount;
     SDL_TouchID* touchDevices = SDL_GetTouchDevices(&touchDeviceCount);
-    if (touchDeviceCount == 0) {
+    if (!touchDevices || touchDeviceCount == 0) {
         return false;
     }
+    bool hasDirectTouch = false;
     for (int i = 0; i < touchDeviceCount; i++) {
         SDL_TouchDeviceType deviceType = SDL_GetTouchDeviceType(touchDevices[i]);
         if (deviceType == SDL_TOUCH_DEVICE_DIRECT) {
-            return true;
+            hasDirectTouch = true;
+            break;
         }
     }
-    return false;
+    SDL_free(touchDevices);
+    return hasDirectTouch;
 }
 
 bool InputManager::enableTouchPlayer() {
@@ -373,6 +376,22 @@ void InputManager::removePlayerSourceAtIndex(size_t index) {
     // Just so i dont have to worry about keeping the logic for removing players in check at two
     // different places.
     removePlayerSource(playerSources[index].value());
+}
+
+bool InputManager::isTouchPlayerEnabled(size_t* atIndex) {
+    for (size_t i = 0; i < playerSources.size(); i++) {
+        if (!playerSources[i].has_value()) {
+            continue;
+        }
+        InputSource source = playerSources[i].value();
+        if (source.type == InputType::Touch) {
+            if (atIndex) {
+                *atIndex = i;
+            }
+            return true;
+        }
+    }
+    return false;
 }
 
 std::vector<GameEventTypes::Input> InputManager::handleKeyboardEvent(SDL_KeyboardEvent& event) {
