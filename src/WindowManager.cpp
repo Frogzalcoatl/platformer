@@ -45,10 +45,9 @@ WindowManager::WindowManager(const char* windowName, SDL_Color backgroundColor)
         return;
     }
     SDL_Log("Created SDL3 renderer");
+    Uint64 monitorRefreshRate = static_cast<Uint64>(SDL_roundf(getMonitorRefreshRate()));
+    setTargetFps(monitorRefreshRate);
     setVsync(vsync);
-    Uint64 vsyncFps = static_cast<Uint64>(SDL_roundf(getVsyncFps()));
-    targetFps = vsyncFps;
-    targetFrameTimeNs = 1000000000ULL / targetFps;
     ImGui_ImplSDL3_InitForSDLRenderer(sdlWindow.get(), sdlRenderer.get());
     ImGui_ImplSDLRenderer3_Init(sdlRenderer.get());
 }
@@ -119,7 +118,7 @@ Uint64 WindowManager::getTargetFps() const {
     return targetFps;
 }
 
-float WindowManager::getVsyncFps() const {
+float WindowManager::getMonitorRefreshRate() const {
     SDL_DisplayID displayID = SDL_GetDisplayForWindow(sdlWindow.get());
     if (displayID == 0) {
         return 60;
@@ -133,7 +132,7 @@ float WindowManager::getVsyncFps() const {
 
 std::string WindowManager::targetFpsStr() const {
     if (vsync) {
-        float vsyncFps = getVsyncFps();
+        float vsyncFps = getMonitorRefreshRate();
         return std::to_string(static_cast<int>(SDL_roundf(vsyncFps))) + ".0";
     } else if (fpsUnlimited) {
         return "Unlimited";
@@ -143,7 +142,6 @@ std::string WindowManager::targetFpsStr() const {
 }
 
 void WindowManager::setTargetFps(Uint64 value) {
-    // Logic is copied in constructor to avoid log
     targetFps = value;
     targetFrameTimeNs = 1000000000ULL / targetFps;
     SDL_Log("Set target fps to %zu", value);

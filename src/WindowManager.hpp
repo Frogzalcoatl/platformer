@@ -63,7 +63,7 @@ class WindowManager {
 
     Uint64 getTargetFps() const;
 
-    float getVsyncFps() const;
+    float getMonitorRefreshRate() const;
 
     std::string targetFpsStr() const;
 
