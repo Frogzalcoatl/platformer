@@ -95,6 +95,28 @@ bool Entity::draw(
     return true;
 }
 
+bool Entity::drawNametag(
+    WindowManager& window,
+    float alpha,
+    float cameraScale,
+    WindowVec2 cameraOffsetPixels,
+    AssetManager& assets
+) const {
+    if (!nametag) {
+        return false;
+    }
+    Drawing::text(
+        nametag.get(),
+        window,
+        getNametagWorldPos(alpha),
+        cameraScale,
+        cameraOffsetPixels,
+        assets.TextRenderScale,
+        assets.TextWorldSizeMultiplier
+    );
+    return true;
+}
+
 void Entity::drawHitbox(
     WindowManager& window, float alpha, float cameraScale, WindowVec2 cameraOffsetPixels
 ) const {

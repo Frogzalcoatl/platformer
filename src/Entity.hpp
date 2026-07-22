@@ -59,9 +59,19 @@ class Entity {
         WindowVec2 cameraOffsetPixels,
         AssetManager& assets
     ) const;
+
+    bool drawNametag(
+        WindowManager& window,
+        float alpha,
+        float cameraScale,
+        WindowVec2 cameraOffsetPixels,
+        AssetManager& assets
+    ) const;
+
     void drawHitbox(
         WindowManager& window, float alpha, float cameraScale, WindowVec2 cameraOffsetPixels
     ) const;
+
     void teleport(b2Vec2 location);
 
     void setNametag(std::string_view text, AssetManager& assets);

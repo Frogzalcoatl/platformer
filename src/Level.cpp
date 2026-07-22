@@ -237,6 +237,17 @@ void Level::draw(WindowManager& window, AssetManager& assets) {
         if (!Drawing::shouldDrawObject(
                 entityAABB.lowerBound, entitySize, minXFloat, maxXFloat, minYFloat, maxYFloat
             )) {
+            b2Vec2 nametagPos = entity->getNametagWorldPos(alpha);
+            b2Vec2 nametagSize =
+                entity->getNametagWorldSize(assets.TextRenderScale, assets.TextWorldSizeMultiplier);
+            b2Vec2 posBottomLeft{
+                nametagPos.x - nametagSize.x / 2.f, nametagPos.y - nametagSize.y / 2.f
+            };
+            if (Drawing::shouldDrawObject(
+                    posBottomLeft, nametagSize, minXFloat, maxXFloat, minYFloat, maxYFloat
+                )) {
+                entity->drawNametag(window, alpha, cameraScale, cameraOffsetPixels, assets);
+            }
             continue;
         }
         if (entity->draw(window, alpha, cameraScale, cameraOffsetPixels, assets)) {

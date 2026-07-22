@@ -1,8 +1,6 @@
 Move pinch event handling to touchcontroller class to avoid conflicts with pressing multiple controls at once
 
-Fix vsync on mumplayer, learn how to use adb with mumuplayer
-
-Proper culling for entity nametags
+Fix vsync on mumuplayer, learn how to use adb with mumuplayer
 
 Save settings between reopens
 
