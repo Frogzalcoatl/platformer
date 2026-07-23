@@ -104,7 +104,12 @@ UniqueText AssetManager::getSDLText(
     std::string_view text, std::string_view relativeFontPath, float ptSize, TTF_FontStyleFlags style
 ) {
     if (!textEngine) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Unable to get text. SDL3 text engine is null.");
+        SDL_LogError(
+            SDL_LOG_CATEGORY_APPLICATION,
+            "Unable to get SDL3 TTF text \"%.*s\". SDL3 text engine is null.",
+            static_cast<int>(text.length()),
+            text.data()
+        );
         return nullptr;
     }
     TTF_Font* font = getSDLFont(relativeFontPath, ptSize, style);
