@@ -70,7 +70,7 @@ void WindowManager::render(Uint64 frameStartNs) {
     ImGui::Render();
     ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), sdlRenderer.get());
     SDL_RenderPresent(sdlRenderer.get());
-    if (fpsUnlimited || vsync) {
+    if (fpsUnlimited) {
         return;
     }
     const Uint64 frameTimeNs = SDL_GetTicksNS() - frameStartNs;
@@ -162,6 +162,10 @@ void WindowManager::setVsync(bool value) {
     }
     SDL_Log("Vsync set to %s", value ? "true" : "false");
     vsync = value;
+    if (vsync) {
+        // Vsync cannot be toggled during runtime on android for some reason.
+        setTargetFps(static_cast<Uint64>(SDL_roundf(getMonitorRefreshRate())));
+    }
 }
 
 bool WindowManager::getFpsUnlimited() const {
