@@ -59,7 +59,9 @@ void Platformer::handleSdlEvent() {
         case SDL_EVENT_PINCH_BEGIN:
         case SDL_EVENT_PINCH_UPDATE:
         case SDL_EVENT_PINCH_END: {
-            input.handlePinchEvent(event.pinch);
+            if (ui.getFreeFingerCount() >= 2) {
+                input.handlePinchEvent(event.pinch);
+            }
         }
         };
     }

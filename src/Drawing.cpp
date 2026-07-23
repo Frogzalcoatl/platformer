@@ -21,20 +21,20 @@ void Drawing::polygon(
     float windowHeight = static_cast<float>(window.getSize().y);
     float cameraOffsetX = static_cast<float>(cameraOffsetPixels.x);
     float cameraOffsetY = static_cast<float>(cameraOffsetPixels.y);
-    for (int i = 0; i < polygon.count; i++) {
+    for (size_t i = 0; i < static_cast<size_t>(polygon.count); i++) {
         b2Vec2 pos = b2TransformPoint(transform, polygon.vertices[i]);
         pos.x = pos.x * cameraScale - cameraOffsetX;
         pos.y = windowHeight - (pos.y * cameraScale - cameraOffsetY);
         points[i] = SDL_FPoint{pos.x, pos.y};
     }
     std::array<SDL_Vertex, B2_MAX_POLYGON_VERTICES> vertices;
-    for (int i = 0; i < polygon.count; i++) {
+    for (size_t i = 0; i < static_cast<size_t>(polygon.count); i++) {
         vertices[i].color = color;
         vertices[i].position = points[i];
     }
     // Fan triangulation
     std::vector<int> indices;
-    indices.reserve(polygon.count * 3 - 2);
+    indices.reserve(static_cast<size_t>(polygon.count) * 3 - 2);
     for (int current = 2; current <= polygon.count - 1; current++) {
         indices.push_back(0);
         indices.push_back(current - 1);
@@ -67,12 +67,12 @@ void Drawing::polygonBorders(
     float windowHeight = static_cast<float>(window.getSize().y);
     float cameraOffsetX = static_cast<float>(cameraOffsetPixels.x);
     float cameraOffsetY = static_cast<float>(cameraOffsetPixels.y);
-    for (int i = 0; i < polygon.count; i++) {
+    for (size_t i = 0; i < static_cast<size_t>(polygon.count); i++) {
         b2Vec2 pos = b2TransformPoint(transform, polygon.vertices[i]);
         points[i].x = pos.x * cameraScale - cameraOffsetX;
         points[i].y = windowHeight - (pos.y * cameraScale - cameraOffsetY);
     }
-    points[polygon.count] = points[0];
+    points[static_cast<size_t>(polygon.count)] = points[0];
     SDL_SetRenderDrawColorFloat(renderer, color.r, color.g, color.b, color.a);
     SDL_RenderLines(renderer, points.data(), polygon.count + 1);
 }
@@ -94,15 +94,15 @@ void Drawing::showFanTriangulation(
     float windowHeight = static_cast<float>(window.getSize().y);
     float cameraOffsetX = static_cast<float>(cameraOffsetPixels.x);
     float cameraOffsetY = static_cast<float>(cameraOffsetPixels.y);
-    for (int i = 0; i < polygon.count; i++) {
+    for (size_t i = 0; i < static_cast<size_t>(polygon.count); i++) {
         b2Vec2 pos = b2TransformPoint(transform, polygon.vertices[i]);
         points[i].x = pos.x * cameraScale - cameraOffsetX;
         points[i].y = windowHeight - (pos.y * cameraScale - cameraOffsetY);
     }
-    points[polygon.count] = points[0];
+    points[static_cast<size_t>(polygon.count)] = points[0];
     SDL_SetRenderDrawColorFloat(renderer, color.r, color.g, color.b, color.a);
     SDL_RenderLines(renderer, points.data(), polygon.count + 1);
-    for (int i = 2; i < polygon.count; i++) {
+    for (size_t i = 2; i < static_cast<size_t>(polygon.count); i++) {
         SDL_RenderLine(renderer, points[0].x, points[0].y, points[i].x, points[i].y);
     }
 }

@@ -116,4 +116,6 @@ class UiManager {
     void enableTouchController(Entity& entity);
 
     void disableTouchController();
+
+    int getFreeFingerCount() const;
 };

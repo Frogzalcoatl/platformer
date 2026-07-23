@@ -4,11 +4,11 @@
 
 constexpr size_t EventQueueSize = 256;
 static std::array<GameEvent, EventQueueSize> eventQueue = {};
-static int head = 0;
-static int tail = 0;
+static size_t head = 0;
+static size_t tail = 0;
 
 void GameEvents::Push(GameEvent event) {
-    int nextHead = (head + 1) % EventQueueSize;
+    size_t nextHead = (head + 1) % EventQueueSize;
     if (nextHead == tail) {
         SDL_LogWarn(
             SDL_LOG_CATEGORY_APPLICATION,

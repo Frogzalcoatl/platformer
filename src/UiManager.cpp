@@ -169,6 +169,14 @@ void UiManager::disableTouchController() {
     touchController.reset();
 }
 
+int UiManager::getFreeFingerCount() const {
+    if (touchController) {
+        return touchController->getFreeFingerCount();
+    } else {
+        return 999;
+    }
+}
+
 void UiManager::setNextWindowFullscreen() {
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->Pos);
@@ -194,8 +202,8 @@ void UiManager::setNextWindowYOnlySafeArea(WindowManager& window) {
 
 void UiManager::updateActiveScale(WindowManager& window) {
     SDL_Rect safeArea = window.getSafeArea();
-    const float baseMinWidth = 640.f;
-    const float baseMinHeight = 720.f;
+    const float baseMinWidth = 480.f;
+    const float baseMinHeight = 540.f;
     float maxScaleW = static_cast<float>(safeArea.w) / baseMinWidth;
     float maxScaleH = static_cast<float>(safeArea.h) / baseMinHeight;
     float maxSafeScale = (maxScaleW < maxScaleH) ? maxScaleW : maxScaleH;
@@ -233,7 +241,7 @@ void UiManager::drawLargeLogo(WindowManager& window, float menuHeight) {
         static_cast<float>(safeArea.h)
     };
     float absoluteCenterX = static_cast<float>(window.getSize().x) * 0.5f;
-    float idealPadding = 50.f * uiScale;
+    float idealPadding = 15.f;
     float logoMenuSpacing = 20.f * uiScale;
     float totalRequiredHeight = logoHeight + logoMenuSpacing + menuHeight;
     float maxAllowedPadding = safeAreaF.h - totalRequiredHeight;
@@ -493,10 +501,10 @@ void UiManager::drawSettings(
                 &tempIndex,
                 0,
                 static_cast<int>(UiSizePresets.size() - 1),
-                UiSizePresets[tempIndex].name
+                UiSizePresets[static_cast<size_t>(tempIndex)].name
             );
             if (ImGui::IsItemDeactivatedAfterEdit()) {
-                userPreferredScale = UiSizePresets[tempIndex].scale;
+                userPreferredScale = UiSizePresets[static_cast<size_t>(tempIndex)].scale;
                 activeIndex = tempIndex;
             }
             if (!ImGui::IsItemActive()) {
