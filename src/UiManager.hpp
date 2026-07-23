@@ -9,14 +9,28 @@
 #include <memory>
 #include <numeric>
 
+struct UiSizePreset {
+    float scale;
+    const char* name;
+};
+
 class UiManager {
   private:
     UiState currentState = UiState::MainMenu;
     bool stateChangedThisFrame = false;
     bool playerSourceAddedThisFrame = false; // temporary fix probably
 
-    float userPreferredScale = 1.f;
+    const std::array<UiSizePreset, 6> UiSizePresets = {
+        {{0.5f, "Extra Small"},
+         {1.0f, "Small"},
+         {1.5f, "Normal"},
+         {2.0f, "Large"},
+         {2.5f, "Extra Large"},
+         {3.0f, "Ginormous"}}
+    };
+
     float uiScale = 1.f;
+    float userPreferredScale = 1.5f;
 
     ImGuiStyle defaultStyle;
     float logoHeight = 0.f;
@@ -25,11 +39,11 @@ class UiManager {
     void updateActiveScale(WindowManager& window);
     void updateStyleScale(float scale);
 
-    ImFont* fontExtraSmall = nullptr;
     ImFont* fontSmall = nullptr;
     ImFont* fontMedium = nullptr;
     ImFont* fontLarge = nullptr;
-    ImFont* fontExtraLarge = nullptr;
+    ImFont* fontDoubleLarge = nullptr;
+    ImFont* fontTripleLarge = nullptr;
     ImFont* fontTitle = nullptr;
 
     const int MaxVolume = 100;

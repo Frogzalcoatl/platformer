@@ -1,12 +1,15 @@
 #include "UiManager.hpp"
 #include "AssetPaths.hpp"
+#include <array>
+#include <cmath>
+#include <limits>
 
 UiManager::UiManager(AssetManager& assets, UiState startingState) : currentState(startingState) {
-    fontExtraSmall = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 12.f);
-    fontSmall = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 18.f);
-    fontMedium = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 24.f);
-    fontLarge = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 36.f);
-    fontExtraLarge = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 48.f);
+    fontSmall = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 12.f);
+    fontMedium = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 18.f);
+    fontLarge = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 24.f);
+    fontDoubleLarge = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 36.f);
+    fontTripleLarge = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 48.f);
     fontTitle = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 128.f);
     defaultStyle = ImGui::GetStyle();
 }
@@ -359,7 +362,7 @@ void UiManager::drawDebug(
 }
 
 void UiManager::drawMainMenu(WindowManager& window) {
-    float menuHeight = 375.f * uiScale;
+    float menuHeight = 250.f * uiScale;
     drawLargeLogo(window, menuHeight);
     SDL_Rect safeArea = window.getSafeArea();
     SDL_FRect safeAreaF{
@@ -372,7 +375,7 @@ void UiManager::drawMainMenu(WindowManager& window) {
     ImVec2 windowSizeF{static_cast<float>(windowSize.x), static_cast<float>(windowSize.y)};
     float absoluteCenterX = windowSizeF.x * 0.5f;
     float centerY = safeAreaF.y + safeAreaF.h * 0.5f;
-    ImVec2 menuSize = ImVec2{425.f * uiScale, menuHeight};
+    ImVec2 menuSize = ImVec2{300.f * uiScale, menuHeight};
     float centeredMenuTop = centerY - (menuSize.y * 0.5f);
     float logoTop = safeAreaF.y + 50.f * uiScale;
     float logoBottom = logoTop + logoHeight;
@@ -387,10 +390,10 @@ void UiManager::drawMainMenu(WindowManager& window) {
         ImGui::PushFont(fontLarge);
         float verticalSpacing = 15.f * uiScale;
         float windowWidth = ImGui::GetWindowSize().x;
-        float buttonWidth = 350.f * uiScale;
-        float buttonHeight = 75.f * uiScale;
+        float buttonWidth = 225.f * uiScale;
+        float buttonHeight = 50.f * uiScale;
         float cursorX = (windowWidth - buttonWidth) * 0.5f;
-        ImGui::SetCursorPosY(50.f * uiScale);
+        ImGui::SetCursorPosY(25.f * uiScale);
         ImGui::SetCursorPosX(cursorX);
         if (ImGui::Button("Test Game", ImVec2{buttonWidth, buttonHeight})) {
             setState(UiState::PlayerSourceSetup);
@@ -432,21 +435,21 @@ void UiManager::drawSettings(
             staticFlags | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_AlwaysVerticalScrollbar
         )) {
         ImGui::PushFont(fontLarge);
-        if (ImGui::Button("Back", ImVec2{100.f * uiScale, 45.f * uiScale})) {
+        if (ImGui::Button("Back")) {
             runCancelEvent();
         }
         ImGui::SameLine();
         ImGui::Dummy(horizontalSpacingDummy);
         ImGui::SameLine();
-        ImGui::PushFont(fontLarge);
         ImGui::BeginTabBar("SettingsTabBar");
         ImGuiTabItemFlags displayTabFlags = ImGuiTabItemFlags_None;
         if (ImGui::IsWindowAppearing()) {
             displayTabFlags |= ImGuiTabItemFlags_SetSelected;
         }
         if (ImGui::BeginTabItem("Display", nullptr, displayTabFlags)) {
+            ImGui::PushFont(fontDoubleLarge);
             ImGui::Text("Display");
-            ImGui::PushFont(fontMedium);
+            ImGui::PopFont();
             ImGui::Dummy(verticalSpacingDummy);
             fpsText(window);
             ImGui::Dummy(verticalSpacingDummy);
@@ -468,32 +471,47 @@ void UiManager::drawSettings(
                 }
             }
             ImGui::Dummy(verticalSpacingDummy);
-            static float tempPreferredScale = userPreferredScale;
+            int activeIndex = 0;
+            float minDiff = std::numeric_limits<float>::max();
+            for (size_t i = 0; i < UiSizePresets.size(); i++) {
+                float diff = std::abs(UiSizePresets[i].scale - userPreferredScale);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    activeIndex = static_cast<int>(i);
+                }
+            }
+            static int tempIndex = activeIndex;
             if (ImGui::Button("Reset##ResetUIScale", resetButtonSize)) {
-                tempPreferredScale = 1.f;
-                userPreferredScale = 1.f;
+                userPreferredScale = UiSizePresets[2].scale;
+                tempIndex = 2;
             }
             ImGui::SameLine();
             ImGui::Dummy(horizontalSpacingDummy);
             ImGui::SameLine();
-            ImGui::SliderFloat("UI Scale", &tempPreferredScale, 0.5f, 2.f, "%.2f");
+            ImGui::SliderInt(
+                "UI Scale",
+                &tempIndex,
+                0,
+                static_cast<int>(UiSizePresets.size() - 1),
+                UiSizePresets[tempIndex].name
+            );
             if (ImGui::IsItemDeactivatedAfterEdit()) {
-                userPreferredScale = tempPreferredScale;
-                // userPreferredScale will properly be updated by the updateActiveScale func inside
-                // draw()
+                userPreferredScale = UiSizePresets[tempIndex].scale;
+                activeIndex = tempIndex;
+            }
+            if (!ImGui::IsItemActive()) {
+                tempIndex = activeIndex;
             }
             if (level) {
                 ImGui::Dummy(verticalSpacingDummy);
                 ImGui::Checkbox("Show Hitboxes", &level->showHitBoxes);
             }
-            ImGui::PopFont();
             ImGui::EndTabItem();
         }
-        ImGui::PopFont();
-        ImGui::PushFont(fontLarge);
         if (ImGui::BeginTabItem("Audio")) {
+            ImGui::PushFont(fontDoubleLarge);
             ImGui::Text("Audio");
-            ImGui::PushFont(fontMedium);
+            ImGui::PopFont();
             int masterVolume = static_cast<int>(audio.getVolume(AudioCategory::Master));
             int soundVolume = static_cast<int>(audio.getVolume(AudioCategory::Sounds));
             int musicVolume = static_cast<int>(audio.getVolume(AudioCategory::Music));
@@ -549,14 +567,12 @@ void UiManager::drawSettings(
             if (ImGui::Button("Play Random Music")) {
                 audio.clearCurrentMusic();
             }
-            ImGui::PopFont();
             ImGui::EndTabItem();
         }
-        ImGui::PopFont();
-        ImGui::PushFont(fontLarge);
         if (ImGui::BeginTabItem("Controls")) {
+            ImGui::PushFont(fontDoubleLarge);
             ImGui::Text("Controls (Unfinished)");
-            ImGui::PushFont(fontMedium);
+            ImGui::PopFont();
             const ScancodeBindings& scancodeBidings = input.getScancodeBindings();
             for (size_t i = 0; i < static_cast<size_t>(InputVerb::VerbCount); i++) {
                 ImGui::Dummy(ImVec2{0.f, 25.f * uiScale});
@@ -572,13 +588,11 @@ void UiManager::drawSettings(
                 }
                 ImGui::NewLine();
             }
-            ImGui::PopFont();
             ImGui::EndTabItem();
         }
-        ImGui::PopFont();
     }
-    ImGui::EndTabBar();
     ImGui::PopFont();
+    ImGui::EndTabBar();
     ImGui::End();
 }
 
@@ -592,7 +606,7 @@ void UiManager::drawPlayerSourceSetup(WindowManager& window, InputManager& input
     ImGui::End();
     setNextWindowSafeArea(window);
     ImGui::Begin("Player Source Setup", nullptr, staticFlags | ImGuiWindowFlags_NoBackground);
-    ImGui::PushFont(fontExtraLarge);
+    ImGui::PushFont(fontDoubleLarge);
     ImGui::Text("Player Source Setup:");
     ImGui::PopFont();
     ImGui::PushFont(fontLarge);
@@ -612,15 +626,13 @@ void UiManager::drawPlayerSourceSetup(WindowManager& window, InputManager& input
         if (playerSources[i].has_value()) {
             ImGui::SameLine();
             std::string buttonId = "Remove##" + std::to_string(i + 1);
-            if (ImGui::Button(buttonId.c_str(), ImVec2{150.f * uiScale, 50.f * uiScale}) &&
-                !playerSourceAddedThisFrame) {
+            if (ImGui::Button(buttonId.c_str()) && !playerSourceAddedThisFrame) {
                 input.removePlayerSourceAtIndex(i);
             }
         }
         ImGui::Dummy(ImVec2{0.f, 50.f * uiScale});
     }
-    ImGui::PushFont(fontExtraLarge);
-    if (ImGui::Button("Play", ImVec2{200.f * uiScale, 60.f * uiScale})) {
+    if (ImGui::Button("Play", ImVec2{200.f * uiScale, 45.f * uiScale})) {
         const size_t playerSourceCount = input.getPlayerSourceCount();
         if (playerSourceCount > 0 && !playerSourceAddedThisFrame) {
             GameEvents::Push(GameEventTypes::ShouldDetectNewPlayerSources{false});
@@ -630,16 +642,15 @@ void UiManager::drawPlayerSourceSetup(WindowManager& window, InputManager& input
         }
     }
     ImGui::SameLine();
-    if (ImGui::Button("Back", ImVec2{200.f * uiScale, 60.f * uiScale})) {
+    if (ImGui::Button("Back", ImVec2{200.f * uiScale, 45.f * uiScale})) {
         runCancelEvent();
     }
-    ImGui::PopFont();
     ImGui::PopFont();
     ImGui::End();
 }
 
 void UiManager::drawPauseMenu(WindowManager& window) {
-    float menuHeight = 450.f * uiScale;
+    float menuHeight = 325.f * uiScale;
     drawLargeLogo(window, menuHeight);
     SDL_Rect safeArea = window.getSafeArea();
     SDL_FRect safeAreaF{
@@ -652,7 +663,7 @@ void UiManager::drawPauseMenu(WindowManager& window) {
     ImVec2 windowSizeF{static_cast<float>(windowSize.x), static_cast<float>(windowSize.y)};
     float absoluteCenterX = windowSizeF.x * 0.5f;
     float centerY = safeAreaF.y + safeAreaF.h * 0.5f;
-    ImVec2 menuSize = ImVec2{425.f * uiScale, menuHeight};
+    ImVec2 menuSize = ImVec2{300.f * uiScale, menuHeight};
     float centeredMenuTop = centerY - (menuSize.y * 0.5f);
     float logoTop = safeAreaF.y + 50.f * uiScale;
     float logoBottom = logoTop + logoHeight;
@@ -667,10 +678,10 @@ void UiManager::drawPauseMenu(WindowManager& window) {
         ImGui::PushFont(fontLarge);
         float verticalSpacing = 15.f * uiScale;
         float windowWidth = ImGui::GetWindowSize().x;
-        float buttonWidth = 350.f * uiScale;
-        float buttonHeight = 75.f * uiScale;
+        float buttonWidth = 225.f * uiScale;
+        float buttonHeight = 50.f * uiScale;
         float cursorX = (windowWidth - buttonWidth) * 0.5f;
-        ImGui::SetCursorPosY(50.f * uiScale);
+        ImGui::SetCursorPosY(25.f * uiScale);
         const char pausedText[] = "> Paused <";
         ImVec2 pauseTextSize = ImGui::CalcTextSize(pausedText);
         ImGui::SetCursorPosX((windowWidth - pauseTextSize.x) * 0.5f);
