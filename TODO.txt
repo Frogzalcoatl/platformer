@@ -1,5 +1,3 @@
-Add android scrolling
-
 Save settings between reopens
 
 Account for polygon radius in draw func

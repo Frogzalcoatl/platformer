@@ -55,6 +55,8 @@ class UiManager {
 
     std::unique_ptr<TouchController> touchController = nullptr;
 
+    void applyTouchScroll();
+
     void setNextWindowFullscreen();
     void setNextWindowSafeArea(WindowManager& window);
     void setNextWindowYOnlySafeArea(WindowManager& window);
