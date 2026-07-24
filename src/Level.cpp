@@ -27,6 +27,12 @@ Level::Level(
     for (auto& column : tiles) {
         column.resize(size.height);
     }
+    for (size_t i = 1; i < static_cast<size_t>(Textures::TileTypes::TileCount); i++) {
+        std::string_view path = Textures::TilePaths[i];
+        if (!path.empty()) {
+            tileTextureCache[i] = assetManager.getTexture(path);
+        }
+    }
 }
 
 Level::~Level() {
@@ -132,16 +138,15 @@ void Level::drawTile(
     AssetPaths::Textures::TileTypes tileId,
     size_t x,
     size_t y,
-    AssetManager& assets,
     WindowManager& window,
     float cameraScale
 ) {
     assert(tileId < Textures::TileTypes::TileCount);
-    if (tileId >= Textures::TileTypes::TileCount) {
+    size_t tileIndex = static_cast<size_t>(tileId);
+    if (tileIndex >= tileTextureCache.size()) {
         return;
     }
-    std::string_view relativePath = Textures::TilePaths[static_cast<size_t>(tileId)];
-    SDL_Texture* texture = assets.getTexture(relativePath);
+    SDL_Texture* texture = tileTextureCache[tileIndex];
     if (!texture) {
         return;
     }
@@ -192,7 +197,7 @@ void Level::handleInput(GameEventTypes::Input event) {
     }
 }
 
-void Level::draw(WindowManager& window, AssetManager& assets) {
+void Level::draw(WindowManager& window, AssetManager& assetManager) {
     camera.run(alpha);
     if (tiles.empty()) {
         return;
@@ -215,7 +220,7 @@ void Level::draw(WindowManager& window, AssetManager& assets) {
     for (size_t x = minX; x <= maxX; x++) {
         for (size_t y = minY; y <= maxY; y++) {
             if (tiles[x][y] != Textures::TileTypes::Air) {
-                drawTile(tiles[x][y], x, y, assets, window, cameraScale);
+                drawTile(tiles[x][y], x, y, window, cameraScale);
                 drawInfo.tiles++;
             }
         }
@@ -240,19 +245,20 @@ void Level::draw(WindowManager& window, AssetManager& assets) {
                 entityAABB.lowerBound, entitySize, minXFloat, maxXFloat, minYFloat, maxYFloat
             )) {
             b2Vec2 nametagPos = entity->getNametagWorldPos(alpha);
-            b2Vec2 nametagSize =
-                entity->getNametagWorldSize(assets.TextRenderScale, assets.TextWorldSizeMultiplier);
+            b2Vec2 nametagSize = entity->getNametagWorldSize(
+                assetManager.TextRenderScale, assetManager.TextWorldSizeMultiplier
+            );
             b2Vec2 posBottomLeft{
                 nametagPos.x - nametagSize.x / 2.f, nametagPos.y - nametagSize.y / 2.f
             };
             if (Drawing::shouldDrawObject(
                     posBottomLeft, nametagSize, minXFloat, maxXFloat, minYFloat, maxYFloat
                 )) {
-                entity->drawNametag(window, alpha, cameraScale, cameraOffsetPixels, assets);
+                entity->drawNametag(window, alpha, cameraScale, cameraOffsetPixels, assetManager);
             }
             continue;
         }
-        if (entity->draw(window, alpha, cameraScale, cameraOffsetPixels, assets)) {
+        if (entity->draw(window, alpha, cameraScale, cameraOffsetPixels, assetManager)) {
             didDrawEntity = true;
         }
         if (showFanTriangulation) {

@@ -46,6 +46,9 @@ class Level {
     LevelDrawInfo drawInfo;
     size_t tileCount = 0; // Incremented when addTile is run
 
+    std::array<SDL_Texture*, static_cast<size_t>(AssetPaths::Textures::TileTypes::TileCount)>
+        tileTextureCache{};
+
     uint64_t currentTime = 0;
     uint64_t lastTime = 0;
     float accumulator = 0.f;
@@ -57,7 +60,6 @@ class Level {
         AssetPaths::Textures::TileTypes tileId,
         size_t x,
         size_t y,
-        AssetManager& assets,
         WindowManager& window,
         float cameraScale
     );
@@ -90,7 +92,7 @@ class Level {
 
     void handleInput(GameEventTypes::Input event);
 
-    void draw(WindowManager& window, AssetManager& assets);
+    void draw(WindowManager& window, AssetManager& assetManager);
 
     b2WorldId getWorldId() const;
 

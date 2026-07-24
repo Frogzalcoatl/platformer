@@ -1,11 +1,13 @@
 Improve sizing and coloring of mobile ui.
 
-Determine whether drawing tiles can be made more efficient
-
 Determine whether ui funcs can be optimized at all (they probably can be)
 
 Account for polygon radius in draw func
 
 Use enet lib for online multiplayer
+
+Render textures in chunks
+
+Use a texture atlas
 
 Figure out some way to automatically load static entities on exposed solid tiles.
