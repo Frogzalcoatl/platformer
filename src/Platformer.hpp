@@ -3,6 +3,7 @@
 #include "AudioManager.hpp"
 #include "InputManager.hpp"
 #include "Level.hpp"
+#include "SettingsManager.hpp"
 #include "UiManager.hpp"
 #include "WindowManager.hpp"
 #include <memory>
@@ -17,6 +18,9 @@ class Platformer {
     InputManager input;
     UiManager ui;
     std::unique_ptr<Level> currentLevel;
+    SettingsManager settings;
+
+    void loadSettings(bool readFromDisk);
 
     void handleSdlEvent();
 

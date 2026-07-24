@@ -16,10 +16,10 @@ UiManager::UiManager(AssetManager& assets, UiState startingState) : currentState
 
 void UiManager::draw(
     WindowManager& window,
+    SettingsManager& settings,
     AudioManager& audio,
     InputManager& input,
-    Level* level,
-    UiManager& uiManager
+    Level* level
 ) {
     updateActiveScale(window);
     Entity* playerEntity = nullptr;
@@ -35,14 +35,14 @@ void UiManager::draw(
         camera = level->getCamera();
     }
     if (showDebug) {
-        drawDebug(window, playerEntity, camera, input, level, uiManager);
+        drawDebug(window, playerEntity, camera, input, level);
     }
     switch (currentState) {
     case UiState::MainMenu: {
         drawMainMenu(window);
     }; break;
     case UiState::Settings: {
-        drawSettings(window, audio, input, level);
+        drawSettings(window, settings, audio, input, level);
     }; break;
     case UiState::PlayerSourceSetup: {
         drawPlayerSourceSetup(window, input);
@@ -51,7 +51,7 @@ void UiManager::draw(
         drawPauseMenu(window);
     }; break;
     case UiState::PausedSettings: {
-        drawSettings(window, audio, input, level);
+        drawSettings(window, settings, audio, input, level);
     }; break;
     default:
         break;
@@ -177,6 +177,31 @@ int UiManager::getFreeFingerCount() const {
     }
 }
 
+void UiManager::setUserPreferredScale(size_t scaleIndex) {
+    const size_t MaxScaleIndex = UiSizePresets.size() - 1;
+    if (scaleIndex > MaxScaleIndex) {
+        SDL_LogWarn(
+            SDL_LOG_CATEGORY_APPLICATION,
+            "Clamping user preferred scale from %zu to %zu",
+            scaleIndex,
+            MaxScaleIndex
+        );
+        scaleIndex = MaxScaleIndex;
+    }
+    userPreferredScale = UiSizePresets[scaleIndex].scale;
+    SDL_Log("User preferred UI set scale to %zu", scaleIndex);
+}
+
+size_t UiManager::getUserPreferredScale() const {
+    const float epsilon = 0.001f;
+    for (size_t i = 0; i < UiSizePresets.size(); i++) {
+        if (std::abs(UiSizePresets[i].scale - userPreferredScale) < epsilon) {
+            return i;
+        }
+    }
+    return 2; // fallback
+}
+
 void UiManager::applyTouchScroll() {
     ImGuiIO& io = ImGui::GetIO();
     if (io.MouseSource != ImGuiMouseSource_TouchScreen) {
@@ -290,12 +315,7 @@ void UiManager::fpsText(WindowManager& window) {
 }
 
 void UiManager::drawDebug(
-    WindowManager& window,
-    Entity* playerEntity,
-    Camera* camera,
-    InputManager& input,
-    Level* level,
-    UiManager& uiManager
+    WindowManager& window, Entity* playerEntity, Camera* camera, InputManager& input, Level* level
 ) {
     ImGui::PushFont(fontSmall);
     SDL_Rect safeArea = window.getSafeArea();
@@ -310,7 +330,7 @@ void UiManager::drawDebug(
         ImGui::SameLine();
         fpsText(window);
         ImGui::Dummy(ImVec2{1.f, 1.f});
-        ImGui::Text("\nUI State: %s", uiManager.getStateStr().c_str());
+        ImGui::Text("\nUI State: %s", getStateStr().c_str());
         ImGui::Dummy(ImVec2{1.f, 1.f});
         if (level) {
             std::string_view levelName = level->getName();
@@ -437,7 +457,11 @@ void UiManager::drawMainMenu(WindowManager& window) {
 }
 
 void UiManager::drawSettings(
-    WindowManager& window, AudioManager& audio, InputManager& input, Level* level
+    WindowManager& window,
+    SettingsManager& settings,
+    AudioManager& audio,
+    InputManager& input,
+    Level* level
 ) {
     setNextWindowFullscreen();
     ImGui::Begin(
@@ -479,11 +503,13 @@ void UiManager::drawSettings(
                 bool vsync = window.isVsyncEnabled();
                 if (ImGui::Checkbox("VSync", &vsync)) {
                     window.setVsync(vsync);
+                    settings.setVsyncEnabled(vsync);
                 }
                 ImGui::Dummy(verticalSpacingDummy);
                 bool fpsUnlimited = window.getFpsUnlimited();
                 if (ImGui::Checkbox("FPS Unlimited", &fpsUnlimited)) {
                     window.setFpsUnlimited(fpsUnlimited);
+                    settings.setFpsUnlimited(fpsUnlimited);
                 }
                 if (!vsync && !fpsUnlimited) {
                     ImGui::Dummy(verticalSpacingDummy);
@@ -491,6 +517,10 @@ void UiManager::drawSettings(
                     ImGui::SliderInt("Target FPS", &tempFps, 10, 300, "%d", sliderFlags);
                     if (ImGui::IsItemDeactivatedAfterEdit()) {
                         window.setTargetFps(static_cast<Uint64>(tempFps));
+                        settings.setTargetFps(static_cast<unsigned int>(tempFps));
+                    }
+                    if (!ImGui::IsItemActive()) {
+                        tempFps = static_cast<int>(window.getTargetFps());
                     }
                 }
                 ImGui::Dummy(verticalSpacingDummy);
@@ -505,8 +535,10 @@ void UiManager::drawSettings(
                 }
                 static int tempIndex = activeIndex;
                 if (ImGui::Button("Reset##ResetUIScale", resetButtonSize)) {
-                    userPreferredScale = UiSizePresets[2].scale;
-                    tempIndex = 2;
+                    const Settings& defaultSettings = settings.getDefault();
+                    userPreferredScale = UiSizePresets[defaultSettings.uiScale].scale;
+                    tempIndex = static_cast<int>(defaultSettings.uiScale);
+                    settings.setUiScale(defaultSettings.uiScale);
                 }
                 ImGui::SameLine();
                 ImGui::Dummy(horizontalSpacingDummy);
@@ -521,6 +553,7 @@ void UiManager::drawSettings(
                 if (ImGui::IsItemDeactivatedAfterEdit()) {
                     userPreferredScale = UiSizePresets[static_cast<size_t>(tempIndex)].scale;
                     activeIndex = tempIndex;
+                    settings.setUiScale(static_cast<unsigned int>(tempIndex));
                 }
                 if (!ImGui::IsItemActive()) {
                     tempIndex = activeIndex;
@@ -542,32 +575,38 @@ void UiManager::drawSettings(
                 ImGui::Dummy(verticalSpacingDummy);
                 if (ImGui::Button("Reset##ResetMaster", resetButtonSize)) {
                     audio.setVolume(AudioCategory::Master, 100);
+                    settings.setMasterVolume(100);
                 }
                 ImGui::SameLine();
                 ImGui::Dummy(horizontalSpacingDummy);
                 ImGui::SameLine();
                 if (ImGui::SliderInt("Master", &masterVolume, 0, MaxVolume, "%d", sliderFlags)) {
                     audio.setVolume(AudioCategory::Master, static_cast<unsigned int>(masterVolume));
+                    settings.setMasterVolume(static_cast<unsigned int>(masterVolume));
                 }
                 ImGui::Dummy(verticalSpacingDummy);
                 if (ImGui::Button("Reset##ResetSounds", resetButtonSize)) {
                     audio.setVolume(AudioCategory::Sounds, 100);
+                    settings.setSoundsVolume(100);
                 }
                 ImGui::SameLine();
                 ImGui::Dummy(horizontalSpacingDummy);
                 ImGui::SameLine();
                 if (ImGui::SliderInt("Sounds", &soundVolume, 0, MaxVolume, "%d", sliderFlags)) {
                     audio.setVolume(AudioCategory::Sounds, static_cast<unsigned int>(soundVolume));
+                    settings.setSoundsVolume(static_cast<unsigned int>(soundVolume));
                 }
                 ImGui::Dummy(verticalSpacingDummy);
                 if (ImGui::Button("Reset##ResetMusic", resetButtonSize)) {
                     audio.setVolume(AudioCategory::Music, 100);
+                    settings.setMusicVolume(100);
                 }
                 ImGui::SameLine();
                 ImGui::Dummy(horizontalSpacingDummy);
                 ImGui::SameLine();
                 if (ImGui::SliderInt("Music", &musicVolume, 0, MaxVolume, "%d", sliderFlags)) {
                     audio.setVolume(AudioCategory::Music, static_cast<unsigned int>(musicVolume));
+                    settings.setMusicVolume(static_cast<unsigned int>(musicVolume));
                 }
                 ImGui::Dummy(verticalSpacingDummy);
                 if (ImGui::Button("Reset##ResetMusicPitch", resetButtonSize)) {

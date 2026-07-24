@@ -67,6 +67,7 @@ find_package(SDL3_ttf REQUIRED)
 find_package(SDL3_mixer REQUIRED)
 find_package(box2d CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
+find_package(RapidJSON CONFIG REQUIRED)
 set(USE_DISCORD_RPC FALSE)
 if(WIN32 OR (APPLE AND NOT IOS) OR LINUX)
     set(USE_DISCORD_RPC TRUE)
@@ -120,9 +121,11 @@ set(SOURCES
     src/FormatLogs.cpp
     src/ImGuiDrawing.cpp
     src/InputManager.cpp
+    src/JsonManager.cpp
     src/Level.cpp
     src/Main.cpp
     src/Platformer.cpp
+    src/SettingsManager.cpp
     src/TouchController.cpp
     src/UiManager.cpp
     src/WindowManager.cpp
@@ -145,6 +148,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     SDL3_mixer::SDL3_mixer
     box2d::box2d
     imgui::imgui
+    rapidjson
     VirtualFileSystem
 )
 if(USE_DISCORD_RPC AND TARGET discord-rpc::discord-rpc)

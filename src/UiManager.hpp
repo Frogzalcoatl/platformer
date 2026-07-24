@@ -3,6 +3,7 @@
 #include "Events.hpp"
 #include "InputManager.hpp"
 #include "Level.hpp"
+#include "SettingsManager.hpp"
 #include "TouchController.hpp"
 #include "WindowManager.hpp"
 #include <imgui.h>
@@ -66,18 +67,18 @@ class UiManager {
     void fpsText(WindowManager& window);
 
     void drawDebug(
-        WindowManager& window,
-        Entity* player,
-        Camera* camera,
-        InputManager& input,
-        Level* level,
-        UiManager& uiManager
+        WindowManager& window, Entity* player, Camera* camera, InputManager& input, Level* level
     );
 
     void drawMainMenu(WindowManager& window);
 
-    void
-    drawSettings(WindowManager& window, AudioManager& audio, InputManager& input, Level* level);
+    void drawSettings(
+        WindowManager& window,
+        SettingsManager& settings,
+        AudioManager& audio,
+        InputManager& input,
+        Level* level
+    );
 
     void drawPlayerSourceSetup(WindowManager& window, InputManager& input);
 
@@ -90,10 +91,10 @@ class UiManager {
 
     void draw(
         WindowManager& window,
+        SettingsManager& settings,
         AudioManager& audio,
         InputManager& input,
-        Level* level,
-        UiManager& uiManager
+        Level* level
     );
 
     void update();
@@ -120,4 +121,8 @@ class UiManager {
     void disableTouchController();
 
     int getFreeFingerCount() const;
+
+    void setUserPreferredScale(size_t scaleIndex);
+
+    size_t getUserPreferredScale() const;
 };

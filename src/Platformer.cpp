@@ -12,11 +12,82 @@
 #include <stdexcept>
 
 Platformer::Platformer()
-    : window{"C++ Platformer", Colors::Background}, assets{window.getSdlRenderer()}, audio{assets},
-      ui{assets} {
-    audio.setVolume(AudioCategory::Music, 50);
+    : window{"C++ Platformer", Colors::Background}, assets(window.getSdlRenderer()), audio(assets),
+      ui(assets), settings("Settings.json") {
     assets.addGameControllerMappings("gamepads/gamecontrollerdb.txt");
     assets.addGameControllerMappings("gamepads/retrolink.txt");
+    loadSettings(false); // No need to read from disk. Happens in constructor
+}
+
+void Platformer::loadSettings(bool readFromDisk) {
+    if (readFromDisk) {
+        settings.readFromDisk();
+    }
+    const Settings& currentSettings = settings.get();
+    window.setVsync(currentSettings.vsyncEnabled);
+#ifdef SDL_PLATFORM_ANDROID
+    if (window.isVsyncEnabled()) {
+        // Since target fps can be changed by setVsync on android
+        settings.setTargetFps(static_cast<unsigned int>(window.getTargetFps()));
+    }
+#endif
+    const unsigned int MinTargetFps = 1;
+    const unsigned int MaxTargetFps = 1000;
+    if (currentSettings.targetFps < MinTargetFps) {
+        SDL_LogWarn(
+            SDL_LOG_CATEGORY_APPLICATION,
+            "Clamping target fps from %u to %u",
+            currentSettings.targetFps,
+            MinTargetFps
+        );
+        settings.setTargetFps(1);
+    } else if (currentSettings.targetFps > MaxTargetFps) {
+        SDL_LogWarn(
+            SDL_LOG_CATEGORY_APPLICATION,
+            "Clamping target fps from %u to %u",
+            currentSettings.targetFps,
+            MaxTargetFps
+        );
+        settings.setTargetFps(1000);
+    }
+    window.setTargetFps(currentSettings.targetFps);
+    window.setFpsUnlimited(currentSettings.fpsUnlimited);
+    ui.setUserPreferredScale(currentSettings.uiScale);
+    size_t userPreferredScale = ui.getUserPreferredScale();
+    if (userPreferredScale != currentSettings.uiScale) {
+        settings.setUiScale(userPreferredScale);
+    }
+    const unsigned int MaxVolume = 200;
+    if (currentSettings.masterVolume > MaxVolume) {
+        SDL_LogWarn(
+            SDL_LOG_CATEGORY_APPLICATION,
+            "Clamping master volume from %u to %u",
+            currentSettings.masterVolume,
+            MaxVolume
+        );
+        settings.setMasterVolume(MaxVolume);
+    }
+    if (currentSettings.soundsVolume > MaxVolume) {
+        SDL_LogWarn(
+            SDL_LOG_CATEGORY_APPLICATION,
+            "Clamping sounds volume from %u to %u",
+            currentSettings.soundsVolume,
+            MaxVolume
+        );
+        settings.setSoundsVolume(MaxVolume);
+    }
+    if (currentSettings.musicVolume > MaxVolume) {
+        SDL_LogWarn(
+            SDL_LOG_CATEGORY_APPLICATION,
+            "Clamping music volume from %u to %u",
+            currentSettings.musicVolume,
+            MaxVolume
+        );
+        settings.setMusicVolume(MaxVolume);
+    }
+    audio.setVolume(AudioCategory::Master, currentSettings.masterVolume);
+    audio.setVolume(AudioCategory::Sounds, currentSettings.soundsVolume);
+    audio.setVolume(AudioCategory::Music, currentSettings.musicVolume);
 }
 
 void Platformer::handleSdlEvent() {
@@ -282,7 +353,7 @@ void Platformer::run() {
             currentLevel->draw(window, assets);
         }
         ui.update();
-        ui.draw(window, audio, input, currentLevel.get(), ui);
+        ui.draw(window, settings, audio, input, currentLevel.get());
         window.render(frameStartNs);
         DiscordRpcManager::update();
     }

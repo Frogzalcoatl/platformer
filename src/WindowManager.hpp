@@ -32,7 +32,7 @@ class WindowManager {
     UniqueRenderer sdlRenderer;
     WindowVec2 size;
     WindowVec2 mousePos;
-    Uint64 targetFps = 240;
+    Uint64 targetFps = 120;
     Uint64 targetFrameTimeNs = 1000000000ULL / targetFps;
     bool vsync = true;
     bool fpsUnlimited = false;

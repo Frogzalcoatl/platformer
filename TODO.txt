@@ -1,4 +1,10 @@
-Save settings between reopens
+Determine whether settings.json can be saved between android app installs.
+
+Add ui toggle for touch controls
+
+Determine whether drawing tiles can be made more efficient
+
+Determine whether ui funcs can be optimized at all (they probably can be)
 
 Account for polygon radius in draw func
 

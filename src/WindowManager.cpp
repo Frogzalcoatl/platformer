@@ -45,9 +45,6 @@ WindowManager::WindowManager(const char* windowName, SDL_Color backgroundColor)
         return;
     }
     SDL_Log("Created SDL3 renderer");
-    Uint64 monitorRefreshRate = static_cast<Uint64>(SDL_roundf(getMonitorRefreshRate()));
-    setTargetFps(monitorRefreshRate);
-    setVsync(vsync);
     ImGui_ImplSDL3_InitForSDLRenderer(sdlWindow.get(), sdlRenderer.get());
     ImGui_ImplSDLRenderer3_Init(sdlRenderer.get());
 }
@@ -73,6 +70,13 @@ void WindowManager::render(Uint64 frameStartNs) {
     if (fpsUnlimited) {
         return;
     }
+#ifndef SDL_PLATFORM_ANDROID
+    // vsync works on every platform but android.
+    // android just fakes vsync by setting target fps to monitor refresh rate.
+    if (vsync) {
+        return;
+    }
+#endif
     const Uint64 frameTimeNs = SDL_GetTicksNS() - frameStartNs;
     if (frameTimeNs < targetFrameTimeNs) {
         const Uint64 delayNs = targetFrameTimeNs - frameTimeNs;
@@ -142,9 +146,17 @@ std::string WindowManager::targetFpsStr() const {
 }
 
 void WindowManager::setTargetFps(Uint64 value) {
+    if (value == 0) {
+        SDL_LogWarn(
+            SDL_LOG_CATEGORY_APPLICATION,
+            "Ignoring attempt to set target fps to 0. It is still set to %llu",
+            targetFps
+        );
+        return;
+    }
     targetFps = value;
     targetFrameTimeNs = 1000000000ULL / targetFps;
-    SDL_Log("Set target fps to %zu", value);
+    SDL_Log("Target fps set to %zu", value);
 }
 
 bool WindowManager::isVsyncEnabled() const {
@@ -162,10 +174,13 @@ void WindowManager::setVsync(bool value) {
     }
     SDL_Log("Vsync set to %s", value ? "true" : "false");
     vsync = value;
+#ifdef SDL_PLATFORM_ANDROID
     if (vsync) {
         // Vsync cannot be toggled during runtime on android for some reason.
+        // Fake vsync by setting target fps to monitor refresh rate.
         setTargetFps(static_cast<Uint64>(SDL_roundf(getMonitorRefreshRate())));
     }
+#endif
 }
 
 bool WindowManager::getFpsUnlimited() const {
