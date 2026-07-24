@@ -219,7 +219,11 @@ void Drawing::texture(
     rect.h = worldSize.y * cameraScale;
     rect.x = (worldPosition.x - worldSize.x / 2.f) * cameraScale - cameraOffsetX;
     rect.y = windowHeight - ((worldPosition.y + worldSize.y / 2.f) * cameraScale - cameraOffsetY);
-    SDL_RenderTextureRotated(renderer, texture, nullptr, &rect, sdlAngle, nullptr, flip);
+    if (sdlAngle == 0.0 && flip == SDL_FLIP_NONE) {
+        SDL_RenderTexture(renderer, texture, nullptr, &rect);
+    } else {
+        SDL_RenderTextureRotated(renderer, texture, nullptr, &rect, sdlAngle, nullptr, flip);
+    }
 }
 
 double Drawing::b2RotToSdlAngle(b2Rot rotation) {
