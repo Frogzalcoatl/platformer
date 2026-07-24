@@ -5,7 +5,6 @@
 namespace AssetPaths {
 
 namespace Fonts {
-inline constexpr std::string_view Xsku = "fonts/xsku.ttf";
 inline constexpr std::string_view Consolas = "fonts/consola.ttf";
 }
 
