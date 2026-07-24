@@ -2,6 +2,7 @@
 #include "AssetPaths.hpp"
 #include <array>
 #include <cmath>
+#include <format>
 #include <limits>
 
 UiManager::UiManager(AssetManager& assets, UiState startingState) : currentState(startingState) {
@@ -303,15 +304,17 @@ void UiManager::drawLargeLogo(WindowManager& window, float menuHeight) {
 
 void UiManager::fpsText(WindowManager& window) {
     float fps = ImGui::GetIO().Framerate;
+    std::string text;
     if (fps >= 1000) {
-        ImGui::Text(
-            "%07.1f/%s FPS (%.3f ms/frame)", fps, window.targetFpsStr().c_str(), 1000.0f / fps
-        );
+        text += std::format("{:0{}.{}f}", fps, 7, 1);
     } else {
-        ImGui::Text(
-            "%.1f/%s FPS (%.3f ms/frame)", fps, window.targetFpsStr().c_str(), 1000.0f / fps
-        );
+        text += std::format("{:.1f}", fps);
     }
+    if (!window.isVsyncEnabled()) {
+        text += "/" + window.targetFpsStr();
+    }
+    text += " FPS (" + std::format("{:.3f}", fps / 1000.f) + " ms/frame)";
+    ImGui::Text("%s", text.c_str());
 }
 
 void UiManager::drawDebug(

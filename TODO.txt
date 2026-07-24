@@ -1,8 +1,4 @@
-Handle vsync fps display on battery saver
-
 Improve sizing and coloring of mobile ui.
-
-Add ui toggle for touch controls
 
 Determine whether drawing tiles can be made more efficient
 
