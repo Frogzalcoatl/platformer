@@ -30,6 +30,10 @@ pip install clang-format
 * Download [Build Tools for Visual Studio](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2026)
 
 * Select and install the **"Desktop development with C++"** workload.
+* On the right side panel (**Installation Details**), you only need the following checked:
+  *  **MSVC v14x - VS 20xx C++ x64/x86 build tools**
+  * **C++ CMake tools for Windows**
+  * **Windows 11 SDK** (Compatible with both Windows 10 and 11)
 
 **MacOS:**
 
