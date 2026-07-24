@@ -105,6 +105,8 @@ class AssetManager {
     AudioCacheMap audioCachePredecoded;
     TextureCacheMap textureCache;
 
+    std::string getSDLTextErrorMessage(std::string_view text);
+
   public:
     AssetManager(SDL_Renderer* renderer);
 

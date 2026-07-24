@@ -100,39 +100,42 @@ TTF_TextEngine* AssetManager::getTextEngine() const {
     return textEngine.get();
 }
 
+std::string AssetManager::getSDLTextErrorMessage(std::string_view text) {
+    std::string message = "Unable to get SDL3 TTF text \"";
+    size_t MaxTextLength = 128;
+    message.append(text, 0, SDL_min(text.length(), MaxTextLength));
+    if (text.length() > MaxTextLength) {
+        message += "...";
+    }
+    message += "\": ";
+    return message;
+}
+
 UniqueText AssetManager::getSDLText(
     std::string_view text, std::string_view relativeFontPath, float ptSize, TTF_FontStyleFlags style
 ) {
     if (!textEngine) {
-        SDL_LogError(
-            SDL_LOG_CATEGORY_APPLICATION,
-            "Unable to get SDL3 TTF text \"%.*s\". SDL3 text engine is null.",
-            static_cast<int>(text.length()),
-            text.data()
-        );
+        std::string message = getSDLTextErrorMessage(text);
+        message += "SDL3 text engine is null";
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s", message.c_str());
         return nullptr;
     }
     TTF_Font* font = getSDLFont(relativeFontPath, ptSize, style);
     if (!font) {
+        std::string message = getSDLTextErrorMessage(text);
+        message += "font \"";
+        message += relativeFontPath;
+        message += "\" is null";
         std::string pathStr(relativeFontPath);
-        SDL_LogError(
-            SDL_LOG_CATEGORY_APPLICATION,
-            "Unable to get SDL3 TTF text \"%.*s\" using font \"%s\"",
-            static_cast<int>(text.length()),
-            text.data(),
-            pathStr.c_str()
-        );
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s", message.c_str());
         return nullptr;
     }
     TTF_Text* ttfText = TTF_CreateText(textEngine.get(), font, text.data(), text.length());
     if (!ttfText) {
-        SDL_LogError(
-            SDL_LOG_CATEGORY_APPLICATION,
-            "Unable to create SDL3 TTF text \"%.*s\": %s",
-            static_cast<int>(text.length()),
-            text.data(),
-            SDL_GetError()
-        );
+        std::string message = getSDLTextErrorMessage(text);
+        message += "TTF_CreateText failed - ";
+        message += SDL_GetError();
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s", message.c_str());
         return nullptr;
     }
     return UniqueText(ttfText, TTF_Text_Deleter{});
