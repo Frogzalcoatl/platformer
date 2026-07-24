@@ -54,8 +54,6 @@ class InputManager {
     std::vector<GameEventTypes::Input> handleMouseWheelEvent(SDL_MouseWheelEvent& event);
     std::vector<GameEventTypes::Input> handleGamepadButtonEvent(SDL_GamepadButtonEvent& event);
 
-    bool hasTouchScreen();
-
   public:
     InputManager();
 
@@ -95,6 +93,8 @@ class InputManager {
     bool disableTouchPlayer();
 
     void removePlayerSourceAtIndex(size_t index);
+
+    bool hasTouchScreen();
 
     bool isTouchPlayerEnabled(size_t* atIndex);
 

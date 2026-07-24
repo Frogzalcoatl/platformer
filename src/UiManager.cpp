@@ -676,6 +676,21 @@ void UiManager::drawPlayerSourceSetup(WindowManager& window, InputManager& input
     ImGui::PushFont(fontLarge);
     ImGui::Dummy(ImVec2{0.f, 10.f * uiScale});
     ImGui::Text("Press any button to join!");
+    static bool touchPlayerEnabled = input.isTouchPlayerEnabled(nullptr);
+    if (input.hasTouchScreen()) {
+        ImGui::Dummy(ImVec2{0.f, 25.f * uiScale});
+        if (ImGui::Checkbox("Touch Player", &touchPlayerEnabled)) {
+            if (touchPlayerEnabled) {
+                input.disableTouchPlayer();
+            } else {
+                input.enableTouchPlayer();
+            }
+            touchPlayerEnabled = input.isTouchPlayerEnabled(nullptr);
+        }
+    }
+    if (ImGui::IsItemActive()) {
+        touchPlayerEnabled = input.isTouchPlayerEnabled(nullptr);
+    }
     ImGui::Dummy(ImVec2{0.f, 25.f * uiScale});
     const PlayerSources& playerSources = input.getPlayerSources();
     for (size_t i = 0; i < playerSources.size(); i++) {
