@@ -681,14 +681,14 @@ void UiManager::drawPlayerSourceSetup(WindowManager& window, InputManager& input
         ImGui::Dummy(ImVec2{0.f, 25.f * uiScale});
         if (ImGui::Checkbox("Touch Player", &touchPlayerEnabled)) {
             if (touchPlayerEnabled) {
-                input.disableTouchPlayer();
-            } else {
                 input.enableTouchPlayer();
+            } else {
+                input.disableTouchPlayer();
             }
             touchPlayerEnabled = input.isTouchPlayerEnabled(nullptr);
         }
     }
-    if (ImGui::IsItemActive()) {
+    if (!ImGui::IsItemActive()) {
         touchPlayerEnabled = input.isTouchPlayerEnabled(nullptr);
     }
     ImGui::Dummy(ImVec2{0.f, 25.f * uiScale});
