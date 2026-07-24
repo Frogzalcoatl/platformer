@@ -1,4 +1,6 @@
-Determine whether settings.json can be saved between android app installs.
+Handle vsync fps display on battery saver
+
+Improve sizing and coloring of mobile ui.
 
 Add ui toggle for touch controls
 
