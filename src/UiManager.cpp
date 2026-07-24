@@ -507,12 +507,14 @@ void UiManager::drawSettings(
                 if (ImGui::Checkbox("VSync", &vsync)) {
                     window.setVsync(vsync);
                     settings.setVsyncEnabled(vsync);
+                    settings.setFpsUnlimited(window.getFpsUnlimited());
                 }
                 ImGui::Dummy(verticalSpacingDummy);
                 bool fpsUnlimited = window.getFpsUnlimited();
                 if (ImGui::Checkbox("FPS Unlimited", &fpsUnlimited)) {
                     window.setFpsUnlimited(fpsUnlimited);
                     settings.setFpsUnlimited(fpsUnlimited);
+                    settings.setVsyncEnabled(window.isVsyncEnabled());
                 }
                 if (!vsync && !fpsUnlimited) {
                     ImGui::Dummy(verticalSpacingDummy);
