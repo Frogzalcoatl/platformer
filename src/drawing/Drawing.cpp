@@ -4,7 +4,6 @@
 #include <cassert>
 #include <vector>
 
-// TODO: Account for polygon radius
 void Drawing::polygon(
     const b2Polygon& polygon,
     WindowManager& window,
@@ -22,30 +21,89 @@ void Drawing::polygon(
     float windowHeight = static_cast<float>(window.getSize().y);
     float cameraOffsetX = static_cast<float>(cameraOffsetPixels.x);
     float cameraOffsetY = static_cast<float>(cameraOffsetPixels.y);
-    for (size_t i = 0; i < static_cast<size_t>(polygon.count); i++) {
-        b2Vec2 pos = b2TransformPoint(transform, polygon.vertices[i]);
-        pos.x = pos.x * cameraScale - cameraOffsetX;
-        pos.y = windowHeight - (pos.y * cameraScale - cameraOffsetY);
-        points[i] = SDL_FPoint{pos.x, pos.y};
+    if (polygon.radius < 0.001f) {
+        for (size_t i = 0; i < static_cast<size_t>(polygon.count); i++) {
+            b2Vec2 pos = b2TransformPoint(transform, polygon.vertices[i]);
+            pos.x = pos.x * cameraScale - cameraOffsetX;
+            pos.y = windowHeight - (pos.y * cameraScale - cameraOffsetY);
+            points[i] = SDL_FPoint{pos.x, pos.y};
+        }
+        std::array<SDL_Vertex, B2_MAX_POLYGON_VERTICES> vertices;
+        for (size_t i = 0; i < static_cast<size_t>(polygon.count); i++) {
+            vertices[i].color = color;
+            vertices[i].position = points[i];
+        }
+        // Fan triangulation
+        std::vector<int> indices;
+        indices.reserve(static_cast<size_t>(polygon.count) * 3 - 2);
+        for (int current = 2; current <= polygon.count - 1; current++) {
+            indices.push_back(0);
+            indices.push_back(current - 1);
+            indices.push_back(current);
+        }
+        SDL_RenderGeometry(
+            renderer,
+            NULL,
+            vertices.data(),
+            polygon.count,
+            indices.data(),
+            static_cast<int>(indices.size())
+        );
+        return;
     }
-    std::array<SDL_Vertex, B2_MAX_POLYGON_VERTICES> vertices;
-    for (size_t i = 0; i < static_cast<size_t>(polygon.count); i++) {
+    // Used AI for help with radius stuff
+    std::vector<SDL_FPoint> roundedPoints;
+    const size_t count = static_cast<size_t>(polygon.count);
+    for (size_t i = 0; i < count; i++) {
+        b2Vec2 v = polygon.vertices[i];
+        size_t prevIndex = (i + count - 1) % count;
+        b2Vec2 nIn = polygon.normals[prevIndex];
+        b2Vec2 nOut = polygon.normals[i];
+        float thetaStart = atan2f(nIn.y, nIn.x);
+        float thetaEnd = atan2f(nOut.y, nOut.x);
+        float diff = thetaEnd - thetaStart;
+        if (diff < 0.f) {
+            diff += 2.f * SDL_PI_F;
+        }
+        float radiusPixels = polygon.radius * cameraScale;
+        float arcLengthPixels = radiusPixels * diff;
+        int arcSegments = static_cast<int>(arcLengthPixels / 3.f);
+        if (arcSegments < 3) {
+            arcSegments = 3;
+        }
+        for (int j = 0; j <= arcSegments; j++) {
+            float angle =
+                thetaStart + diff * (static_cast<float>(j) / static_cast<float>(arcSegments));
+            b2Vec2 offset = {polygon.radius * cosf(angle), polygon.radius * sinf(angle)};
+            b2Vec2 pLocal = {v.x + offset.x, v.y + offset.y};
+            b2Vec2 pWorld = b2TransformPoint(transform, pLocal);
+            SDL_FPoint pScreen;
+            pScreen.x = pWorld.x * cameraScale - cameraOffsetX;
+            pScreen.y = windowHeight - (pWorld.y * cameraScale - cameraOffsetY);
+            roundedPoints.push_back(pScreen);
+        }
+    }
+    size_t vertexCount = roundedPoints.size();
+    if (vertexCount < 3) {
+        return;
+    }
+    std::vector<SDL_Vertex> vertices(vertexCount);
+    for (size_t i = 0; i < vertexCount; i++) {
         vertices[i].color = color;
-        vertices[i].position = points[i];
+        vertices[i].position = roundedPoints[i];
     }
-    // Fan triangulation
     std::vector<int> indices;
-    indices.reserve(static_cast<size_t>(polygon.count) * 3 - 2);
-    for (int current = 2; current <= polygon.count - 1; current++) {
+    indices.reserve(vertexCount * 3 - 2);
+    for (size_t current = 2; current < vertexCount; current++) {
         indices.push_back(0);
-        indices.push_back(current - 1);
-        indices.push_back(current);
+        indices.push_back(static_cast<int>(current - 1));
+        indices.push_back(static_cast<int>(current));
     }
     SDL_RenderGeometry(
         renderer,
-        NULL,
+        nullptr,
         vertices.data(),
-        polygon.count,
+        static_cast<int>(vertexCount),
         indices.data(),
         static_cast<int>(indices.size())
     );
@@ -64,18 +122,58 @@ void Drawing::polygonBorders(
     if (!renderer) {
         return;
     }
-    std::array<SDL_FPoint, B2_MAX_POLYGON_VERTICES + 1> points;
     float windowHeight = static_cast<float>(window.getSize().y);
     float cameraOffsetX = static_cast<float>(cameraOffsetPixels.x);
     float cameraOffsetY = static_cast<float>(cameraOffsetPixels.y);
-    for (size_t i = 0; i < static_cast<size_t>(polygon.count); i++) {
-        b2Vec2 pos = b2TransformPoint(transform, polygon.vertices[i]);
-        points[i].x = pos.x * cameraScale - cameraOffsetX;
-        points[i].y = windowHeight - (pos.y * cameraScale - cameraOffsetY);
+    if (polygon.radius < 0.001f) {
+        std::array<SDL_FPoint, B2_MAX_POLYGON_VERTICES + 1> points;
+        for (size_t i = 0; i < static_cast<size_t>(polygon.count); i++) {
+            b2Vec2 pos = b2TransformPoint(transform, polygon.vertices[i]);
+            points[i].x = pos.x * cameraScale - cameraOffsetX;
+            points[i].y = windowHeight - (pos.y * cameraScale - cameraOffsetY);
+        }
+        points[static_cast<size_t>(polygon.count)] = points[0];
+        SDL_SetRenderDrawColorFloat(renderer, color.r, color.g, color.b, color.a);
+        SDL_RenderLines(renderer, points.data(), polygon.count + 1);
+        return;
     }
-    points[static_cast<size_t>(polygon.count)] = points[0];
+    // Used AI for help with the polygon radius drawing
+    std::vector<SDL_FPoint> roundedPoints;
+    const size_t count = static_cast<size_t>(polygon.count);
+    for (size_t i = 0; i < count; i++) {
+        b2Vec2 v = polygon.vertices[i];
+        size_t prevIndex = (i + count - 1) % count;
+        b2Vec2 nIn = polygon.normals[prevIndex];
+        b2Vec2 nOut = polygon.normals[i];
+        float thetaStart = atan2f(nIn.y, nIn.x);
+        float thetaEnd = atan2f(nOut.y, nOut.x);
+        float diff = thetaEnd - thetaStart;
+        if (diff < 0.f) {
+            diff += 2.f * SDL_PI_F;
+        }
+        float radiusPixels = polygon.radius * cameraScale;
+        float arcLengthPixels = radiusPixels * diff;
+        int arcSegments = static_cast<int>(arcLengthPixels / 3.f);
+        if (arcSegments < 3) {
+            arcSegments = 3;
+        }
+        for (int j = 0; j <= arcSegments; j++) {
+            float angle =
+                thetaStart + diff * (static_cast<float>(j) / static_cast<float>(arcSegments));
+            b2Vec2 offset = {polygon.radius * cosf(angle), polygon.radius * sinf(angle)};
+            b2Vec2 pLocal = {v.x + offset.x, v.y + offset.y};
+            b2Vec2 pWorld = b2TransformPoint(transform, pLocal);
+            SDL_FPoint pScreen;
+            pScreen.x = pWorld.x * cameraScale - cameraOffsetX;
+            pScreen.y = windowHeight - (pWorld.y * cameraScale - cameraOffsetY);
+            roundedPoints.push_back(pScreen);
+        }
+    }
+    if (!roundedPoints.empty()) {
+        roundedPoints.push_back(roundedPoints[0]);
+    }
     SDL_SetRenderDrawColorFloat(renderer, color.r, color.g, color.b, color.a);
-    SDL_RenderLines(renderer, points.data(), polygon.count + 1);
+    SDL_RenderLines(renderer, roundedPoints.data(), static_cast<int>(roundedPoints.size()));
 }
 
 void Drawing::showFanTriangulation(

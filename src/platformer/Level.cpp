@@ -393,7 +393,7 @@ void Level::addPlayer(InputSource playerSource, AssetManager& assets) {
     playerShapeDef.density = 4.f;
     std::unique_ptr<Entity> playerEntity = std::make_unique<Entity>(
         world,
-        b2MakeBox(0.5f, 1.f),
+        b2MakeRoundedBox(0.35f, 0.85f, 0.15f),
         b2Vec2{10.f, 4.f},
         playerBodyDef,
         playerShapeDef,

@@ -1,4 +1,7 @@
-Account for polygon radius in draw func
+Notificaiton ui element
+    This might be the time to add the min heap priority queue
+
+Account for any TODO comments
 
 Improve character physics
 
