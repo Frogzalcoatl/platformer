@@ -26,8 +26,8 @@ class JsonManager {
 
     // Template helper (Idea from AI)
     template <typename T> void set(std::string_view key, T value) {
-        rapidjson::Value rValue{value};
-        set(key, rValue);
+        rapidjson::Value rJsonValue{value};
+        set(key, rJsonValue);
     }
 
     void set(std::string_view key, rapidjson::Value& value);
