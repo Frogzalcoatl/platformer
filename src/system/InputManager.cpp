@@ -246,10 +246,7 @@ int InputManager::sdlGamepadsDetected() const {
 std::string InputManager::getSourceName(const InputSource& source) {
     std::string inputSourceName;
     if (source.type == InputType::Controller) {
-        inputSourceName = SDL_GetGamepadNameForID(source.sdlId);
-        if (inputSourceName.empty()) {
-            inputSourceName = "Controller " + std::to_string(source.sdlId);
-        }
+        return getGamepadName(source.sdlId);
     } else {
         inputSourceName = inputTypeToString(source.type);
     }
@@ -259,10 +256,13 @@ std::string InputManager::getSourceName(const InputSource& source) {
 std::string InputManager::getGamepadName(const SDL_JoystickID id) {
     SDL_Gamepad* gamepad = SDL_GetGamepadFromID(id);
     const char* name = SDL_GetGamepadName(gamepad);
+    if (!name) {
+        name = SDL_GetJoystickNameForID(id);
+    }
     if (name) {
         return std::string{name};
     } else {
-        return "Unknown Gamepad";
+        return "Controller " + std::to_string(id);
     }
 }
 
