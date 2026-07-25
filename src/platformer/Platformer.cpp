@@ -7,10 +7,10 @@
 
 Platformer::Platformer()
     : window{"C++ Platformer", Colors::Background}, assets(window.getSdlRenderer()), audio(assets),
-      ui(assets), settings("Settings.json") {
+      settings("Settings.json"), ui(assets) {
     assets.addGameControllerMappings("gamepads/gamecontrollerdb.txt");
     assets.addGameControllerMappings("gamepads/retrolink.txt");
-    loadSettings(false); // No need to read from disk. Happens in constructor
+    loadSettings(false); // No need to read from disk. Happens in settings constructor
 }
 
 void Platformer::loadSettings(bool readFromDisk) {
@@ -46,8 +46,8 @@ void Platformer::loadSettings(bool readFromDisk) {
     }
     window.setTargetFps(currentSettings.targetFps);
     window.setFpsUnlimited(currentSettings.fpsUnlimited);
-    ui.setUserPreferredScale(currentSettings.uiScale);
-    size_t userPreferredScale = ui.getUserPreferredScale();
+    ui.setScaleIndex(currentSettings.uiScale);
+    size_t userPreferredScale = ui.getScaleIndex();
     if (userPreferredScale != currentSettings.uiScale) {
         settings.setUiScale(userPreferredScale);
     }
@@ -118,8 +118,16 @@ void Platformer::handleSdlEvent() {
                 GameEvents::Push(inputEvent);
             }
         }; break;
+        case SDL_EVENT_GAMEPAD_ADDED: {
+            std::string message =
+                "Controller Connected: " + input.getGamepadName(event.gdevice.which);
+            GameEvents::Push(GameEventTypes::SendNotification{message});
+        }; break;
         case SDL_EVENT_GAMEPAD_REMOVED: {
             input.handleGamepadRemoved(event.gdevice);
+            std::string message =
+                "Controller Disconnected: " + input.getGamepadName(event.gdevice.which);
+            notificationManager.send(message);
         }; break;
         case SDL_EVENT_PINCH_BEGIN:
         case SDL_EVENT_PINCH_UPDATE:
@@ -166,7 +174,7 @@ void Platformer::handleInputGameEvent(const GameEventTypes::Input& inputEvent) {
             }
             break;
         case InputVerb::ToggleDebug:
-            ui.showDebug = !ui.showDebug;
+            ui.toggleDebug();
             break;
         case InputVerb::Cancel:
             // Purposely continuing into pause, cancel and pause are nearly identical
@@ -255,21 +263,27 @@ void Platformer::handleGameEvent() {
         } else if (
             const auto* playerSourceAdded = std::get_if<GameEventTypes::PlayerSourceAdded>(&event)
         ) {
-            // TODO: Some sort of ui stating a player has been added
             (void)playerSourceAdded;
             if (currentLevel) {
                 currentLevel->updatePlayers(input.getPlayerSources(), assets);
             }
             ui.setPlayerSourceAddedThisFrame(true);
+            if (ui.getState() != UiState::PlayerSourceSetup) {
+                std::string notification = "Player Source Added: \"" +
+                                           input.getSourceName(playerSourceAdded->source) + "\"";
+                notificationManager.send(notification);
+            }
         } else if (
             const auto* playerSourceRemoved =
                 std::get_if<GameEventTypes::PlayerSourceRemoved>(&event)
         ) {
-            // TODO: some sort of ui stating a player has been disconnected.
-            // Maybe a reconnect input source prompt
-            (void)playerSourceRemoved;
             if (currentLevel) {
                 currentLevel->updatePlayers(input.getPlayerSources(), assets);
+            }
+            if (ui.getState() != UiState::PlayerSourceSetup) {
+                std::string notification = "Player Source Removed: \"" +
+                                           input.getSourceName(playerSourceRemoved->source) + "\"";
+                notificationManager.send(notification);
             }
         } else if (
             const auto* detectNewPlayers =
@@ -297,6 +311,10 @@ void Platformer::handleGameEvent() {
                     camera->incrementScaleMultiplierBy(changeLevelZoom->amount);
                 }
             }
+        } else if (
+            const auto* sendNotification = std::get_if<GameEventTypes::SendNotification>(&event)
+        ) {
+            notificationManager.send(sendNotification->message, sendNotification->onClick);
         }
     }
 }
@@ -348,6 +366,7 @@ void Platformer::run() {
         }
         ui.update();
         ui.draw(window, settings, audio, input, currentLevel.get());
+        notificationManager.update(window, ui.getActualScale());
         window.render(frameStartNs);
         DiscordRpcManager::update();
     }

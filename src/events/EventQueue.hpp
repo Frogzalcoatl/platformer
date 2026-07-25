@@ -1,5 +1,6 @@
 #pragma once
 #include <SDL3/SDL.h>
+#include <functional>
 #include <optional>
 #include <string>
 #include <variant>
@@ -147,6 +148,11 @@ struct ShouldDetectNewPlayerSources {
 struct ChangeLevelZoom {
     float amount;
 };
+
+struct SendNotification {
+    std::string message;
+    std::function<void()> onClick = nullptr;
+};
 }
 
 // Learned about std::variant from AI. Seems like a reasonable choice here.
@@ -161,7 +167,8 @@ using GameEvent = std::variant<
     GameEventTypes::PlayerSourceAdded,
     GameEventTypes::PlayerSourceRemoved,
     GameEventTypes::ShouldDetectNewPlayerSources,
-    GameEventTypes::ChangeLevelZoom>;
+    GameEventTypes::ChangeLevelZoom,
+    GameEventTypes::SendNotification>;
 
 namespace GameEvents {
 bool Poll(GameEvent& event);

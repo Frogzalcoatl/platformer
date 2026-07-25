@@ -82,6 +82,8 @@ class InputManager {
 
     std::string getSourceName(const InputSource& source);
 
+    std::string getGamepadName(const SDL_JoystickID id);
+
     bool listenForNewGamepad = false;
     bool listenForValidKeyboard = false;
 

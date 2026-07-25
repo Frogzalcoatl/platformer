@@ -71,6 +71,12 @@ class UiManager {
 
     void fpsText(WindowManager& window);
 
+    bool showDebug = false;
+
+    const std::vector<UiState> debugVisibleIn = {
+        UiState::MainMenu, UiState::Paused, UiState::Playing
+    };
+
     void drawDebug(
         WindowManager& window, Entity* player, Camera* camera, InputManager& input, Level* level
     );
@@ -92,7 +98,7 @@ class UiManager {
   public:
     UiManager(AssetManager& assets, UiState startingState = UiState::MainMenu);
 
-    bool showDebug = false;
+    void toggleDebug();
 
     void draw(
         WindowManager& window,
@@ -127,7 +133,11 @@ class UiManager {
 
     int getFreeFingerCount() const;
 
-    void setUserPreferredScale(size_t scaleIndex);
+    void setScaleIndex(size_t scaleIndex);
 
-    size_t getUserPreferredScale() const;
+    size_t getScaleIndex() const;
+
+    float getActualScale() const {
+        return uiScale;
+    }
 };

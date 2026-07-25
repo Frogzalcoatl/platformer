@@ -116,6 +116,7 @@ set(SOURCES
     src/entities/Entity.cpp
     src/events/EventQueue.cpp
     src/imgui/ImGuiWidgets.cpp
+    src/imgui/NotificationManager.cpp
     src/imgui/TouchController.cpp
     src/imgui/UiManager.cpp
     src/platformer/Camera.cpp

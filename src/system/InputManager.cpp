@@ -256,6 +256,16 @@ std::string InputManager::getSourceName(const InputSource& source) {
     return inputSourceName;
 }
 
+std::string InputManager::getGamepadName(const SDL_JoystickID id) {
+    SDL_Gamepad* gamepad = SDL_GetGamepadFromID(id);
+    const char* name = SDL_GetGamepadName(gamepad);
+    if (name) {
+        return std::string{name};
+    } else {
+        return "Unknown Gamepad";
+    }
+}
+
 bool InputManager::addPlayerSource(const InputSource& source) {
     assert(source.type < InputType::InputTypeCount);
     if (playerSourceCount == MaxPlayerSources) {

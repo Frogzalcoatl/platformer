@@ -1,5 +1,6 @@
 #pragma once
 #include "assets/AssetManager.hpp"
+#include "imgui/NotificationManager.hpp"
 #include "imgui/UiManager.hpp"
 #include "platformer/Level.hpp"
 #include "system/AudioManager.hpp"
@@ -16,9 +17,10 @@ class Platformer {
     AssetManager assets;
     AudioManager audio;
     InputManager input;
-    UiManager ui;
     std::unique_ptr<Level> currentLevel;
     SettingsManager settings;
+    UiManager ui;
+    NotificationManager notificationManager;
 
     void loadSettings(bool readFromDisk);
 

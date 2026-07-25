@@ -1,5 +1,8 @@
-Notificaiton ui element
-    This might be the time to add the min heap priority queue
+Add priority queue for events
+
+Organize ui code into separate files
+
+Finish controls ui
 
 Account for any TODO comments
 

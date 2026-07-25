@@ -27,6 +27,13 @@ void UiManager::handleSounds() {
     }
 }
 
+void UiManager::toggleDebug() {
+    if (std::find(debugVisibleIn.begin(), debugVisibleIn.end(), currentState) !=
+        debugVisibleIn.end()) {
+        showDebug = !showDebug;
+    }
+}
+
 void UiManager::draw(
     WindowManager& window,
     SettingsManager& settings,
@@ -48,7 +55,8 @@ void UiManager::draw(
         }
         camera = level->getCamera();
     }
-    if (showDebug) {
+    if (showDebug && std::find(debugVisibleIn.begin(), debugVisibleIn.end(), currentState) !=
+                         debugVisibleIn.end()) {
         drawDebug(window, playerEntity, camera, input, level);
     }
     switch (currentState) {
@@ -191,7 +199,7 @@ int UiManager::getFreeFingerCount() const {
     }
 }
 
-void UiManager::setUserPreferredScale(size_t scaleIndex) {
+void UiManager::setScaleIndex(size_t scaleIndex) {
     const size_t MaxScaleIndex = UiSizePresets.size() - 1;
     if (scaleIndex > MaxScaleIndex) {
         SDL_LogWarn(
@@ -206,7 +214,7 @@ void UiManager::setUserPreferredScale(size_t scaleIndex) {
     SDL_Log("User preferred UI set scale to %zu", scaleIndex);
 }
 
-size_t UiManager::getUserPreferredScale() const {
+size_t UiManager::getScaleIndex() const {
     const float epsilon = 0.001f;
     for (size_t i = 0; i < UiSizePresets.size(); i++) {
         if (std::abs(UiSizePresets[i].scale - userPreferredScale) < epsilon) {
@@ -451,7 +459,7 @@ void UiManager::drawMainMenu(WindowManager& window) {
         ImVec2{absoluteCenterX, actualMenuTop}, ImGuiCond_Always, ImVec2{0.5f, 0.0f}
     );
     ImGui::SetNextWindowSize(menuSize);
-    if (ImGui::Begin("Main Menu", nullptr, staticFlags)) {
+    if (ImGui::Begin("Main Menu", nullptr, staticFlags | ImGuiWindowFlags_NoBringToFrontOnFocus)) {
         ImGui::PushFont(fontLarge);
         float verticalSpacing = 15.f * uiScale;
         float windowWidth = ImGui::GetWindowSize().x;
@@ -476,7 +484,6 @@ void UiManager::drawMainMenu(WindowManager& window) {
         }
         ImGui::PopFont();
     }
-    ImGui::SetWindowFocus("Main Menu");
     ImGui::End();
 }
 
@@ -491,7 +498,8 @@ void UiManager::drawSettings(
     ImGui::Begin(
         "SettingsBackground",
         nullptr,
-        staticFlags | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoNav
+        staticFlags | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoNav |
+            ImGuiWindowFlags_NoBringToFrontOnFocus
     );
     ImGui::End();
     setNextWindowSafeArea(window);
@@ -691,7 +699,8 @@ void UiManager::drawPlayerSourceSetup(WindowManager& window, InputManager& input
     ImGui::Begin(
         "PlayerSetupBackground",
         nullptr,
-        staticFlags | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoNav
+        staticFlags | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoNav |
+            ImGuiWindowFlags_NoBringToFrontOnFocus
     );
     ImGui::End();
     setNextWindowSafeArea(window);
@@ -777,7 +786,7 @@ void UiManager::drawPauseMenu(WindowManager& window) {
         ImVec2{absoluteCenterX, actualMenuTop}, ImGuiCond_Always, ImVec2{0.5f, 0.0f}
     );
     ImGui::SetNextWindowSize(menuSize);
-    if (ImGui::Begin("Pause Menu", nullptr, staticFlags)) {
+    if (ImGui::Begin("Pause Menu", nullptr, staticFlags | ImGuiWindowFlags_NoBringToFrontOnFocus)) {
         ImGui::PushFont(fontLarge);
         float verticalSpacing = 15.f * uiScale;
         float windowWidth = ImGui::GetWindowSize().x;
