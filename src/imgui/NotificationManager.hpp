@@ -25,7 +25,7 @@ class NotificationManager {
     NotificationManager() = default;
 
     // Length of time notifications are shown before being removed
-    unsigned int durationSeconds = 5;
+    unsigned int durationSeconds = 10;
 
     void send(std::string_view message, std::function<void()> onClick = nullptr);
 

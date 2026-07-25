@@ -119,9 +119,9 @@ void Platformer::handleSdlEvent() {
             }
         }; break;
         case SDL_EVENT_GAMEPAD_ADDED: {
-            std::string message =
-                "Controller Connected: " + input.getGamepadName(event.gdevice.which);
-            GameEvents::Push(GameEventTypes::SendNotification{message});
+            GameEvents::Schedule(
+                GameEventTypes::GamepadConnectedNotification{event.gdevice.which}, 25
+            );
         }; break;
         case SDL_EVENT_GAMEPAD_REMOVED: {
             input.handleGamepadRemoved(event.gdevice);
@@ -212,6 +212,7 @@ void Platformer::handleInputGameEvent(const GameEventTypes::Input& inputEvent) {
 }
 
 void Platformer::handleGameEvent() {
+    GameEvents::UpdateScheduledEvents();
     GameEvent event;
     while (GameEvents::Poll(event)) {
         if (std::holds_alternative<GameEventTypes::CloseWindow>(event)) {
@@ -315,6 +316,13 @@ void Platformer::handleGameEvent() {
             const auto* sendNotification = std::get_if<GameEventTypes::SendNotification>(&event)
         ) {
             notificationManager.send(sendNotification->message, sendNotification->onClick);
+        } else if (
+            const auto* gamepadEventNotification =
+                std::get_if<GameEventTypes::GamepadConnectedNotification>(&event)
+        ) {
+            std::string message =
+                "Controller Connected: " + input.getGamepadName(gamepadEventNotification->id);
+            notificationManager.send(message);
         }
     }
 }

@@ -2,8 +2,10 @@
 #include <SDL3/SDL.h>
 #include <functional>
 #include <optional>
+#include <queue>
 #include <string>
 #include <variant>
+#include <vector>
 
 enum class InputVerb : uint8_t {
     Up,
@@ -153,6 +155,12 @@ struct SendNotification {
     std::string message;
     std::function<void()> onClick = nullptr;
 };
+
+// You have to wait a bit before the actual gamepad name is accessible
+// Use event scheduler
+struct GamepadConnectedNotification {
+    SDL_JoystickID id;
+};
 }
 
 // Learned about std::variant from AI. Seems like a reasonable choice here.
@@ -168,9 +176,20 @@ using GameEvent = std::variant<
     GameEventTypes::PlayerSourceRemoved,
     GameEventTypes::ShouldDetectNewPlayerSources,
     GameEventTypes::ChangeLevelZoom,
-    GameEventTypes::SendNotification>;
+    GameEventTypes::SendNotification,
+    GameEventTypes::GamepadConnectedNotification>;
+
+struct ScheduledEvent {
+    Uint64 executeTimeMS; // SDL_GetTicks() timestamp of when this should happen
+    GameEvent event;
+    bool operator>(const ScheduledEvent& other) const {
+        return executeTimeMS > other.executeTimeMS;
+    }
+};
 
 namespace GameEvents {
 bool Poll(GameEvent& event);
 void Push(GameEvent event);
+void Schedule(GameEvent event, Uint64 delayMS);
+void UpdateScheduledEvents();
 }
