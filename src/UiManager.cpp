@@ -291,8 +291,8 @@ void UiManager::drawLargeLogo(WindowManager& window, float menuHeight) {
         static_cast<float>(safeArea.h)
     };
     float absoluteCenterX = static_cast<float>(window.getSize().x) * 0.5f;
-    float idealPadding = 15.f;
-    float logoMenuSpacing = 20.f * uiScale;
+    float idealPadding = 5.f;
+    float logoMenuSpacing = 5.f * uiScale;
     float totalRequiredHeight = logoHeight + logoMenuSpacing + menuHeight;
     float maxAllowedPadding = safeAreaF.h - totalRequiredHeight;
     float actualLogoTopPadding =
@@ -429,14 +429,11 @@ void UiManager::drawMainMenu(WindowManager& window) {
     WindowVec2 windowSize = window.getSize();
     ImVec2 windowSizeF{static_cast<float>(windowSize.x), static_cast<float>(windowSize.y)};
     float absoluteCenterX = windowSizeF.x * 0.5f;
-    float centerY = safeAreaF.y + safeAreaF.h * 0.5f;
     ImVec2 menuSize = ImVec2{300.f * uiScale, menuHeight};
-    float centeredMenuTop = centerY - (menuSize.y * 0.5f);
-    float logoTop = safeAreaF.y + 50.f * uiScale;
+    float logoTop = safeAreaF.y + logoTopPadding;
     float logoBottom = logoTop + logoHeight;
-    float logoMenuSpacing = 20.f * uiScale;
-    float minMenuTop = logoBottom + logoMenuSpacing;
-    float actualMenuTop = (centeredMenuTop > minMenuTop) ? centeredMenuTop : minMenuTop;
+    float logoMenuSpacing = 15.f * uiScale;
+    float actualMenuTop = logoBottom + logoMenuSpacing;
     ImGui::SetNextWindowPos(
         ImVec2{absoluteCenterX, actualMenuTop}, ImGuiCond_Always, ImVec2{0.5f, 0.0f}
     );
@@ -758,14 +755,11 @@ void UiManager::drawPauseMenu(WindowManager& window) {
     WindowVec2 windowSize = window.getSize();
     ImVec2 windowSizeF{static_cast<float>(windowSize.x), static_cast<float>(windowSize.y)};
     float absoluteCenterX = windowSizeF.x * 0.5f;
-    float centerY = safeAreaF.y + safeAreaF.h * 0.5f;
     ImVec2 menuSize = ImVec2{300.f * uiScale, menuHeight};
-    float centeredMenuTop = centerY - (menuSize.y * 0.5f);
-    float logoTop = safeAreaF.y + 50.f * uiScale;
+    float logoTop = safeAreaF.y + logoTopPadding;
     float logoBottom = logoTop + logoHeight;
-    float logoMenuSpacing = 20.f * uiScale;
-    float minMenuTop = logoBottom + logoMenuSpacing;
-    float actualMenuTop = (centeredMenuTop > minMenuTop) ? centeredMenuTop : minMenuTop;
+    float logoMenuSpacing = 15.f * uiScale;
+    float actualMenuTop = logoBottom + logoMenuSpacing;
     ImGui::SetNextWindowPos(
         ImVec2{absoluteCenterX, actualMenuTop}, ImGuiCond_Always, ImVec2{0.5f, 0.0f}
     );
