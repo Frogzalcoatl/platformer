@@ -21,6 +21,10 @@ class UiManager {
     bool stateChangedThisFrame = false;
     bool playerSourceAddedThisFrame = false; // temporary fix probably
 
+    bool itemHoveredThisFrame = false;
+    bool itemActiveThisFrame = false;
+    void handleSounds(); // Should be called every frame
+
     const std::array<UiSizePreset, 6> UiSizePresets = {
         {{0.5f, "Extra Small"},
          {1.0f, "Small"},

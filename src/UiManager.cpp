@@ -15,6 +15,19 @@ UiManager::UiManager(AssetManager& assets, UiState startingState) : currentState
     defaultStyle = ImGui::GetStyle();
 }
 
+void UiManager::handleSounds() {
+    bool itemHoveredLastFrame = itemHoveredThisFrame;
+    itemHoveredThisFrame = ImGui::IsAnyItemHovered();
+    if (!itemHoveredLastFrame && itemHoveredThisFrame) {
+        GameEvents::Push(GameEventTypes::PlaySound{AssetPaths::Sounds::Hover});
+    }
+    bool itemActiveLastFrame = itemActiveThisFrame;
+    itemActiveThisFrame = ImGui::IsAnyItemActive();
+    if (!itemActiveLastFrame && itemActiveThisFrame) {
+        GameEvents::Push(GameEventTypes::PlaySound{AssetPaths::Sounds::Click});
+    }
+}
+
 void UiManager::draw(
     WindowManager& window,
     SettingsManager& settings,
@@ -22,6 +35,7 @@ void UiManager::draw(
     InputManager& input,
     Level* level
 ) {
+    handleSounds();
     updateActiveScale(window);
     Entity* playerEntity = nullptr;
     Camera* camera = nullptr;

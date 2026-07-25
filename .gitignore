@@ -17,3 +17,6 @@ local.properties
 **/app/build/
 android-project/app/src/main/assets/*
 android-project/app/src/main/jniLibs/*
+
+# FL Studio
+Backup/

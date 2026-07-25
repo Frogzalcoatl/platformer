@@ -10,6 +10,8 @@ inline constexpr std::string_view Consolas = "fonts/consola.ttf";
 
 namespace Sounds {
 inline constexpr std::string_view Jump = "sounds/jump.wav";
+inline constexpr std::string_view Click = "sounds/click.wav";
+inline constexpr std::string_view Hover = "sounds/hover.wav";
 }
 
 namespace Textures {
