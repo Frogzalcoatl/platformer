@@ -134,7 +134,7 @@ set(SOURCES
 )
 
 if (ANDROID)
-    list(APPEND SOURCES src/Android.cpp)
+    list(APPEND SOURCES src/system/Android.cpp)
     add_library(${PROJECT_NAME} SHARED ${SOURCES})
 else()
     add_executable(${PROJECT_NAME} ${SOURCES})

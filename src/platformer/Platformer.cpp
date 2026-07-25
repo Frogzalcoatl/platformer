@@ -5,6 +5,10 @@
 #include <imgui_impl_sdlrenderer3.h>
 #include <stdexcept>
 
+#ifdef SDL_PLATFORM_ANDROID
+#include "system/Android.hpp"
+#endif
+
 Platformer::Platformer()
     : window{"C++ Platformer", Colors::Background}, assets(window.getSdlRenderer()), audio(assets),
       settings("Settings.json"), ui(assets) {

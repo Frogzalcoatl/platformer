@@ -5,7 +5,9 @@ void NotificationManager::removeIndex(size_t i) {
     if (i >= notifications.size()) {
         return;
     }
-    notifications.erase(notifications.begin() + i);
+    // std::ptrdiff_t "Pointer Difference" i think
+    // Just added to avoid warnings about num type
+    notifications.erase(notifications.begin() + static_cast<std::ptrdiff_t>(i));
 }
 
 void NotificationManager::send(std::string_view message, std::function<void()> onClick) {
@@ -23,11 +25,7 @@ void NotificationManager::update(WindowManager& window, const float uiScale) {
         // Elements should always be in order of timestamp so this should always work
         notifications.erase(notifications.begin());
     }
-    for (size_t i = 0; i < notifications.size(); i++) {
-        if (notifications[i].dismissed) {
-            notifications.erase(notifications.begin() + i);
-        }
-    }
+    std::erase_if(notifications, [](const Notification& n) { return n.dismissed; });
     draw(window, uiScale);
 }
 

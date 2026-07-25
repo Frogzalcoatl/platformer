@@ -325,7 +325,11 @@ void UiManager::drawLargeLogo(WindowManager& window, float menuHeight) {
     ImGui::SetNextWindowPos(
         ImVec2{absoluteCenterX, safeAreaF.y + logoTopPadding}, ImGuiCond_Always, ImVec2{0.5f, 0.f}
     );
-    if (ImGui::Begin("Main Menu Title", nullptr, staticFlags | ImGuiWindowFlags_AlwaysAutoResize)) {
+    if (ImGui::Begin(
+            "Main Menu Title",
+            nullptr,
+            staticFlags | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing
+        )) {
         ImGui::PushFont(fontTitle);
         ImGui::Text("Platformer");
         ImGui::PopFont();
@@ -494,14 +498,6 @@ void UiManager::drawSettings(
     InputManager& input,
     Level* level
 ) {
-    setNextWindowFullscreen();
-    ImGui::Begin(
-        "SettingsBackground",
-        nullptr,
-        staticFlags | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoNav |
-            ImGuiWindowFlags_NoBringToFrontOnFocus
-    );
-    ImGui::End();
     setNextWindowSafeArea(window);
     const ImVec2 verticalSpacingDummy{0.f, 10.f * uiScale};
     const ImVec2 horizontalSpacingDummy{10.f * uiScale, 0.f};
@@ -511,7 +507,7 @@ void UiManager::drawSettings(
             nullptr,
             ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse |
                 ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground |
-                ImGuiWindowFlags_NoMove
+                ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus
         )) {
         ImGui::PushFont(fontLarge);
         if (ImGui::Button("Back")) {
@@ -692,19 +688,23 @@ void UiManager::drawSettings(
         ImGui::PopFont();
     }
     ImGui::End();
-}
-
-void UiManager::drawPlayerSourceSetup(WindowManager& window, InputManager& input) {
     setNextWindowFullscreen();
     ImGui::Begin(
-        "PlayerSetupBackground",
+        "SettingsBackground",
         nullptr,
         staticFlags | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoNav |
             ImGuiWindowFlags_NoBringToFrontOnFocus
     );
     ImGui::End();
+}
+
+void UiManager::drawPlayerSourceSetup(WindowManager& window, InputManager& input) {
     setNextWindowSafeArea(window);
-    ImGui::Begin("Player Source Setup", nullptr, staticFlags | ImGuiWindowFlags_NoBackground);
+    ImGui::Begin(
+        "Player Source Setup",
+        nullptr,
+        staticFlags | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoBringToFrontOnFocus
+    );
     ImGui::PushFont(fontDoubleLarge);
     ImGui::Text("Player Source Setup:");
     ImGui::PopFont();
@@ -753,6 +753,10 @@ void UiManager::drawPlayerSourceSetup(WindowManager& window, InputManager& input
             GameEvents::Push(GameEventTypes::SetLevelName{LevelName::Test});
             // To make sure the ui screen is switched after the level is loaded.
             GameEvents::Push(GameEventTypes::SetUiState{UiState::Playing});
+        } else {
+            GameEvents::Push(
+                GameEventTypes::SendNotification{"Must connect at least one valid player source"}
+            );
         }
     }
     ImGui::SameLine();
@@ -761,6 +765,14 @@ void UiManager::drawPlayerSourceSetup(WindowManager& window, InputManager& input
     }
     ImGui::PopFont();
     applyTouchScroll();
+    ImGui::End();
+    setNextWindowFullscreen();
+    ImGui::Begin(
+        "PlayerSetupBackground",
+        nullptr,
+        staticFlags | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoNav |
+            ImGuiWindowFlags_NoBringToFrontOnFocus
+    );
     ImGui::End();
 }
 

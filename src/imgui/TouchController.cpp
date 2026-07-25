@@ -85,7 +85,7 @@ void TouchController::draw(WindowManager& window, float uiScale) {
         );
     }
     wasPauseTouched = isPauseTouched;
-    ImVec2 buttonSize = ImVec2{200.f * uiScale, 200.f * uiScale};
+    ImVec2 buttonSize = ImVec2{100.f * uiScale, 100.f * uiScale};
     ImVec2 upButtonPos{safeAreaF.w - buttonSize.x, safeAreaF.y + safeAreaF.h - buttonSize.y * 2.f};
     ImGui::SetCursorPos(upButtonPos);
     Drawing::CustomArrowButton("##Up", ImGuiDir_Up, buttonSize);

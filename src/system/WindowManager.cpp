@@ -149,8 +149,8 @@ void WindowManager::setTargetFps(Uint64 value) {
     if (value == 0) {
         SDL_LogWarn(
             SDL_LOG_CATEGORY_APPLICATION,
-            "Ignoring attempt to set target fps to 0. It is still set to %llu",
-            targetFps
+            "Ignoring attempt to set target fps to 0. It is still set to %d",
+            static_cast<int>(targetFps)
         );
         return;
     }
