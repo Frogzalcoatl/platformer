@@ -36,11 +36,14 @@ void NotificationManager::draw(WindowManager& window, const float uiScale) {
         return;
     }
     const SDL_Rect safeArea = window.getSafeArea();
-    const ImVec2 notificationSize{250.f * uiScale, 50.f * uiScale};
-    const ImVec2 xButtonSize{50.f * uiScale, 50.f * uiScale};
     const ImVec2 windowPos{
         static_cast<float>(safeArea.x + safeArea.w), static_cast<float>(safeArea.y)
     };
+    const float buttonWidth = 250.f * uiScale;
+    const float xButtonWidth = 50.f * uiScale;
+    ImGuiStyle& style = ImGui::GetStyle();
+    const float wrapWidth = buttonWidth - (style.FramePadding.x * 2.f);
+    const float minHeight = 50.f * uiScale;
     const float verticalSpacing = 10.f * uiScale;
     const ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground |
                                    ImGuiWindowFlags_AlwaysAutoResize |
@@ -48,19 +51,37 @@ void NotificationManager::draw(WindowManager& window, const float uiScale) {
     ImGui::SetNextWindowPos(windowPos, ImGuiCond_Always, ImVec2{1.f, 0.f});
     if (ImGui::Begin("Notifications", nullptr, flags)) {
         for (size_t i = 0; i < notifications.size(); i++) {
-            std::string label = notifications[i].message + "##Notifications_" + std::to_string(i);
-            if (ImGui::Button(label.c_str(), notificationSize)) {
+            const ImVec2 textSize =
+                ImGui::CalcTextSize(notifications[i].message.c_str(), nullptr, false, wrapWidth);
+            const float calculatedHeight = textSize.y + (style.FramePadding.y * 2.f);
+            const float finalHeight = (calculatedHeight > minHeight) ? calculatedHeight : minHeight;
+            const ImVec2 notificationSize{buttonWidth, finalHeight};
+            ImVec2 originalCursorPos = ImGui::GetCursorPos();
+            const std::string buttonId = "##Notifications_" + std::to_string(i);
+            if (ImGui::Button(buttonId.c_str(), notificationSize)) {
                 if (notifications[i].onClick) {
                     notifications[i].dismissed = true;
                     notifications[i].onClick();
                 }
             }
-            ImGui::SameLine(0.f, 0.f);
-            std::string xLabel = "X##Notifications_" + std::to_string(i);
-            if (ImGui::Button(xLabel.c_str(), xButtonSize)) {
+            float textOffsetY = (finalHeight - textSize.y) * 0.5f;
+            ImGui::SetCursorPos(
+                ImVec2{
+                    originalCursorPos.x + style.FramePadding.x, originalCursorPos.y + textOffsetY
+                }
+            );
+            ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + wrapWidth);
+            ImGui::TextUnformatted(notifications[i].message.c_str());
+            ImGui::PopTextWrapPos();
+            ImGui::SetCursorPos(ImVec2{originalCursorPos.x + buttonWidth, originalCursorPos.y});
+            std::string xLabel = "X##NotificationsX_" + std::to_string(i);
+            if (ImGui::Button(xLabel.c_str(), ImVec2{xButtonWidth, finalHeight})) {
                 notifications[i].dismissed = true;
             }
-            ImGui::Dummy(ImVec2{0.f, verticalSpacing});
+            ImGui::SetCursorPos(
+                ImVec2{originalCursorPos.x, originalCursorPos.y + finalHeight + verticalSpacing}
+            );
+            ImGui::Dummy(ImVec2{0.f, 0.f});
         }
     }
     ImGui::End();
