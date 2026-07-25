@@ -1,6 +1,6 @@
-#include "DiscordRpcManager.hpp"
-#include "FormatLogs.hpp"
-#include "Platformer.hpp"
+#include "platformer/Platformer.hpp"
+#include "system/DiscordRpcManager.hpp"
+#include "system/LogFormatting.hpp"
 #include <SDL3/SDL_main.h>
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>

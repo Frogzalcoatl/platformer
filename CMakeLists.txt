@@ -110,25 +110,26 @@ endif()
 
 # Source C++ Files
 set(SOURCES
-    src/AssetManager.cpp
-    src/AudioManager.cpp
-    src/Camera.cpp
-    src/DiscordRpcManager.cpp
-    src/Drawing.cpp
-    src/Entity.cpp
-    src/EntityController.cpp
-    src/Events.cpp
-    src/FormatLogs.cpp
-    src/ImGuiDrawing.cpp
-    src/InputManager.cpp
-    src/JsonManager.cpp
-    src/Level.cpp
     src/Main.cpp
-    src/Platformer.cpp
-    src/SettingsManager.cpp
-    src/TouchController.cpp
-    src/UiManager.cpp
-    src/WindowManager.cpp
+    src/assets/AssetManager.cpp
+    src/drawing/Drawing.cpp
+    src/entities/Entity.cpp
+    src/events/EventQueue.cpp
+    src/imgui/ImGuiWidgets.cpp
+    src/imgui/TouchController.cpp
+    src/imgui/UiManager.cpp
+    src/platformer/Camera.cpp
+    src/platformer/EntityController.cpp
+    src/platformer/Level.cpp
+    src/platformer/Platformer.cpp
+    src/system/Android.cpp
+    src/system/Audiomanager.cpp
+    src/system/DiscordRpcManager.cpp
+    src/system/LogFormatting.cpp
+    src/system/InputManager.cpp
+    src/system/WindowManager.cpp
+    src/user-data/JsonManager.cpp
+    src/user-data/SettingsManager.cpp
 )
 
 if (ANDROID)
