@@ -66,6 +66,10 @@ void TouchController::draw(WindowManager& window, float uiScale) {
         static_cast<float>(safeArea.w),
         static_cast<float>(safeArea.h)
     };
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.12f, 0.12f, 0.12f, 0.40f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.25f, 0.25f, 0.25f, 0.60f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.40f, 0.40f, 0.40f, 0.80f));
+    ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(1.00f, 1.00f, 1.00f, 0.45f));
     std::vector<TouchButtonRect> buttonRects;
     ImVec2 pauseButtonSize{100.f * uiScale, 100.f * uiScale};
     ImVec2 pauseButtonPos{windowSizeF.x / 2.f - pauseButtonSize.x, 0.f};
@@ -114,6 +118,7 @@ void TouchController::draw(WindowManager& window, float uiScale) {
     buttonRects.push_back({ImGui::GetItemRectMin(), ImGui::GetItemRectMax()});
     entityController.movement[static_cast<size_t>(EntityMovement::Right)] =
         isLastItemTouched(activeTouchPositions);
+    ImGui::PopStyleColor(4);
     ImGui::End();
     int uiFingers = 0;
     for (const ImVec2& pos : activeTouchPositions) {

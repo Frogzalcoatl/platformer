@@ -243,9 +243,20 @@ void UiManager::updateActiveScale(WindowManager& window) {
     SDL_Rect safeArea = window.getSafeArea();
     const float baseMinWidth = 480.f;
     const float baseMinHeight = 540.f;
-    float maxScaleW = static_cast<float>(safeArea.w) / baseMinWidth;
-    float maxScaleH = static_cast<float>(safeArea.h) / baseMinHeight;
-    float maxSafeScale = (maxScaleW < maxScaleH) ? maxScaleW : maxScaleH;
+    const float baseDiagonal =
+        std::sqrt(baseMinWidth * baseMinWidth + baseMinHeight * baseMinHeight);
+    float currentDiagonal =
+        std::sqrt(static_cast<float>(safeArea.w * safeArea.w + safeArea.h * safeArea.h));
+    float maxSafeScale = currentDiagonal / baseDiagonal;
+    const float maxMenuWidth = 320.f;
+    const float maxMenuHeight = 350.f;
+
+    float fitScaleW = static_cast<float>(safeArea.w) / maxMenuWidth;
+    float fitScaleH = static_cast<float>(safeArea.h) / maxMenuHeight;
+    float absoluteMaxScale = (fitScaleW < fitScaleH) ? fitScaleW : fitScaleH;
+    if (maxSafeScale > absoluteMaxScale) {
+        maxSafeScale = absoluteMaxScale;
+    }
     if (maxSafeScale < 0.25f) {
         maxSafeScale = 0.25f;
     }

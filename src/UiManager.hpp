@@ -49,8 +49,9 @@ class UiManager {
 
     const int MaxVolume = 100;
 
-    ImGuiWindowFlags staticFlags =
-        ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings;
+    ImGuiWindowFlags staticFlags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+                                   ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse |
+                                   ImGuiWindowFlags_NoSavedSettings;
 
     ImGuiSliderFlags sliderFlags = ImGuiSliderFlags_NoInput;
 
