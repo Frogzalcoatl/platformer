@@ -18,10 +18,10 @@ class SettingsManager : public JsonManager {
     const Settings defaultSettings;
     Settings activeSettings;
 
+    void readFromDisk();
+
   public:
     SettingsManager(std::string_view relativeFilePath);
-
-    void readFromDisk();
 
     bool saveToDisk();
 

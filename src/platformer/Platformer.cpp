@@ -14,13 +14,10 @@ Platformer::Platformer()
       settings("Settings.json"), ui(assets) {
     assets.addGameControllerMappings("gamepads/gamecontrollerdb.txt");
     assets.addGameControllerMappings("gamepads/retrolink.txt");
-    loadSettings(false); // No need to read from disk. Happens in settings constructor
+    loadSettings();
 }
 
-void Platformer::loadSettings(bool readFromDisk) {
-    if (readFromDisk) {
-        settings.readFromDisk();
-    }
+void Platformer::loadSettings() {
     const Settings& currentSettings = settings.get();
     window.setVsync(currentSettings.vsyncEnabled);
 #ifdef SDL_PLATFORM_ANDROID

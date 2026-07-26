@@ -5,6 +5,7 @@
 #include <jni.h>
 #endif
 
+// Needed AI for help with jni
 void Android::quitAndRemoveTask() {
 #ifdef SDL_PLATFORM_ANDROID
     JNIEnv* env = (JNIEnv*)SDL_GetAndroidJNIEnv();

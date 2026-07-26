@@ -22,7 +22,7 @@ class Platformer {
     UiManager ui;
     NotificationManager notificationManager;
 
-    void loadSettings(bool readFromDisk);
+    void loadSettings();
 
     void handleSdlEvent();
 
