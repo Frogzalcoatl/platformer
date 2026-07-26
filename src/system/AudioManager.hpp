@@ -1,6 +1,6 @@
 #pragma once
 #include "assets/AssetManager.hpp"
-#include "events/EventQueue.hpp"
+#include "platformer/GameEvents.hpp"
 #include <SDL3_mixer/SDL_mixer.h>
 #include <array>
 #include <memory>

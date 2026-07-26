@@ -45,7 +45,10 @@ void Platformer::loadSettings() {
         settings.setTargetFps(MaxTargetFps);
     }
     if (settings.createdNewFileOnRead()) {
-        window.setTargetFps(static_cast<Uint64>(SDL_roundf(window.getMonitorRefreshRate())));
+        const Uint64 monitorRefreshRate =
+            static_cast<Uint64>(SDL_roundf(window.getMonitorRefreshRate()));
+        settings.setTargetFps(static_cast<unsigned int>(monitorRefreshRate));
+        window.setTargetFps(monitorRefreshRate);
     } else {
         window.setTargetFps(currentSettings.targetFps);
     }

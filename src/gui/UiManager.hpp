@@ -1,6 +1,6 @@
 #pragma once
-#include "events/EventQueue.hpp"
 #include "gui/TouchController.hpp"
+#include "platformer/GameEvents.hpp"
 #include "platformer/Level.hpp"
 #include "system/AudioManager.hpp"
 #include "system/InputManager.hpp"

@@ -1,7 +1,7 @@
 #pragma once
 #include "entities/Entity.hpp"
-#include "events/EventQueue.hpp"
 #include "platformer/Camera.hpp"
+#include "platformer/GameEvents.hpp"
 #include <optional>
 
 class EntityController {

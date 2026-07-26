@@ -2,8 +2,8 @@
 #include "assets/AssetPaths.hpp"
 #include "assets/Colors.hpp"
 #include "assets/LevelAssets.hpp"
-#include "events/EventQueue.hpp"
 #include "platformer/EntityController.hpp"
+#include "platformer/GameEvents.hpp"
 #include "system/AudioManager.hpp"
 #include "system/InputManager.hpp"
 #include <box2d/box2d.h>

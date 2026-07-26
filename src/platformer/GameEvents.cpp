@@ -1,4 +1,4 @@
-#include "events/EventQueue.hpp"
+#include "platformer/GameEvents.hpp"
 #include <SDL3/SDL.h>
 #include <array>
 

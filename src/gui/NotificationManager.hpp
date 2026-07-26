@@ -1,5 +1,5 @@
 #pragma once
-#include "events/EventQueue.hpp"
+#include "platformer/GameEvents.hpp"
 #include "system/WindowManager.hpp"
 #include <SDL3/SDL.h>
 #include <optional>

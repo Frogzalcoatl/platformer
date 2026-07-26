@@ -114,7 +114,6 @@ set(SOURCES
     src/assets/AssetManager.cpp
     src/drawing/Drawing.cpp
     src/entities/Entity.cpp
-    src/events/EventQueue.cpp
     src/gui/ImGuiWidgets.cpp
     src/gui/NotificationManager.cpp
     src/gui/TouchController.cpp
@@ -126,6 +125,7 @@ set(SOURCES
     src/gui/ui-states/Settings.cpp
     src/platformer/Camera.cpp
     src/platformer/EntityController.cpp
+    src/platformer/GameEvents.cpp
     src/platformer/Level.cpp
     src/platformer/Platformer.cpp
     src/system/Android.cpp
