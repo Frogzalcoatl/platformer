@@ -4,8 +4,6 @@ Finish controls settings ui
 
 Improve camera following when there are multiple player sources
 
-Determine why android pinch zooming seems to be able to go beyond the limits
-
 Handle player source removals more gracefully
 
 Improve character physics

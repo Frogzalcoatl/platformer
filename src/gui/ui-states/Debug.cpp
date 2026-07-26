@@ -66,9 +66,11 @@ void UiManager::drawDebug(
             const b2Vec2 safeAreaSize = camera->getSafeAreaSize();
             const b2Vec2 safeAreaValue = camera->getEntitySafeAreaValue();
             const b2Vec2 mouseWorldPos = camera->pixelPosToWorldPos(window.getMousePos());
+            const float scaleMultiplier = camera->getScaleMultiplier();
             ImGui::Text("\nCamera:");
             ImGui::Text(
-                "Offset Pixels: %d, %d\nOffset World: %.2f, %.2f\nSize World: %.2f, %.2f\nSafe Area Size World: %.2f, %.2f\nPlayer Ratio from Center: %.2f, %.2f\nMouse Position World: %.2f, %.2f",
+                "Zoom: %.2f\nOffset Pixels: %d, %d\nOffset World: %.2f, %.2f\nSize World: %.2f, %.2f\nSafe Area Size World: %.2f, %.2f\nPlayer Ratio from Center: %.2f, %.2f\nMouse Position World: %.2f, %.2f",
+                scaleMultiplier,
                 offsetPixels.x,
                 offsetPixels.y,
                 offsetWorld.x,

@@ -12,6 +12,8 @@ class Camera {
     b2Vec2 offsetWorld = {0.f, 0.f};
     float scaleFactor = 1.f;
     float scaleMultiplier = 1.f;
+    float MinScaleMultiplier = 0.05f;
+    float MaxScaleMultiplier = 2.5f;
 
     void applyViewableLimits(b2Vec2& camPos);
 
@@ -33,6 +35,8 @@ class Camera {
     b2Vec2 getOffsetWorld() const;
 
     float getScaleFactor() const;
+
+    float getScaleMultiplier() const;
 
     b2Vec2 getSafeAreaSize() const;
 

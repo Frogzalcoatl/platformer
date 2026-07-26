@@ -117,6 +117,10 @@ float Camera::getScaleFactor() const {
     return scaleFactor;
 }
 
+float Camera::getScaleMultiplier() const {
+    return scaleMultiplier;
+}
+
 b2Vec2 Camera::getSafeAreaSize() const {
     return safeAreaSize;
 }
@@ -133,7 +137,8 @@ void Camera::centerOnEntity(float alpha) {
 }
 
 void Camera::incrementScaleMultiplierBy(float amount) {
-    if (scaleMultiplier + amount <= 0) {
+    if (scaleMultiplier + amount <= MinScaleMultiplier ||
+        scaleMultiplier + amount >= MaxScaleMultiplier) {
         return;
     }
     scaleMultiplier += amount;
