@@ -56,14 +56,7 @@ void UiManager::drawSettings(
                     ImGui::Dummy(verticalSpacingDummy);
                     static int tempFps = static_cast<int>(window.getTargetFps());
                     ImGui::SliderInt(
-                        "Target FPS",
-                        &tempFps,
-                        10,
-                        300,
-                        "%d",
-                        ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
-                            ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse |
-                            ImGuiWindowFlags_NoSavedSettings
+                        "Target FPS", &tempFps, 10, 300, "%d", ImGuiSliderFlags_NoInput
                     );
                     if (ImGui::IsItemDeactivatedAfterEdit()) {
                         window.setTargetFps(static_cast<Uint64>(tempFps));
