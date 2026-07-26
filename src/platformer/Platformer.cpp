@@ -19,12 +19,11 @@ Platformer::Platformer()
 
 void Platformer::loadSettings() {
     const Settings& currentSettings = settings.get();
-    window.setVsync(currentSettings.vsyncEnabled);
 #ifdef SDL_PLATFORM_ANDROID
-    if (window.isVsyncEnabled()) {
-        // Since target fps can be changed by setVsync on android
-        settings.setTargetFps(static_cast<unsigned int>(window.getTargetFps()));
-    }
+    // Cannot toggle vsync on android anyways
+    window.setVsync(false);
+#else
+    window.setVsync(currentSettings.vsyncEnabled);
 #endif
     const unsigned int MinTargetFps = 1;
     const unsigned int MaxTargetFps = 1000;

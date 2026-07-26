@@ -38,6 +38,7 @@ void UiManager::drawSettings(
                 fpsText(window);
                 ImGui::Dummy(verticalSpacingDummy);
                 bool vsync = window.isVsyncEnabled();
+#ifndef SDL_PLATFORM_ANDROID
                 if (ImGui::Checkbox("VSync", &vsync)) {
                     window.setVsync(vsync);
                     settings.setVsyncEnabled(vsync);
@@ -45,6 +46,7 @@ void UiManager::drawSettings(
                     didEditSettings = true;
                 }
                 ImGui::Dummy(verticalSpacingDummy);
+#endif
                 bool fpsUnlimited = window.getFpsUnlimited();
                 if (ImGui::Checkbox("FPS Unlimited", &fpsUnlimited)) {
                     window.setFpsUnlimited(fpsUnlimited);
