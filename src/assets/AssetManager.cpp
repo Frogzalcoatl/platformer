@@ -313,8 +313,9 @@ int AssetManager::addGameControllerMappings(std::string_view relativePath) {
     }
     int result = SDL_AddGamepadMappingsFromIO(io, true);
     SDL_Log(
-        "Added %d gampad mapping(s) from file \"%.*s\"",
+        "Added %d gamepad %s from file \"%.*s\"",
         result,
+        result == 1 ? "mapping" : "mappings",
         static_cast<int>(relativePath.length()),
         relativePath.data()
     );

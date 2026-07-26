@@ -17,31 +17,30 @@ JsonManager::JsonManager(std::string_view relativeFilePath) : relativeFilePath(r
     filePathStr = filePath.string();
 }
 
-bool JsonManager::doesFileExist() {
+FileExistsResult JsonManager::fileExists() {
     SDL_PathInfo pathInfo{};
     if (!SDL_GetPathInfo(filePathStr.c_str(), &pathInfo)) {
         SDL_LogError(
             SDL_LOG_CATEGORY_APPLICATION,
             "Unable to access file \"%s\": %s",
-            relativeFilePath.c_str(),
+            filePathStr.c_str(),
             SDL_GetError()
         );
-        return false;
+        return FileExistsResult::DoesNotExist;
     }
     if (pathInfo.type != SDL_PATHTYPE_FILE) {
         SDL_LogError(
             SDL_LOG_CATEGORY_APPLICATION,
             "Unable to access file \"%s\": Path currently holds non file type",
-            relativeFilePath.c_str()
+            filePathStr.c_str()
         );
-        return false;
+        return FileExistsResult::HoldsNonFileType;
     }
-    SDL_Log("File \"%s\" exists!", relativeFilePath.c_str());
-    return true;
+    return FileExistsResult::Success;
 }
 
 bool JsonManager::createFile() {
-    SDL_Log("Creating file \"%s\"...", relativeFilePath.c_str());
+    SDL_Log("Creating file \"%s\"...", filePathStr.c_str());
     SDL_IOStream* io = SDL_IOFromFile(filePathStr.c_str(), "w");
     if (!io) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s", SDL_GetError());
@@ -57,8 +56,10 @@ bool JsonManager::createFile() {
 }
 
 bool JsonManager::saveToDisk() {
-    SDL_Log("Saving \"%s\" to disk...", relativeFilePath.c_str());
-    if (!doesFileExist()) {
+    FileExistsResult existsResult = fileExists();
+    if (existsResult == FileExistsResult::HoldsNonFileType) {
+        return false;
+    } else if (existsResult == FileExistsResult::DoesNotExist) {
         if (!createFile()) {
             return false;
         }
@@ -71,7 +72,7 @@ bool JsonManager::saveToDisk() {
         SDL_LogError(
             SDL_LOG_CATEGORY_APPLICATION,
             "Unable to write json to file \"%s\": %s",
-            relativeFilePath.c_str(),
+            filePathStr.c_str(),
             SDL_GetError()
         );
         return false;
@@ -83,18 +84,20 @@ bool JsonManager::saveToDisk() {
         SDL_LogError(
             SDL_LOG_CATEGORY_APPLICATION,
             "Unable to write json to file \"%s\": %s",
-            relativeFilePath.c_str(),
+            filePathStr.c_str(),
             SDL_GetError()
         );
         return false;
     }
-    SDL_Log("Wrote json to file \"%s\"", relativeFilePath.c_str());
+    SDL_Log("Saved json to file \"%s\"", relativeFilePath.c_str());
     return true;
 }
 
 bool JsonManager::readFromDisk() {
-    SDL_Log("Reading \"%s\" from disk...", relativeFilePath.c_str());
-    if (!doesFileExist()) {
+    FileExistsResult existsResult = fileExists();
+    if (existsResult == FileExistsResult::HoldsNonFileType) {
+        return false;
+    } else if (existsResult == FileExistsResult::DoesNotExist) {
         if (!createFile()) {
             return false;
         }
@@ -104,7 +107,7 @@ bool JsonManager::readFromDisk() {
         SDL_LogError(
             SDL_LOG_CATEGORY_APPLICATION,
             "Unable to create SDL IO to read file: \"%s\"",
-            relativeFilePath.c_str()
+            filePathStr.c_str()
         );
         return false;
     }
@@ -121,7 +124,7 @@ bool JsonManager::readFromDisk() {
         SDL_LogError(
             SDL_LOG_CATEGORY_APPLICATION,
             "Unable to read file \"%s\": %s",
-            relativeFilePath.c_str(),
+            filePathStr.c_str(),
             SDL_GetError()
         );
         return false;
@@ -145,6 +148,7 @@ bool JsonManager::readFromDisk() {
         doc.SetObject();
         return saveToDisk();
     }
+    SDL_Log("Read json from file \"%s\"", relativeFilePath.c_str());
     return true;
 }
 

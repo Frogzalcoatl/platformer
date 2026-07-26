@@ -5,6 +5,12 @@
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
 
+enum class FileExistsResult : uint8_t {
+    Success,
+    DoesNotExist,
+    HoldsNonFileType
+};
+
 class JsonManager {
   protected:
     std::filesystem::path filePath;
@@ -15,7 +21,7 @@ class JsonManager {
 
     bool readFromDisk();
 
-    bool doesFileExist();
+    FileExistsResult fileExists();
 
     bool createFile();
 

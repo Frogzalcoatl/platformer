@@ -216,7 +216,7 @@ void UiManager::setScaleIndex(size_t scaleIndex) {
         scaleIndex = MaxScaleIndex;
     }
     userPreferredScale = UiSizePresets[scaleIndex].scale;
-    SDL_Log("User preferred UI set scale to %zu", scaleIndex);
+    SDL_Log("User preferred UI scale set to %zu", scaleIndex);
 }
 
 size_t UiManager::getScaleIndex() const {
@@ -351,10 +351,10 @@ void UiManager::fpsText(WindowManager& window) {
     } else {
         text += std::format("{:.1f}", fps);
     }
-    if (!window.isVsyncEnabled()) {
+    if (!window.isVsyncEnabled() && !window.getFpsUnlimited()) {
         text += "/" + window.targetFpsStr();
     }
-    text += " FPS (" + std::format("{:.3f}", fps / 1000.f) + " ms/frame)";
+    text += " FPS (" + std::format("{:.3f}", 1000.f / fps) + " ms/frame)";
     ImGui::Text("%s", text.c_str());
 }
 
