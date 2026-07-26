@@ -59,10 +59,16 @@ void Camera::run(float alpha) {
     if (!entityToFollow) {
         return;
     }
-    const b2Vec2 size = getSize();
-    const b2Vec2 camPos = {offsetWorld.x + size.x / 2.f, offsetWorld.y + size.y / 2.f};
+    float deltaTime = window.getDeltaTime();
+    scaleMultiplier = scaleMultiplier + (targetScaleMultiplier - scaleMultiplier) *
+                                            (1.f - std::exp(-zoomSmoothingSpeed * deltaTime));
+    WindowVec2 windowSize = window.getSize();
+    float dividend = static_cast<float>(b2MinInt(windowSize.x, windowSize.y));
+    scaleFactor = dividend / 20.f * scaleMultiplier;
+    const b2Vec2 cameraSize = getSize();
+    const b2Vec2 camPos = {offsetWorld.x + cameraSize.x / 2.f, offsetWorld.y + cameraSize.y / 2.f};
     const b2Vec2 entityPos = entityToFollow->getInterpolatedPosition(alpha);
-    const b2Vec2 windowSizeWorld = size;
+    const b2Vec2 windowSizeWorld = cameraSize;
     const b2Vec2 entityOffset = {entityPos.x - camPos.x, entityPos.y - camPos.y};
     const float halfDeadZoneX = (windowSizeWorld.x * 0.5f) * safeArea.x;
     const float halfDeadZoneY = (windowSizeWorld.y * 0.5f) * safeArea.y;
@@ -136,7 +142,12 @@ void Camera::centerOnEntity(float alpha) {
     updateOffset(entityToFollow->getInterpolatedPosition(alpha));
 }
 
-void Camera::incrementScaleMultiplierBy(float amount) {
+void Camera::incrementScaleMultiplierSmooth(float amount) {
+    targetScaleMultiplier =
+        std::clamp(targetScaleMultiplier + amount, MinScaleMultiplier, MaxScaleMultiplier);
+}
+
+void Camera::incrementScaleMultiplier(float amount) {
     if (scaleMultiplier + amount <= MinScaleMultiplier ||
         scaleMultiplier + amount >= MaxScaleMultiplier) {
         return;

@@ -154,6 +154,7 @@ struct ShouldDetectNewPlayerSources {
 
 struct ChangeLevelZoom {
     float amount;
+    bool smooth;
 };
 
 struct SendNotification {

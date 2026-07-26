@@ -15,6 +15,9 @@ class Camera {
     float MinScaleMultiplier = 0.05f;
     float MaxScaleMultiplier = 2.5f;
 
+    float targetScaleMultiplier = 1.f;
+    float zoomSmoothingSpeed = 10.f;
+
     void applyViewableLimits(b2Vec2& camPos);
 
     void updateScaleFactor(int windowSizeX, int windowSizeY);
@@ -44,7 +47,9 @@ class Camera {
 
     void centerOnEntity(float alpha);
 
-    void incrementScaleMultiplierBy(float amount);
+    void incrementScaleMultiplier(float amount);
+
+    void incrementScaleMultiplierSmooth(float amount);
 
     void resetScaleMultiplier();
 

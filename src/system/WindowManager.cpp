@@ -50,6 +50,12 @@ WindowManager::WindowManager(const char* windowName, SDL_Color backgroundColor)
 }
 
 void WindowManager::clearFrame() {
+    Uint64 now = SDL_GetTicksNS();
+    deltaTime = static_cast<float>(now - lastFrameTimeNs) / 1000000000.f;
+    lastFrameTimeNs = now;
+    if (deltaTime > 0.1f) {
+        deltaTime = 0.1f;
+    }
     ImGui_ImplSDLRenderer3_NewFrame();
     ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();

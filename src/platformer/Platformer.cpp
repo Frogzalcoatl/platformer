@@ -163,7 +163,7 @@ void Platformer::handleInputGameEvent(const GameEventTypes::Input& inputEvent) {
             if (currentLevel && uiState == UiState::Playing) {
                 Camera* camera = currentLevel->getCamera();
                 if (camera) {
-                    camera->incrementScaleMultiplierBy(0.05f);
+                    camera->incrementScaleMultiplierSmooth(0.05f);
                 }
             }
             break;
@@ -171,7 +171,7 @@ void Platformer::handleInputGameEvent(const GameEventTypes::Input& inputEvent) {
             if (currentLevel && uiState == UiState::Playing) {
                 Camera* camera = currentLevel->getCamera();
                 if (camera) {
-                    camera->incrementScaleMultiplierBy(-0.05f);
+                    camera->incrementScaleMultiplierSmooth(-0.05f);
                 }
             }
             break;
@@ -319,7 +319,11 @@ void Platformer::handleGameEvent() {
             if (currentLevel && ui.getState() == UiState::Playing) {
                 Camera* camera = currentLevel->getCamera();
                 if (camera) {
-                    camera->incrementScaleMultiplierBy(changeLevelZoom->amount);
+                    if (changeLevelZoom->smooth) {
+                        camera->incrementScaleMultiplierSmooth(changeLevelZoom->amount);
+                    } else {
+                        camera->incrementScaleMultiplier(changeLevelZoom->amount);
+                    }
                 }
             }
         } else if (

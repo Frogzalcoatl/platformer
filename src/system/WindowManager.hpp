@@ -34,6 +34,8 @@ class WindowManager {
     WindowVec2 mousePos;
     Uint64 targetFps = 120;
     Uint64 targetFrameTimeNs = 1000000000ULL / targetFps;
+    Uint64 lastFrameTimeNs = 0;
+    float deltaTime = 0.f;
     bool vsync = true;
     bool fpsUnlimited = false;
     bool isFullscreen = false;
@@ -68,6 +70,10 @@ class WindowManager {
     std::string targetFpsStr() const;
 
     void setTargetFps(Uint64 value);
+
+    float getDeltaTime() const {
+        return deltaTime;
+    }
 
     bool isVsyncEnabled() const;
 
