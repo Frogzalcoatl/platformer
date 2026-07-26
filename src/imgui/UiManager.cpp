@@ -115,7 +115,10 @@ void UiManager::setState(UiState newState) {
     if (newState >= UiState::UiStateCount || stateChangedThisFrame || newState == currentState) {
         return;
     }
-    if (currentState == UiState::PlayerSourceSetup) {
+    UiState previousState = currentState;
+    currentState = newState;
+    stateChangedThisFrame = true;
+    if (previousState == UiState::PlayerSourceSetup) {
         // Switching off setup screen
         GameEvents::Push(GameEventTypes::ShouldDetectNewPlayerSources{false});
     }
@@ -123,8 +126,10 @@ void UiManager::setState(UiState newState) {
         // Switching to player source setup screen
         GameEvents::Push(GameEventTypes::ShouldDetectNewPlayerSources{true});
     }
-    currentState = newState;
-    stateChangedThisFrame = true;
+    if (previousState == UiState::Settings && didEditSettings) {
+        GameEvents::Push(GameEventTypes::SaveUserData{UserDataTypes::Settings});
+        didEditSettings = false;
+    }
     ImGuiIO& io = ImGui::GetIO();
     if (newState == UiState::Playing) {
         io.ConfigFlags &= ~ImGuiConfigFlags_NavEnableGamepad;
@@ -533,6 +538,7 @@ void UiManager::drawSettings(
                     window.setVsync(vsync);
                     settings.setVsyncEnabled(vsync);
                     settings.setFpsUnlimited(window.getFpsUnlimited());
+                    didEditSettings = true;
                 }
                 ImGui::Dummy(verticalSpacingDummy);
                 bool fpsUnlimited = window.getFpsUnlimited();
@@ -540,6 +546,7 @@ void UiManager::drawSettings(
                     window.setFpsUnlimited(fpsUnlimited);
                     settings.setFpsUnlimited(fpsUnlimited);
                     settings.setVsyncEnabled(window.isVsyncEnabled());
+                    didEditSettings = true;
                 }
                 if (!vsync && !fpsUnlimited) {
                     ImGui::Dummy(verticalSpacingDummy);
@@ -548,6 +555,7 @@ void UiManager::drawSettings(
                     if (ImGui::IsItemDeactivatedAfterEdit()) {
                         window.setTargetFps(static_cast<Uint64>(tempFps));
                         settings.setTargetFps(static_cast<unsigned int>(tempFps));
+                        didEditSettings = true;
                     }
                     if (!ImGui::IsItemActive()) {
                         tempFps = static_cast<int>(window.getTargetFps());
@@ -569,6 +577,7 @@ void UiManager::drawSettings(
                     userPreferredScale = UiSizePresets[defaultSettings.uiScale].scale;
                     tempIndex = static_cast<int>(defaultSettings.uiScale);
                     settings.setUiScale(defaultSettings.uiScale);
+                    didEditSettings = true;
                 }
                 ImGui::SameLine();
                 ImGui::Dummy(horizontalSpacingDummy);
@@ -584,6 +593,7 @@ void UiManager::drawSettings(
                     userPreferredScale = UiSizePresets[static_cast<size_t>(tempIndex)].scale;
                     activeIndex = tempIndex;
                     settings.setUiScale(static_cast<unsigned int>(tempIndex));
+                    didEditSettings = true;
                 }
                 if (!ImGui::IsItemActive()) {
                     tempIndex = activeIndex;
@@ -606,6 +616,7 @@ void UiManager::drawSettings(
                 if (ImGui::Button("Reset##ResetMaster", resetButtonSize)) {
                     audio.setVolume(AudioCategory::Master, 100);
                     settings.setMasterVolume(100);
+                    didEditSettings = true;
                 }
                 ImGui::SameLine();
                 ImGui::Dummy(horizontalSpacingDummy);
@@ -613,11 +624,13 @@ void UiManager::drawSettings(
                 if (ImGui::SliderInt("Master", &masterVolume, 0, MaxVolume, "%d", sliderFlags)) {
                     audio.setVolume(AudioCategory::Master, static_cast<unsigned int>(masterVolume));
                     settings.setMasterVolume(static_cast<unsigned int>(masterVolume));
+                    didEditSettings = true;
                 }
                 ImGui::Dummy(verticalSpacingDummy);
                 if (ImGui::Button("Reset##ResetSounds", resetButtonSize)) {
                     audio.setVolume(AudioCategory::Sounds, 100);
                     settings.setSoundsVolume(100);
+                    didEditSettings = true;
                 }
                 ImGui::SameLine();
                 ImGui::Dummy(horizontalSpacingDummy);
@@ -625,11 +638,13 @@ void UiManager::drawSettings(
                 if (ImGui::SliderInt("Sounds", &soundVolume, 0, MaxVolume, "%d", sliderFlags)) {
                     audio.setVolume(AudioCategory::Sounds, static_cast<unsigned int>(soundVolume));
                     settings.setSoundsVolume(static_cast<unsigned int>(soundVolume));
+                    didEditSettings = true;
                 }
                 ImGui::Dummy(verticalSpacingDummy);
                 if (ImGui::Button("Reset##ResetMusic", resetButtonSize)) {
                     audio.setVolume(AudioCategory::Music, 100);
                     settings.setMusicVolume(100);
+                    didEditSettings = true;
                 }
                 ImGui::SameLine();
                 ImGui::Dummy(horizontalSpacingDummy);
@@ -637,16 +652,19 @@ void UiManager::drawSettings(
                 if (ImGui::SliderInt("Music", &musicVolume, 0, MaxVolume, "%d", sliderFlags)) {
                     audio.setVolume(AudioCategory::Music, static_cast<unsigned int>(musicVolume));
                     settings.setMusicVolume(static_cast<unsigned int>(musicVolume));
+                    didEditSettings = true;
                 }
                 ImGui::Dummy(verticalSpacingDummy);
                 if (ImGui::Button("Reset##ResetMusicPitch", resetButtonSize)) {
                     audio.setMusicPitch(1.f);
+                    didEditSettings = true;
                 }
                 ImGui::SameLine();
                 ImGui::Dummy(horizontalSpacingDummy);
                 ImGui::SameLine();
                 if (ImGui::SliderFloat("Music Pitch", &pitch, 0.5f, 1.5f, "%.2f", sliderFlags)) {
                     audio.setMusicPitch(pitch);
+                    didEditSettings = true;
                 }
                 ImGui::Dummy(verticalSpacingDummy);
                 ImGui::Text(

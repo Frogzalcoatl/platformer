@@ -83,6 +83,8 @@ class UiManager {
 
     void drawMainMenu(WindowManager& window);
 
+    bool didEditSettings = false;
+
     void drawSettings(
         WindowManager& window,
         SettingsManager& settings,

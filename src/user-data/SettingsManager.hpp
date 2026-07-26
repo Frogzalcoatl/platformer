@@ -21,10 +21,6 @@ class SettingsManager : public JsonManager {
   public:
     SettingsManager(std::string_view relativeFilePath);
 
-    ~SettingsManager() {
-        saveToDisk();
-    }
-
     void readFromDisk();
 
     bool saveToDisk();

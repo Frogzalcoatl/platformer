@@ -89,6 +89,11 @@ enum class LevelName : uint8_t {
     LevelNameCount
 };
 
+enum class UserDataTypes : uint8_t {
+    Settings,
+    UserDataTypesCount
+};
+
 namespace GameEventTypes {
 struct CloseWindow {};
 
@@ -161,6 +166,10 @@ struct SendNotification {
 struct GamepadConnectedNotification {
     SDL_JoystickID id;
 };
+
+struct SaveUserData {
+    UserDataTypes type;
+};
 }
 
 // Learned about std::variant from AI. Seems like a reasonable choice here.
@@ -177,7 +186,8 @@ using GameEvent = std::variant<
     GameEventTypes::ShouldDetectNewPlayerSources,
     GameEventTypes::ChangeLevelZoom,
     GameEventTypes::SendNotification,
-    GameEventTypes::GamepadConnectedNotification>;
+    GameEventTypes::GamepadConnectedNotification,
+    GameEventTypes::SaveUserData>;
 
 struct ScheduledEvent {
     Uint64 executeTimeMS; // SDL_GetTicks() timestamp of when this should happen

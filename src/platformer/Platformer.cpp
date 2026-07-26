@@ -122,6 +122,13 @@ void Platformer::handleSdlEvent() {
                 GameEvents::Push(inputEvent);
             }
         }; break;
+        case SDL_EVENT_PINCH_BEGIN:
+        case SDL_EVENT_PINCH_UPDATE:
+        case SDL_EVENT_PINCH_END: {
+            if (ui.getFreeFingerCount() >= 2) {
+                input.handlePinchEvent(event.pinch);
+            }
+        }; break;
         case SDL_EVENT_GAMEPAD_ADDED: {
             GameEvents::Schedule(
                 GameEventTypes::GamepadConnectedNotification{event.gdevice.which}, 25
@@ -133,13 +140,9 @@ void Platformer::handleSdlEvent() {
                 "Controller Disconnected: " + input.getGamepadName(event.gdevice.which);
             notificationManager.send(message);
         }; break;
-        case SDL_EVENT_PINCH_BEGIN:
-        case SDL_EVENT_PINCH_UPDATE:
-        case SDL_EVENT_PINCH_END: {
-            if (ui.getFreeFingerCount() >= 2) {
-                input.handlePinchEvent(event.pinch);
-            }
-        }
+        case SDL_EVENT_DID_ENTER_BACKGROUND: {
+            settings.saveToDisk();
+        }; break;
         };
     }
 }
@@ -327,6 +330,10 @@ void Platformer::handleGameEvent() {
             std::string message =
                 "Controller Connected: " + input.getGamepadName(gamepadEventNotification->id);
             notificationManager.send(message);
+        } else if (const auto* saveUserData = std::get_if<GameEventTypes::SaveUserData>(&event)) {
+            if (saveUserData->type == UserDataTypes::Settings) {
+                settings.saveToDisk();
+            }
         }
     }
 }
@@ -382,4 +389,5 @@ void Platformer::run() {
         window.render(frameStartNs);
         DiscordRpcManager::update();
     }
+    settings.saveToDisk();
 }
