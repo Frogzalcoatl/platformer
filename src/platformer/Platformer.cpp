@@ -15,6 +15,11 @@ Platformer::Platformer()
     loadSettings();
     assets.addGameControllerMappings("gamepads/gamecontrollerdb.txt");
     assets.addGameControllerMappings("gamepads/retrolink.txt");
+    MIX_Mixer* mixerDevice = audio.getMixerDevice();
+    if (mixerDevice) {
+        assets.getAudio(AssetPaths::Sounds::Hover, mixerDevice, true);
+        assets.getAudio(AssetPaths::Sounds::Click, mixerDevice, true);
+    }
 }
 
 void Platformer::loadSettings() {
