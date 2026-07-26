@@ -11,6 +11,12 @@ enum class FileExistsResult : uint8_t {
     HoldsNonFileType
 };
 
+enum class ReadFromDiskResult : uint8_t {
+    ReadFromFile,
+    CreatedNewFile,
+    Failure,
+};
+
 class JsonManager {
   protected:
     std::filesystem::path filePath;
@@ -19,7 +25,7 @@ class JsonManager {
     rapidjson::Document doc;
     const rapidjson::Value nullValue;
 
-    bool readFromDisk();
+    ReadFromDiskResult readFromDisk();
 
     FileExistsResult fileExists();
 

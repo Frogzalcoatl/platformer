@@ -12,9 +12,9 @@
 Platformer::Platformer()
     : window{"C++ Platformer", Colors::Background}, assets(window.getSdlRenderer()), audio(assets),
       settings("Settings.json"), ui(assets) {
+    loadSettings();
     assets.addGameControllerMappings("gamepads/gamecontrollerdb.txt");
     assets.addGameControllerMappings("gamepads/retrolink.txt");
-    loadSettings();
 }
 
 void Platformer::loadSettings() {
@@ -35,7 +35,7 @@ void Platformer::loadSettings() {
             currentSettings.targetFps,
             MinTargetFps
         );
-        settings.setTargetFps(1);
+        settings.setTargetFps(MinTargetFps);
     } else if (currentSettings.targetFps > MaxTargetFps) {
         SDL_LogWarn(
             SDL_LOG_CATEGORY_APPLICATION,
@@ -43,9 +43,13 @@ void Platformer::loadSettings() {
             currentSettings.targetFps,
             MaxTargetFps
         );
-        settings.setTargetFps(1000);
+        settings.setTargetFps(MaxTargetFps);
     }
-    window.setTargetFps(currentSettings.targetFps);
+    if (settings.createdNewFileOnRead()) {
+        window.setTargetFps(static_cast<Uint64>(SDL_roundf(window.getMonitorRefreshRate())));
+    } else {
+        window.setTargetFps(currentSettings.targetFps);
+    }
     window.setFpsUnlimited(currentSettings.fpsUnlimited);
     ui.setScaleIndex(currentSettings.uiScale);
     size_t userPreferredScale = ui.getScaleIndex();

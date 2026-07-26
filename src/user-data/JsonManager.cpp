@@ -93,14 +93,16 @@ bool JsonManager::saveToDisk() {
     return true;
 }
 
-bool JsonManager::readFromDisk() {
+ReadFromDiskResult JsonManager::readFromDisk() {
     FileExistsResult existsResult = fileExists();
+    bool createdNewFile = false;
     if (existsResult == FileExistsResult::HoldsNonFileType) {
-        return false;
+        return ReadFromDiskResult::Failure;
     } else if (existsResult == FileExistsResult::DoesNotExist) {
         if (!createFile()) {
-            return false;
+            return ReadFromDiskResult::Failure;
         }
+        createdNewFile = true;
     }
     SDL_IOStream* io = SDL_IOFromFile(filePath.string().c_str(), "r");
     if (!io) {
@@ -109,12 +111,12 @@ bool JsonManager::readFromDisk() {
             "Unable to create SDL IO to read file: \"%s\"",
             filePathStr.c_str()
         );
-        return false;
+        return ReadFromDiskResult::Failure;
     }
     Sint64 fileSize = SDL_GetIOSize(io);
     if (fileSize < 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Unable to read file size: %s", SDL_GetError());
-        return false;
+        return ReadFromDiskResult::Failure;
     }
     // Second arg is the char each index of the str will be initialized to
     std::string fileBuffer(static_cast<size_t>(fileSize), '\0');
@@ -127,7 +129,7 @@ bool JsonManager::readFromDisk() {
             filePathStr.c_str(),
             SDL_GetError()
         );
-        return false;
+        return ReadFromDiskResult::Failure;
     }
     doc.Parse(fileBuffer.data());
     if (doc.HasParseError()) {
@@ -137,7 +139,7 @@ bool JsonManager::readFromDisk() {
             relativeFilePath.c_str()
         );
         doc.SetObject();
-        return saveToDisk();
+        return saveToDisk() ? ReadFromDiskResult::CreatedNewFile : ReadFromDiskResult::Failure;
     }
     if (!doc.IsObject()) {
         SDL_LogWarn(
@@ -146,10 +148,10 @@ bool JsonManager::readFromDisk() {
             relativeFilePath.c_str()
         );
         doc.SetObject();
-        return saveToDisk();
+        return saveToDisk() ? ReadFromDiskResult::CreatedNewFile : ReadFromDiskResult::Failure;
     }
     SDL_Log("Read json from file \"%s\"", relativeFilePath.c_str());
-    return true;
+    return createdNewFile ? ReadFromDiskResult::CreatedNewFile : ReadFromDiskResult::ReadFromFile;
 }
 
 void JsonManager::set(std::string_view keyView, rapidjson::Value& value) {

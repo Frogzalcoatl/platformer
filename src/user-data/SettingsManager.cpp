@@ -5,8 +5,13 @@ SettingsManager::SettingsManager(std::string_view relativeFilePath)
     readFromDisk();
 }
 
+bool SettingsManager::createdNewFileOnRead() const {
+    return createdNewFile;
+}
+
 void SettingsManager::readFromDisk() {
-    JsonManager::readFromDisk();
+    ReadFromDiskResult result = JsonManager::readFromDisk();
+    createdNewFile = (result == ReadFromDiskResult::CreatedNewFile);
     const rapidjson::Value& vsyncEnabled = JsonManager::get("vsyncEnabled");
     if (vsyncEnabled.IsBool()) {
         activeSettings.vsyncEnabled = vsyncEnabled.GetBool();

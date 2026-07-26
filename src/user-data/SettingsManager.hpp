@@ -17,6 +17,7 @@ class SettingsManager : public JsonManager {
   private:
     const Settings defaultSettings;
     Settings activeSettings;
+    bool createdNewFile;
 
     void readFromDisk();
 
@@ -32,6 +33,8 @@ class SettingsManager : public JsonManager {
     const Settings& getDefault() const {
         return defaultSettings;
     }
+
+    bool createdNewFileOnRead() const;
 
     void setVsyncEnabled(bool val) {
         activeSettings.vsyncEnabled = val;
