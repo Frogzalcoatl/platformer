@@ -1,7 +1,7 @@
-#include "imgui/TouchController.hpp"
+#include "gui/TouchController.hpp"
 #include "assets/AssetPaths.hpp"
 #include "events/EventQueue.hpp"
-#include "imgui/ImGuiWidgets.hpp"
+#include "gui/ImGuiWidgets.hpp"
 #include <vector>
 
 TouchController::TouchController() {

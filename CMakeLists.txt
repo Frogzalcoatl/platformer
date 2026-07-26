@@ -115,10 +115,15 @@ set(SOURCES
     src/drawing/Drawing.cpp
     src/entities/Entity.cpp
     src/events/EventQueue.cpp
-    src/imgui/ImGuiWidgets.cpp
-    src/imgui/NotificationManager.cpp
-    src/imgui/TouchController.cpp
-    src/imgui/UiManager.cpp
+    src/gui/ImGuiWidgets.cpp
+    src/gui/NotificationManager.cpp
+    src/gui/TouchController.cpp
+    src/gui/UiManager.cpp
+    src/gui/ui-states/Debug.cpp
+    src/gui/ui-states/MainMenu.cpp
+    src/gui/ui-states/Paused.cpp
+    src/gui/ui-states/PlayerSourceSetup.cpp
+    src/gui/ui-states/Settings.cpp
     src/platformer/Camera.cpp
     src/platformer/EntityController.cpp
     src/platformer/Level.cpp

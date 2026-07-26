@@ -1,7 +1,7 @@
 #pragma once
 #include "assets/AssetManager.hpp"
-#include "imgui/NotificationManager.hpp"
-#include "imgui/UiManager.hpp"
+#include "gui/NotificationManager.hpp"
+#include "gui/UiManager.hpp"
 #include "platformer/Level.hpp"
 #include "system/AudioManager.hpp"
 #include "system/InputManager.hpp"

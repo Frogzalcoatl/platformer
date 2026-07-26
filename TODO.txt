@@ -1,5 +1,3 @@
-Organize ui code into separate files
-
 Fix ui sounds
 
 Finish controls settings ui

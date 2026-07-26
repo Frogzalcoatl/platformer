@@ -1,4 +1,4 @@
-#include "imgui/NotificationManager.hpp"
+#include "gui/NotificationManager.hpp"
 #include <imgui.h>
 
 void NotificationManager::removeIndex(size_t i) {

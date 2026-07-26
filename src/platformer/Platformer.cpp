@@ -380,8 +380,7 @@ void Platformer::run() {
             }
             currentLevel->draw(window, assets);
         }
-        ui.update();
-        ui.draw(window, settings, audio, input, currentLevel.get());
+        ui.update(window, settings, audio, input, currentLevel.get());
         notificationManager.update(window, ui.getActualScale());
         window.render(frameStartNs);
         DiscordRpcManager::update();
