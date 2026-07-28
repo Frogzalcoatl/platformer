@@ -1,7 +1,6 @@
 #include "user-data/SettingsManager.hpp"
 
-SettingsManager::SettingsManager(std::string_view relativeFilePath)
-    : JsonManager(relativeFilePath) {
+SettingsManager::SettingsManager(std::string_view relativeFilePath) : json(relativeFilePath) {
     readFromDisk();
 }
 
@@ -10,45 +9,45 @@ bool SettingsManager::createdNewFileOnRead() const {
 }
 
 void SettingsManager::readFromDisk() {
-    ReadFromDiskResult result = JsonManager::readFromDisk();
+    ReadFromDiskResult result = json.readFromDisk();
     createdNewFile = (result == ReadFromDiskResult::CreatedNewFile);
-    const rapidjson::Value& vsyncEnabled = JsonManager::get("vsyncEnabled");
+    const rapidjson::Value& vsyncEnabled = json.get("vsyncEnabled");
     if (vsyncEnabled.IsBool()) {
         activeSettings.vsyncEnabled = vsyncEnabled.GetBool();
     } else {
         activeSettings.vsyncEnabled = defaultSettings.vsyncEnabled;
     }
-    const rapidjson::Value& fpsUnlimited = JsonManager::get("fpsUnlimited");
+    const rapidjson::Value& fpsUnlimited = json.get("fpsUnlimited");
     if (fpsUnlimited.IsBool()) {
         activeSettings.fpsUnlimited = fpsUnlimited.GetBool();
     } else {
         activeSettings.fpsUnlimited = defaultSettings.fpsUnlimited;
     }
-    const rapidjson::Value& targetFps = JsonManager::get("targetFps");
+    const rapidjson::Value& targetFps = json.get("targetFps");
     if (targetFps.IsUint()) {
         activeSettings.targetFps = targetFps.GetUint();
     } else {
         activeSettings.targetFps = defaultSettings.targetFps;
     }
-    const rapidjson::Value& uiScale = JsonManager::get("uiScale");
+    const rapidjson::Value& uiScale = json.get("uiScale");
     if (uiScale.IsUint64()) {
         activeSettings.uiScale = uiScale.GetUint64();
     } else {
         activeSettings.uiScale = defaultSettings.uiScale;
     }
-    const rapidjson::Value& masterVolume = JsonManager::get("masterVolume");
+    const rapidjson::Value& masterVolume = json.get("masterVolume");
     if (masterVolume.IsUint()) {
         activeSettings.masterVolume = masterVolume.GetUint();
     } else {
         activeSettings.masterVolume = defaultSettings.masterVolume;
     }
-    const rapidjson::Value& soundsVolume = JsonManager::get("soundsVolume");
+    const rapidjson::Value& soundsVolume = json.get("soundsVolume");
     if (soundsVolume.IsUint()) {
         activeSettings.soundsVolume = soundsVolume.GetUint();
     } else {
         activeSettings.soundsVolume = defaultSettings.soundsVolume;
     }
-    const rapidjson::Value& musicVolume = JsonManager::get("musicVolume");
+    const rapidjson::Value& musicVolume = json.get("musicVolume");
     if (musicVolume.IsUint()) {
         activeSettings.musicVolume = musicVolume.GetUint();
     } else {
@@ -57,12 +56,12 @@ void SettingsManager::readFromDisk() {
 }
 
 bool SettingsManager::saveToDisk() {
-    set("vsyncEnabled", activeSettings.vsyncEnabled);
-    set("fpsUnlimited", activeSettings.fpsUnlimited);
-    set("targetFps", activeSettings.targetFps);
-    set("uiScale", activeSettings.uiScale);
-    set("masterVolume", activeSettings.masterVolume);
-    set("soundsVolume", activeSettings.soundsVolume);
-    set("musicVolume", activeSettings.musicVolume);
-    return JsonManager::saveToDisk();
+    json.set("vsyncEnabled", activeSettings.vsyncEnabled);
+    json.set("fpsUnlimited", activeSettings.fpsUnlimited);
+    json.set("targetFps", activeSettings.targetFps);
+    json.set("uiScale", activeSettings.uiScale);
+    json.set("masterVolume", activeSettings.masterVolume);
+    json.set("soundsVolume", activeSettings.soundsVolume);
+    json.set("musicVolume", activeSettings.musicVolume);
+    return json.saveToDisk();
 }

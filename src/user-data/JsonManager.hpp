@@ -18,21 +18,20 @@ enum class ReadFromDiskResult : uint8_t {
 };
 
 class JsonManager {
-  protected:
+  private:
     std::filesystem::path filePath;
     std::string filePathStr;
     std::string relativeFilePath;
     rapidjson::Document doc;
     const rapidjson::Value nullValue;
 
-    ReadFromDiskResult readFromDisk();
-
     FileExistsResult fileExists();
-
     bool createFile();
 
   public:
     JsonManager(std::string_view relativeFilePath);
+
+    ReadFromDiskResult readFromDisk();
 
     bool saveToDisk();
 

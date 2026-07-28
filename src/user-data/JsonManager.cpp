@@ -3,7 +3,7 @@
 
 JsonManager::JsonManager(std::string_view relativeFilePath) : relativeFilePath(relativeFilePath) {
     doc.SetObject();
-    // SDL_GetPrefPath is specifically for user data files
+    // SDL_GetPrefPath (Preference Path), useful for user data
     const char* prefPathStr = SDL_GetPrefPath("Frogzalcoatl", "Platformer");
     if (!prefPathStr) {
         SDL_LogError(
@@ -12,8 +12,8 @@ JsonManager::JsonManager(std::string_view relativeFilePath) : relativeFilePath(r
             SDL_GetError()
         );
     }
-    std::filesystem::path basePath{prefPathStr};
-    filePath = basePath / relativeFilePath;
+    std::filesystem::path prefPath{prefPathStr};
+    filePath = prefPath / relativeFilePath;
     filePathStr = filePath.string();
 }
 

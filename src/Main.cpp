@@ -61,7 +61,9 @@ int main(int argc, char* argv[]) {
         SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "Fatal exception caught: %s", e.what());
         returnVal = 1;
     }
+#ifdef USE_DISCORD_RPC
     DiscordRpcManager::shutdown();
+#endif
     ImGui_ImplSDLRenderer3_Shutdown();
     SDL_Log("Shutdown ImGui SDL3 renderer implementation");
     ImGui_ImplSDL3_Shutdown();

@@ -13,8 +13,9 @@ struct Settings {
     unsigned int musicVolume = 50;
 };
 
-class SettingsManager : public JsonManager {
+class SettingsManager {
   private:
+    JsonManager json;
     const Settings defaultSettings;
     Settings activeSettings;
     bool createdNewFile;
