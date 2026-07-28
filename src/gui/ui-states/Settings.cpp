@@ -22,6 +22,8 @@ void UiManager::drawSettings(
         if (ImGui::Button("Back")) {
             runCancelEvent();
         }
+        applyHoverSounds();
+        applyClickSounds();
         ImGui::SameLine();
         ImGui::Dummy(horizontalSpacingDummy);
         ImGui::SameLine();
@@ -31,6 +33,8 @@ void UiManager::drawSettings(
                 displayTabFlags |= ImGuiTabItemFlags_SetSelected;
             }
             if (ImGui::BeginTabItem("Display", nullptr, displayTabFlags)) {
+                applyHoverSounds();
+                applyClickSounds();
                 ImGui::PushFont(fontDoubleLarge);
                 ImGui::Text("Display");
                 ImGui::PopFont();
@@ -45,6 +49,8 @@ void UiManager::drawSettings(
                     settings.setFpsUnlimited(window.getFpsUnlimited());
                     didEditSettings = true;
                 }
+                applyHoverSounds();
+                applyClickSounds();
                 ImGui::Dummy(verticalSpacingDummy);
 #endif
                 bool fpsUnlimited = window.getFpsUnlimited();
@@ -54,12 +60,15 @@ void UiManager::drawSettings(
                     settings.setVsyncEnabled(window.isVsyncEnabled());
                     didEditSettings = true;
                 }
+                applyHoverSounds();
+                applyClickSounds();
                 if (!vsync && !fpsUnlimited) {
                     ImGui::Dummy(verticalSpacingDummy);
                     static int tempFps = static_cast<int>(window.getTargetFps());
                     ImGui::SliderInt(
                         "Target FPS", &tempFps, 10, 300, "%d", ImGuiSliderFlags_NoInput
                     );
+                    applyClickSounds();
                     if (ImGui::IsItemDeactivatedAfterEdit()) {
                         window.setTargetFps(static_cast<Uint64>(tempFps));
                         settings.setTargetFps(static_cast<unsigned int>(tempFps));
@@ -87,6 +96,8 @@ void UiManager::drawSettings(
                     settings.setUiScale(defaultSettings.uiScale);
                     didEditSettings = true;
                 }
+                applyHoverSounds();
+                applyClickSounds();
                 ImGui::SameLine();
                 ImGui::Dummy(horizontalSpacingDummy);
                 ImGui::SameLine();
@@ -97,6 +108,7 @@ void UiManager::drawSettings(
                     static_cast<int>(UiSizePresets.size() - 1),
                     UiSizePresets[static_cast<size_t>(tempIndex)].name
                 );
+                applyClickSounds();
                 if (ImGui::IsItemDeactivatedAfterEdit()) {
                     userPreferredScale = UiSizePresets[static_cast<size_t>(tempIndex)].scale;
                     activeIndex = tempIndex;
@@ -109,10 +121,17 @@ void UiManager::drawSettings(
                 if (level) {
                     ImGui::Dummy(verticalSpacingDummy);
                     ImGui::Checkbox("Show Hitboxes", &level->showHitBoxes);
+                    applyHoverSounds();
+                    applyClickSounds();
                 }
                 ImGui::EndTabItem();
+            } else {
+                applyHoverSounds(); // For tab above
+                applyClickSounds();
             }
             if (ImGui::BeginTabItem("Audio")) {
+                applyHoverSounds();
+                applyClickSounds();
                 ImGui::PushFont(fontDoubleLarge);
                 ImGui::Text("Audio");
                 ImGui::PopFont();
@@ -126,6 +145,8 @@ void UiManager::drawSettings(
                     settings.setMasterVolume(100);
                     didEditSettings = true;
                 }
+                applyHoverSounds();
+                applyClickSounds();
                 ImGui::SameLine();
                 ImGui::Dummy(horizontalSpacingDummy);
                 ImGui::SameLine();
@@ -136,12 +157,15 @@ void UiManager::drawSettings(
                     settings.setMasterVolume(static_cast<unsigned int>(masterVolume));
                     didEditSettings = true;
                 }
+                applyClickSounds();
                 ImGui::Dummy(verticalSpacingDummy);
                 if (ImGui::Button("Reset##ResetSounds", resetButtonSize)) {
                     audio.setVolume(AudioCategory::Sounds, 100);
                     settings.setSoundsVolume(100);
                     didEditSettings = true;
                 }
+                applyHoverSounds();
+                applyClickSounds();
                 ImGui::SameLine();
                 ImGui::Dummy(horizontalSpacingDummy);
                 ImGui::SameLine();
@@ -152,6 +176,7 @@ void UiManager::drawSettings(
                     settings.setSoundsVolume(static_cast<unsigned int>(soundVolume));
                     didEditSettings = true;
                 }
+                applyClickSounds();
                 ImGui::Dummy(verticalSpacingDummy);
                 if (ImGui::Button("Reset##ResetMusic", resetButtonSize)) {
                     audio.setVolume(AudioCategory::Music, 100);
@@ -168,6 +193,7 @@ void UiManager::drawSettings(
                     settings.setMusicVolume(static_cast<unsigned int>(musicVolume));
                     didEditSettings = true;
                 }
+                applyClickSounds();
                 ImGui::Dummy(verticalSpacingDummy);
                 if (ImGui::Button("Reset##ResetMusicPitch", resetButtonSize)) {
                     audio.setMusicPitch(1.f);
@@ -182,6 +208,7 @@ void UiManager::drawSettings(
                     audio.setMusicPitch(pitch);
                     didEditSettings = true;
                 }
+                applyClickSounds();
                 ImGui::Dummy(verticalSpacingDummy);
                 ImGui::Text(
                     "Current Music: %s %s",
@@ -193,9 +220,16 @@ void UiManager::drawSettings(
                 if (ImGui::Button("Play Random Music")) {
                     audio.clearCurrentMusic();
                 }
+                applyClickSounds();
+                applyHoverSounds();
                 ImGui::EndTabItem();
+            } else {
+                applyHoverSounds(); // For tab above
+                applyClickSounds();
             }
             if (ImGui::BeginTabItem("Controls")) {
+                applyClickSounds();
+                applyHoverSounds();
                 ImGui::PushFont(fontDoubleLarge);
                 ImGui::Text("Controls (Unfinished)");
                 ImGui::PopFont();
@@ -208,6 +242,8 @@ void UiManager::drawSettings(
                         std::string current = SDL_GetScancodeName(scancodeBidings[i][j].scancode);
                         current += "##" + currentVerb + "Index" + std::to_string(j);
                         ImGui::Button(current.c_str(), ImVec2{200.f * uiScale, 50.f * uiScale});
+                        applyClickSounds();
+                        applyHoverSounds();
                         ImGui::SameLine();
                         ImGui::Dummy(ImVec2{10.f * uiScale, 0.f});
                         ImGui::SameLine();
@@ -215,6 +251,9 @@ void UiManager::drawSettings(
                     ImGui::NewLine();
                 }
                 ImGui::EndTabItem();
+            } else {
+                applyHoverSounds(); // For tab above
+                applyClickSounds();
             }
             ImGui::EndTabBar();
         }

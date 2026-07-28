@@ -26,6 +26,8 @@ void UiManager::drawPlayerSourceSetup(WindowManager& window, InputManager& input
             }
             touchPlayerEnabled = input.isTouchPlayerEnabled(nullptr);
         }
+        applyHoverSounds();
+        applyClickSounds();
     }
     if (!ImGui::IsItemActive()) {
         touchPlayerEnabled = input.isTouchPlayerEnabled(nullptr);
@@ -47,6 +49,8 @@ void UiManager::drawPlayerSourceSetup(WindowManager& window, InputManager& input
             if (ImGui::Button(buttonId.c_str()) && !playerSourceAddedThisFrame) {
                 input.removePlayerSourceAtIndex(i);
             }
+            applyHoverSounds();
+            applyClickSounds();
         }
         ImGui::Dummy(ImVec2{0.f, 50.f * uiScale});
     }
@@ -63,10 +67,14 @@ void UiManager::drawPlayerSourceSetup(WindowManager& window, InputManager& input
             );
         }
     }
+    applyHoverSounds();
+    applyClickSounds();
     ImGui::SameLine();
     if (ImGui::Button("Back", ImVec2{200.f * uiScale, 45.f * uiScale})) {
         runCancelEvent();
     }
+    applyHoverSounds();
+    applyClickSounds();
     ImGui::PopFont();
     applyTouchScroll();
     ImGui::End();

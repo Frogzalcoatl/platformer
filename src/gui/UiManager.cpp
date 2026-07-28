@@ -2,6 +2,7 @@
 #include <array>
 #include <cmath>
 #include <format>
+#include <imgui_internal.h>
 #include <limits>
 
 UiManager::UiManager(AssetManager& assets, UiState startingState) : currentState(startingState) {
@@ -180,7 +181,6 @@ void UiManager::draw(
     InputManager& input,
     Level* level
 ) {
-    handleSounds();
     updateActiveScale(window);
     Entity* playerEntity = nullptr;
     Camera* camera = nullptr;
@@ -221,6 +221,7 @@ void UiManager::draw(
         touchController->draw(window, uiScale);
     }
     playerSourceAddedThisFrame = false;
+    itemActiveThisFrame = ImGui::IsAnyItemActive();
 }
 
 void UiManager::drawLargeLogo(WindowManager& window, float menuHeight) {
@@ -275,16 +276,40 @@ void UiManager::fpsText(WindowManager& window) {
     ImGui::Text("%s", text.c_str());
 }
 
-void UiManager::handleSounds() {
-    bool itemHoveredLastFrame = itemHoveredThisFrame;
-    itemHoveredThisFrame = ImGui::IsAnyItemHovered();
-    if (!itemHoveredLastFrame && itemHoveredThisFrame) {
-        GameEvents::Push(GameEventTypes::PlaySound{AssetPaths::Sounds::Hover});
+void UiManager::applyClickSounds(
+    std::string_view soundRelativePath, unsigned int volume, float pitch
+) {
+    if (!itemActiveThisFrame && ImGui::IsItemActivated()) {
+        itemActiveThisFrame = true;
+        GameEvents::Push(GameEventTypes::PlaySound{soundRelativePath, volume, pitch});
     }
-    bool itemActiveLastFrame = itemActiveThisFrame;
-    itemActiveThisFrame = ImGui::IsAnyItemActive();
-    if (!itemActiveLastFrame && itemActiveThisFrame) {
-        GameEvents::Push(GameEventTypes::PlaySound{AssetPaths::Sounds::Click});
+}
+
+void UiManager::applyHoverSounds(
+    std::string_view soundRelativePath, unsigned int volume, float pitch
+) {
+    // Got idea to use item ids like this from ai.
+    // Before was just using a simple boolean like in applyClickSounds.
+    // but that meant hover sounds could only occur if no item was hovered last frame.
+    // So if i went from hovering one item in frame 1 to another in frame 2, no sound would trigger
+    // Also using func below from imgui internal prevents me from having to pass const char* ids in
+    // this func.
+    ImGuiID currentItemId = ImGui::GetItemID();
+    if (ImGui::IsItemHovered()) {
+        if (lastHoveredId != currentItemId) {
+            lastHoveredId = currentItemId;
+            GameEvents::Push(GameEventTypes::PlaySound{soundRelativePath, volume, pitch});
+        }
+    } else if (lastHoveredId == currentItemId) {
+        lastHoveredId = 0;
+    }
+}
+
+void UiManager::applyEditSounds(
+    std::string_view soundRelativePath, unsigned int volume, float pitch
+) {
+    if (ImGui::IsItemEdited()) {
+        GameEvents::Push(GameEventTypes::PlaySound{soundRelativePath, volume, pitch});
     }
 }
 

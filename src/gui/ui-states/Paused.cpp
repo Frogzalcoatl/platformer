@@ -45,18 +45,24 @@ void UiManager::drawPauseMenu(WindowManager& window) {
         if (ImGui::Button("Resume", ImVec2{buttonWidth, buttonHeight})) {
             setState(UiState::Playing);
         }
+        applyHoverSounds();
+        applyClickSounds();
         ImGui::SetItemDefaultFocus();
         ImGui::Dummy(ImVec2(0, verticalSpacing));
         ImGui::SetCursorPosX(cursorX);
         if (ImGui::Button("Settings", ImVec2{buttonWidth, buttonHeight})) {
             setState(UiState::PausedSettings);
         }
+        applyHoverSounds();
+        applyClickSounds();
         ImGui::Dummy(ImVec2(0, verticalSpacing));
         ImGui::SetCursorPosX(cursorX);
         if (ImGui::Button("Exit", ImVec2{buttonWidth, buttonHeight})) {
             GameEvents::Push(GameEventTypes::SetLevelName{LevelName::None});
             setState(UiState::MainMenu);
         }
+        applyHoverSounds();
+        applyClickSounds();
         ImGui::PopFont();
     }
     ImGui::End();

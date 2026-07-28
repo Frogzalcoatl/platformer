@@ -74,7 +74,7 @@ void TouchController::draw(WindowManager& window, float uiScale) {
     ImVec2 pauseButtonSize{100.f * uiScale, 100.f * uiScale};
     ImVec2 pauseButtonPos{windowSizeF.x / 2.f - pauseButtonSize.x, 0.f};
     ImGui::SetCursorPos(pauseButtonPos);
-    Drawing::CustomPauseButton("##Pause", pauseButtonSize);
+    ImGuiWidgets::CustomPauseButton("##Pause", pauseButtonSize);
     buttonRects.push_back({ImGui::GetItemRectMin(), ImGui::GetItemRectMax()});
     bool isPauseTouched = isLastItemTouched(activeTouchPositions);
     if (isPauseTouched && !wasPauseTouched) {
@@ -88,7 +88,7 @@ void TouchController::draw(WindowManager& window, float uiScale) {
     ImVec2 buttonSize = ImVec2{100.f * uiScale, 100.f * uiScale};
     ImVec2 upButtonPos{safeAreaF.w - buttonSize.x, safeAreaF.y + safeAreaF.h - buttonSize.y * 2.f};
     ImGui::SetCursorPos(upButtonPos);
-    Drawing::CustomArrowButton("##Up", ImGuiDir_Up, buttonSize);
+    ImGuiWidgets::CustomArrowButton("##Up", ImGuiDir_Up, buttonSize);
     buttonRects.push_back({ImGui::GetItemRectMin(), ImGui::GetItemRectMax()});
     bool isUpTouched = isLastItemTouched(activeTouchPositions);
     if (isUpTouched && !wasUpTouched) {
@@ -102,19 +102,19 @@ void TouchController::draw(WindowManager& window, float uiScale) {
     wasUpTouched = isUpTouched;
     ImVec2 downButtonPos{upButtonPos.x, upButtonPos.y + buttonSize.y};
     ImGui::SetCursorPos(downButtonPos);
-    Drawing::CustomArrowButton("##Down", ImGuiDir_Down, buttonSize);
+    ImGuiWidgets::CustomArrowButton("##Down", ImGuiDir_Down, buttonSize);
     buttonRects.push_back({ImGui::GetItemRectMin(), ImGui::GetItemRectMax()});
     entityController.movement[static_cast<size_t>(EntityMovement::Down)] =
         isLastItemTouched(activeTouchPositions);
     ImVec2 leftButtonPos{static_cast<float>(safeArea.x), downButtonPos.y};
     ImGui::SetCursorPos(leftButtonPos);
-    Drawing::CustomArrowButton("##Left", ImGuiDir_Left, buttonSize);
+    ImGuiWidgets::CustomArrowButton("##Left", ImGuiDir_Left, buttonSize);
     buttonRects.push_back({ImGui::GetItemRectMin(), ImGui::GetItemRectMax()});
     entityController.movement[static_cast<size_t>(EntityMovement::Left)] =
         isLastItemTouched(activeTouchPositions);
     ImVec2 rightButtonPos{leftButtonPos.x + buttonSize.x, leftButtonPos.y};
     ImGui::SetCursorPos(rightButtonPos);
-    Drawing::CustomArrowButton("##Right", ImGuiDir_Right, buttonSize);
+    ImGuiWidgets::CustomArrowButton("##Right", ImGuiDir_Right, buttonSize);
     buttonRects.push_back({ImGui::GetItemRectMin(), ImGui::GetItemRectMax()});
     entityController.movement[static_cast<size_t>(EntityMovement::Right)] =
         isLastItemTouched(activeTouchPositions);

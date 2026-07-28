@@ -12,6 +12,7 @@ namespace Sounds {
 inline constexpr std::string_view Jump = "sounds/jump.wav";
 inline constexpr std::string_view Click = "sounds/click.wav";
 inline constexpr std::string_view Hover = "sounds/hover.wav";
+inline constexpr std::string_view Edit = "sounds/edit.wav";
 }
 
 namespace Textures {

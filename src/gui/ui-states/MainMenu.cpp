@@ -1,3 +1,4 @@
+#include "gui/ImGuiWidgets.hpp"
 #include "gui/UiManager.hpp"
 
 void UiManager::drawMainMenu(WindowManager& window) {
@@ -41,16 +42,22 @@ void UiManager::drawMainMenu(WindowManager& window) {
             setState(UiState::PlayerSourceSetup);
         }
         ImGui::SetItemDefaultFocus();
+        applyHoverSounds();
+        applyClickSounds();
         ImGui::Dummy(ImVec2(0, verticalSpacing));
         ImGui::SetCursorPosX(cursorX);
         if (ImGui::Button("Settings", ImVec2{buttonWidth, buttonHeight})) {
             setState(UiState::Settings);
         }
+        applyHoverSounds();
+        applyClickSounds();
         ImGui::Dummy(ImVec2(0, verticalSpacing));
         ImGui::SetCursorPosX(cursorX);
         if (ImGui::Button("Quit", ImVec2{buttonWidth, buttonHeight})) {
             GameEvents::Push(GameEventTypes::CloseWindow{});
         }
+        applyHoverSounds();
+        applyClickSounds();
         ImGui::PopFont();
     }
     ImGui::End();

@@ -6,7 +6,7 @@
 #include <memory>
 #include <string>
 
-inline constexpr size_t SoundTrackCount = 8;
+inline constexpr size_t SoundTrackCount = 32;
 
 struct MIX_Mixer_Deleter {
     void operator()(MIX_Mixer* m) const {

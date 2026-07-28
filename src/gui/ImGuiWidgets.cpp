@@ -1,7 +1,8 @@
 #include "gui/ImGuiWidgets.hpp"
+#include "platformer/GameEvents.hpp"
 #include <SDL3/SDL.h>
 
-bool Drawing::CustomArrowButton(const char* str_id, ImGuiDir dir, ImVec2 size) {
+bool ImGuiWidgets::CustomArrowButton(const char* str_id, ImGuiDir dir, ImVec2 size) {
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{0.f, 0.f}); // Remove padding
     bool pressed = ImGui::Button(str_id, size);
     ImGui::PopStyleVar();
@@ -35,7 +36,7 @@ bool Drawing::CustomArrowButton(const char* str_id, ImGuiDir dir, ImVec2 size) {
     return pressed;
 }
 
-bool Drawing::CustomPauseButton(const char* str_id, ImVec2 size) {
+bool ImGuiWidgets::CustomPauseButton(const char* str_id, ImVec2 size) {
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{0.f, 0.f});
     bool pressed = ImGui::Button(str_id, size);
     ImGui::PopStyleVar();

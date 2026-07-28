@@ -78,7 +78,21 @@ class UiManager {
     void drawLargeLogo(WindowManager& window, float menuHeight);
     void fpsText(WindowManager& window);
 
-    void handleSounds();
+    void applyClickSounds(
+        std::string_view soundRelativePath = AssetPaths::Sounds::Click,
+        unsigned int volume = 100,
+        float pitch = 1.f
+    );
+    void applyHoverSounds(
+        std::string_view soundRelativePath = AssetPaths::Sounds::Hover,
+        unsigned int volume = 100,
+        float pitch = 1.f
+    );
+    void applyEditSounds(
+        std::string_view soundRelativePath = AssetPaths::Sounds::Edit,
+        unsigned int volume = 100,
+        float pitch = 1.f
+    );
     void applyTouchScroll();
     void updateActiveScale(WindowManager& window);
     void updateStyleScale(float scale);
@@ -90,7 +104,7 @@ class UiManager {
     bool stateChangedThisFrame = false;
     bool playerSourceAddedThisFrame = false;
 
-    bool itemHoveredThisFrame = false;
+    ImGuiID lastHoveredId = 0;
     bool itemActiveThisFrame = false;
     bool didEditSettings = false;
 
