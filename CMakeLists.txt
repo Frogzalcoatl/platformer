@@ -211,6 +211,13 @@ if(NOT ANDROID)
         COMMENT "VFS (Desktop): Packing assets archive next to executable and removing raw assets..."
         VERBATIM
     )
+    add_custom_target(run
+        COMMAND $<TARGET_FILE:${PROJECT_NAME}>
+        WORKING_DIRECTORY $<TARGET_FILE_DIR:${PROJECT_NAME}>
+        DEPENDS ${PROJECT_NAME} pack_assets
+        COMMENT "Executing ${PROJECT_NAME}..."
+        USES_TERMINAL
+    )
 else()
     # Android crosscompiling implementation influenced by AI
     set(ANDROID_PROJ_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android-project")
