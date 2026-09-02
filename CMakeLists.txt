@@ -322,7 +322,7 @@ else()
         COMMENT "VFS: Building host Packer, packing assets bundle, and compiling APK..."
         VERBATIM
     )
-    add_custom_target(install_and_run
+    add_custom_target(run
         COMMAND adb install -r "${ANDROID_BIN_DEST_DIR}/$<IF:$<CONFIG:Debug>,app-debug.apk,app-release-unsigned.apk>"
         COMMAND adb shell am start -n "com.frogzalcoatl.platformer/org.libsdl.app.SDLActivity"
         DEPENDS pack_assets

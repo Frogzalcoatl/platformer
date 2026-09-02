@@ -11,7 +11,7 @@
         {
             "label": "Android: Install and Run",
             "type": "shell",
-            "command": "cmake --build build/android-arm64 --target install_and_run",
+            "command": "cmake --build build/android-arm64 --target run",
             "problemMatcher": [],
             "group": "none"
         },
