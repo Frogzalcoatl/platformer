@@ -1,0 +1,9 @@
+CompileFlags:
+  Add:
+    # Compatibility with Windows SDK & MSVC Standard Library headers
+    - -fms-compatibility
+    - -fms-extensions
+
+    # Suppress warnings about compiler flags clangd doesn't need for code analysis
+    - -Wno-unknown-warning-option
+    - -Wno-unused-command-line-argument
