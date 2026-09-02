@@ -2,9 +2,16 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "Android: Configure (ARM64)",
+            "type": "shell",
+            "command": "cmake --preset android-arm64",
+            "problemMatcher": [],
+            "group": "none"
+        },
+        {
             "label": "Android: Install and Run",
             "type": "shell",
-            "command": "cmake --build --preset android-arm64-debug --target install_and_run",
+            "command": "cmake --build build/android-arm64 --target install_and_run",
             "problemMatcher": [],
             "group": "none"
         },
