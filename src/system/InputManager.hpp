@@ -2,7 +2,6 @@
 #include "platformer/GameEvents.hpp"
 #include <SDL3/SDL.h>
 #include <array>
-#include <filesystem>
 #include <optional>
 #include <unordered_map>
 #include <vector>

@@ -1,5 +1,4 @@
 #pragma once
-#include "assets/AssetPaths.hpp"
 #include <imgui.h>
 
 namespace ImGuiWidgets {

@@ -1,10 +1,10 @@
 #pragma once
-#include "platformer/GameEvents.hpp"
 #include "system/WindowManager.hpp"
 #include <SDL3/SDL.h>
-#include <optional>
+#include <functional>
 #include <string>
 #include <vector>
+
 
 struct Notification {
     std::string message;

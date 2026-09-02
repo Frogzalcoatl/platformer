@@ -1,6 +1,9 @@
 #include "system/DiscordRpcManager.hpp"
 #ifdef USE_DISCORD_RPC
 #include <SDL3/SDL.h>
+#include <ctime>
+#include <string>
+
 
 static time_t lastConnectionAttempt = 0;
 static const int ReconnectIntervalSeconds = 5;

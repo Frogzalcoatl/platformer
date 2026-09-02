@@ -8,7 +8,6 @@
 #include "system/WindowManager.hpp"
 #include "user-data/SettingsManager.hpp"
 #include <memory>
-#include <vector>
 
 class Platformer {
   private:

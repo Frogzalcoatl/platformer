@@ -1,4 +1,3 @@
-#include "gui/ImGuiWidgets.hpp"
 #include "gui/UiManager.hpp"
 
 void UiManager::drawMainMenu(WindowManager& window) {

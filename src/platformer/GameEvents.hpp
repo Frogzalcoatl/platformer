@@ -1,11 +1,8 @@
 #pragma once
 #include <SDL3/SDL.h>
 #include <functional>
-#include <optional>
-#include <queue>
 #include <string>
 #include <variant>
-#include <vector>
 
 enum class InputVerb : uint8_t {
     Up,

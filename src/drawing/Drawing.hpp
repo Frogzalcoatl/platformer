@@ -1,8 +1,9 @@
 #pragma once
 #include "assets/Colors.hpp"
-#include "platformer/Camera.hpp"
 #include "system/WindowManager.hpp"
 #include <SDL3_ttf/SDL_ttf.h>
+#include <box2d/box2d.h>
+#include <optional>
 
 namespace Drawing {
 void polygon(

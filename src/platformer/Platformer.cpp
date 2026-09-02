@@ -3,7 +3,6 @@
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_sdlrenderer3.h>
-#include <stdexcept>
 
 #ifdef SDL_PLATFORM_ANDROID
 #include "system/Android.hpp"

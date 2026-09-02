@@ -1,7 +1,6 @@
 #include "entities/Entity.hpp"
 #include "assets/AssetPaths.hpp"
 #include "drawing/Drawing.hpp"
-#include <cmath>
 
 Entity::Entity(
     b2WorldId world,

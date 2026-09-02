@@ -1,8 +1,5 @@
 #include "system/LogFormatting.hpp"
 #include <format>
-#include <iomanip>
-#include <iostream>
-#include <sstream>
 
 static SDL_LogOutputFunction defaultSdlLogFunc = nullptr;
 

@@ -3,13 +3,11 @@
 #include <SDL3_image/SDL_image.h>
 #include <SDL3_mixer/SDL_mixer.h>
 #include <SDL3_ttf/SDL_ttf.h>
-#include <array>
 #include <box2d/box2d.h>
 #include <filesystem>
 #include <imgui.h>
 #include <memory>
 #include <unordered_map>
-#include <variant>
 #include <vector>
 
 // Got idea to use deleter structs from AI. Makes sense to me.

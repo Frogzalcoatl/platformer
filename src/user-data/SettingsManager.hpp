@@ -1,7 +1,5 @@
 #pragma once
 #include "user-data/JsonManager.hpp"
-#include <string>
-#include <unordered_map>
 
 struct Settings {
     bool vsyncEnabled = true;

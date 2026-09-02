@@ -9,7 +9,6 @@
 #include <array>
 #include <imgui.h>
 #include <memory>
-#include <numeric>
 #include <string>
 #include <vector>
 

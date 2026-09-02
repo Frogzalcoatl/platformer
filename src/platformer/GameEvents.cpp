@@ -1,6 +1,7 @@
 #include "platformer/GameEvents.hpp"
 #include <SDL3/SDL.h>
 #include <array>
+#include <queue>
 
 constexpr size_t EventQueueSize = 256;
 static std::array<GameEvent, EventQueueSize> eventQueue = {};

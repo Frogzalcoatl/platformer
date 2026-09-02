@@ -2,7 +2,6 @@
 #include "assets/AssetPaths.hpp"
 #include <algorithm>
 #include <cstring>
-#include <fstream>
 
 AssetManager::AssetManager(SDL_Renderer* renderer)
     : vfs(std::filesystem::path(SDL_GetBasePath() ? SDL_GetBasePath() : ""),

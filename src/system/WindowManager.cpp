@@ -1,5 +1,4 @@
 #include "system/WindowManager.hpp"
-#include "assets/Colors.hpp"
 #include <box2d/box2d.h>
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>

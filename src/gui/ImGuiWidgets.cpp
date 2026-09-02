@@ -1,5 +1,4 @@
 #include "gui/ImGuiWidgets.hpp"
-#include "platformer/GameEvents.hpp"
 #include <SDL3/SDL.h>
 
 bool ImGuiWidgets::CustomArrowButton(const char* str_id, ImGuiDir dir, ImVec2 size) {

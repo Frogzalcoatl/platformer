@@ -3,7 +3,6 @@
 #include <cmath>
 #include <format>
 #include <imgui_internal.h>
-#include <limits>
 
 UiManager::UiManager(AssetManager& assets, UiState startingState) : currentState(startingState) {
     fontSmall = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 12.f);

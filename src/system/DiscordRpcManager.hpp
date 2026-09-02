@@ -1,7 +1,6 @@
 #pragma once
 #include <SDL3/SDL.h>
-#include <ctime>
-#include <string>
+#include <string_view>
 #ifdef USE_DISCORD_RPC
 #include <discord_rpc.h>
 #endif

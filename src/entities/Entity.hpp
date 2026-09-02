@@ -3,10 +3,8 @@
 #include "assets/Colors.hpp"
 #include "system/WindowManager.hpp"
 #include <SDL3/SDL.h>
-#include <array>
 #include <box2d/box2d.h>
 #include <optional>
-#include <vector>
 
 enum class EntityMovement : uint8_t {
     Up,
