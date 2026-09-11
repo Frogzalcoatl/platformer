@@ -24,6 +24,9 @@ When updating the app version, change both `vcpkg.json` and `android-project/app
     * **C++ CMake tools for Windows**
     * **Windows 11 SDK** (Compatible with both Windows 10 and 11)
 
+Be sure to use the Developer Powershell for VS when building the project on windows.
+If you have a vscode based ide, this project's tasks.json automatically opens that terminal on windows.
+
 **MacOS:**
 
 1. Install Xcode Command Line Tools:

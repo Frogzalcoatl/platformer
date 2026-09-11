@@ -1,28 +1,85 @@
 {
     "version": "2.0.0",
+    "windows": {
+        "options": {
+            "shell": {
+                "executable": "powershell.exe",
+                "args": [
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-Command",
+                    "$vswhere = Join-Path '${env:ProgramFiles(x86)}' 'Microsoft Visual Studio/Installer/vswhere.exe'; $vsPath = & $vswhere -latest -products * -property installationPath; & (Join-Path $vsPath 'Common7/Tools/Launch-VsDevShell.ps1') -Arch amd64 -SkipAutomaticLocation; "
+                ]
+            }
+        }
+    },
     "tasks": [
         {
-            "label": "Android: Configure (ARM64)",
+            "label": " [Default] Configure",
+            "type": "shell",
+            "windows": {
+                "command": "cmake --preset windows"
+            },
+            "linux": {
+                "command": "cmake --preset linux"
+            },
+            "osx": {
+                "command": "cmake --preset macos"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": " [Default] Build",
+            "type": "shell",
+            "windows": {
+                "command": "cmake --build build/windows --target run"
+            },
+            "linux": {
+                "command": "cmake --build build/linux --target run"
+            },
+            "osx": {
+                "command": "cmake --build build/macos --target run"
+            },
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "clear": true,
+                "reveal": "always",
+                "focus": false
+            }
+        },
+        {
+            "label": "[Android ARM64] Configure",
             "type": "shell",
             "command": "cmake --preset android-arm64",
             "problemMatcher": [],
             "group": "none"
         },
         {
-            "label": "Android: Install and Run",
+            "label": "[Android ARM64] Build and Run",
             "type": "shell",
             "command": "cmake --build build/android-arm64 --target run",
             "problemMatcher": [],
-            "group": "none"
+            "group": "none",
+            "presentation": {
+                "clear": true,
+                "reveal": "always"
+            }
         },
         {
-            "label": "Android: Stream Logs",
+            "label": "[Android ARM64] Stream Logs",
             "type": "shell",
             "command": "adb logcat -c && adb logcat SDL/APP:V SDL:I *:S",
             "windows": {
                 "command": "adb logcat -c; adb logcat SDL/APP:V SDL:I *:S"
             },
             "group": "none",
+            "problemMatcher": [],
             "presentation": {
                 "reveal": "always",
                 "panel": "new",
@@ -30,17 +87,14 @@
             }
         },
         {
-            "label": "Android: Install, Run, and Stream Logs",
+            "label": "[Android ARM64] Build, Run, and Stream Logs",
             "dependsOrder": "sequence",
             "dependsOn": [
-                "Android: Install and Run",
-                "Android: Stream Logs"
+                "[Android ARM64] Build and Run",
+                "[Android ARM64] Stream Logs"
             ],
             "problemMatcher": [],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
+            "group": "none"
         }
     ]
 }
