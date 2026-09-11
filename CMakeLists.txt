@@ -276,6 +276,9 @@ else()
         "-DCMAKE_TOOLCHAIN_FILE=" # Clear the parent's Android cross-compiling toolchain
         "-DVCPKG_MANIFEST_MODE=OFF" # Prevent host packer from processing your game's vcpkg.json
     )
+    if(CMAKE_HOST_WIN32)
+        list(APPEND HOST_CMAKE_ARGS "-A" "x64")
+    endif()
     # Use single-config Ninja for the host tool to avoid complex configuration subdirectories
     set(HOST_GENERATOR CMAKE_GENERATOR "Ninja")
     if(CMAKE_HOST_WIN32)
