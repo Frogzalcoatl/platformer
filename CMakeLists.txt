@@ -137,7 +137,6 @@ set(SOURCES
     src/platformer/GameEvents.cpp
     src/platformer/Level.cpp
     src/platformer/Platformer.cpp
-    src/system/Android.cpp
     src/system/Audiomanager.cpp
     src/system/DiscordRpcManager.cpp
     src/system/LogFormatting.cpp
