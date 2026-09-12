@@ -80,6 +80,13 @@ if(USE_DISCORD_RPC)
         endif()
     endif()
 endif()
+include(FetchContent)
+FetchContent_Declare(
+    vfs
+    GIT_REPOSITORY https://github.com/Frogzalcoatl/virtual-file-system.git
+    GIT_TAG        main
+)
+FetchContent_MakeAvailable(vfs)
 
 # Source C++ Files
 set(SOURCES
@@ -118,7 +125,6 @@ else()
 endif()
 
 target_include_directories(${PROJECT_NAME} PRIVATE src)
-add_subdirectory(libs/vfs)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     SDL3::SDL3
@@ -128,7 +134,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     box2d::box2d
     imgui::imgui
     rapidjson
-    VirtualFileSystem
+    vfs::vfs
 )
 if(USE_DISCORD_RPC AND TARGET discord-rpc::discord-rpc)
     target_link_libraries(${PROJECT_NAME} PRIVATE discord-rpc::discord-rpc)
@@ -249,7 +255,7 @@ else()
     endif()
     # Spawns a background compiler targeting your Desktop environment to build Packer
     ExternalProject_Add(host_packer_project
-        SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libs/vfs"
+        SOURCE_DIR "${vfs_SOURCE_DIR}"
         BINARY_DIR "${HOST_BUILD_DIR}"
         ${HOST_GENERATOR}
         CMAKE_ARGS ${HOST_CMAKE_ARGS}

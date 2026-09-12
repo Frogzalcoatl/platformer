@@ -1,5 +1,4 @@
 #pragma once
-#include "VirtualFileSystem.hpp"
 #include <SDL3_image/SDL_image.h>
 #include <SDL3_mixer/SDL_mixer.h>
 #include <SDL3_ttf/SDL_ttf.h>
@@ -9,6 +8,8 @@
 #include <memory>
 #include <unordered_map>
 #include <vector>
+#include <vfs/vfs.hpp>
+
 
 // Got idea to use deleter structs from AI. Makes sense to me.
 struct SDL_Texture_Deleter {
