@@ -90,35 +90,35 @@ FetchContent_MakeAvailable(vfs)
 
 # Source C++ Files
 set(SOURCES
-    src/Main.cpp
-    src/assets/AssetManager.cpp
-    src/drawing/Drawing.cpp
-    src/entities/Entity.cpp
-    src/gui/ImGuiWidgets.cpp
-    src/gui/NotificationManager.cpp
-    src/gui/TouchController.cpp
-    src/gui/UiManager.cpp
-    src/gui/ui-states/Debug.cpp
-    src/gui/ui-states/MainMenu.cpp
-    src/gui/ui-states/Paused.cpp
-    src/gui/ui-states/PlayerSourceSetup.cpp
-    src/gui/ui-states/Settings.cpp
-    src/platformer/Camera.cpp
-    src/platformer/EntityController.cpp
-    src/platformer/GameEvents.cpp
-    src/platformer/Level.cpp
-    src/platformer/Platformer.cpp
-    src/system/Audiomanager.cpp
-    src/system/DiscordRpcManager.cpp
-    src/system/LogFormatting.cpp
-    src/system/InputManager.cpp
-    src/system/WindowManager.cpp
-    src/user-data/JsonManager.cpp
-    src/user-data/SettingsManager.cpp
+    src/main.cpp
+    src/assets/asset_manager.cpp
+    src/drawing/drawing.cpp
+    src/entities/entity.cpp
+    src/gui/imgui_widgets.cpp
+    src/gui/notification_manager.cpp
+    src/gui/touch_controller.cpp
+    src/gui/ui_manager.cpp
+    src/gui/ui_states/debug.cpp
+    src/gui/ui_states/main_menu.cpp
+    src/gui/ui_states/paused.cpp
+    src/gui/ui_states/player_source_setup.cpp
+    src/gui/ui_states/settings.cpp
+    src/platformer/camera.cpp
+    src/platformer/entity_controller.cpp
+    src/platformer/game_events.cpp
+    src/platformer/level.cpp
+    src/platformer/platformer.cpp
+    src/system/audio_manager.cpp
+    src/system/discord_rpc_manager.cpp
+    src/system/input_manager.cpp
+    src/system/log_formatting.cpp
+    src/system/window_manager.cpp
+    src/user_data/json_manager.cpp
+    src/user_data/settings_manager.cpp
 )
 
 if (ANDROID)
-    list(APPEND SOURCES src/system/Android.cpp)
+    list(APPEND SOURCES src/system/android.cpp)
     add_library(${PROJECT_NAME} SHARED ${SOURCES})
 else()
     add_executable(${PROJECT_NAME} ${SOURCES})
