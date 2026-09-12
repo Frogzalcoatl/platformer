@@ -88,37 +88,12 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(vfs)
 
-# Source C++ Files
-set(SOURCES
-    src/main.cpp
-    src/assets/asset_manager.cpp
-    src/drawing/drawing.cpp
-    src/entities/entity.cpp
-    src/gui/imgui_widgets.cpp
-    src/gui/notification_manager.cpp
-    src/gui/touch_controller.cpp
-    src/gui/ui_manager.cpp
-    src/gui/ui_states/debug.cpp
-    src/gui/ui_states/main_menu.cpp
-    src/gui/ui_states/paused.cpp
-    src/gui/ui_states/player_source_setup.cpp
-    src/gui/ui_states/settings.cpp
-    src/platformer/camera.cpp
-    src/platformer/entity_controller.cpp
-    src/platformer/game_events.cpp
-    src/platformer/level.cpp
-    src/platformer/platformer.cpp
-    src/system/audio_manager.cpp
-    src/system/discord_rpc_manager.cpp
-    src/system/input_manager.cpp
-    src/system/log_formatting.cpp
-    src/system/window_manager.cpp
-    src/user_data/json_manager.cpp
-    src/user_data/settings_manager.cpp
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h"
 )
 
 if (ANDROID)
-    list(APPEND SOURCES src/system/android.cpp)
     add_library(${PROJECT_NAME} SHARED ${SOURCES})
 else()
     add_executable(${PROJECT_NAME} ${SOURCES})
@@ -143,7 +118,8 @@ endif()
 
 # I like strict compilers
 if(MSVC)
-    target_compile_options(${PROJECT_NAME} PRIVATE 
+    target_compile_options(${PROJECT_NAME} PRIVATE
+        /EHsc # Allow exceptions
         /W4
         $<$<CONFIG:Release>:/WX> # Warnings as errors only in release
     )
