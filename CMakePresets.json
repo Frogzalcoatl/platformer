@@ -17,7 +17,7 @@
     },
     {
       "name": "windows",
-      "displayName": "Windows (Default / MSVC)",
+      "displayName": "Windows",
       "inherits": "base",
       "condition": {
         "type": "equals",
@@ -39,7 +39,7 @@
     },
     {
       "name": "linux",
-      "displayName": "Linux (Default)",
+      "displayName": "Linux",
       "inherits": "base",
       "condition": {
         "type": "equals",
@@ -48,17 +48,8 @@
       }
     },
     {
-      "name": "linux-clang",
-      "displayName": "Linux (Clang)",
-      "inherits": "linux",
-      "cacheVariables": {
-        "CMAKE_C_COMPILER": "clang",
-        "CMAKE_CXX_COMPILER": "clang++"
-      }
-    },
-    {
       "name": "macos",
-      "displayName": "macOS (Apple Clang)",
+      "displayName": "macOS",
       "inherits": "base",
       "condition": {
         "type": "equals",
