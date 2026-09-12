@@ -26,15 +26,6 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-# Automatically copy compile_commands.json to the project root for clangd
-if(EXISTS "${CMAKE_BINARY_DIR}/compile_commands.json")
-    file(COPY_FILE
-        "${CMAKE_BINARY_DIR}/compile_commands.json"
-        "${CMAKE_SOURCE_DIR}/compile_commands.json"
-        ONLY_IF_DIFFERENT
-    )
-endif()
-
 # Compile definition cmake var initialization
 set(ASSETS_FOLDER_NAME "assets")
 set(PACK_FILE_NAME "${PROJECT_NAME}.dat")
