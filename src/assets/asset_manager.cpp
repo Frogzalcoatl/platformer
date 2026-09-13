@@ -62,7 +62,7 @@ AssetManager::getSDLFont(std::string_view relativePath, float ptSize, TTF_FontSt
     auto it = fontData.find(relativePath);
     if (it == fontData.end()) {
         auto [insertedIt, success] =
-            fontData.emplace(std::string{relativePath}, vfs.readFile(relativePath));
+            fontData.emplace(std::string{relativePath}, vfs.read_file(relativePath));
         rawDataPtr = &insertedIt->second;
     } else {
         rawDataPtr = &it->second;
@@ -95,8 +95,7 @@ AssetManager::getSDLFont(std::string_view relativePath, float ptSize, TTF_FontSt
     newCachedFont.font = UniqueFont(newFont, TTF_Font_Deleter());
     newCachedFont.ptSize = ptSize;
     newCachedFont.style = style;
-    fontCache.push_back(
-        std::move(newCachedFont)
+    fontCache.push_back(std::move(newCachedFont)
     ); // std::move is needed since UniqueFonts are not copyable
     SDL_Log(
         "Loaded SDL3 ttf from file \"%.*s\"",
@@ -151,7 +150,7 @@ UniqueText AssetManager::getSDLText(
 }
 
 ImFont* AssetManager::getImGuiFont(std::string_view relativePath, float ptSize) {
-    std::vector<std::byte> data = vfs.readFile(relativePath);
+    std::vector<std::byte> data = vfs.read_file(relativePath);
     if (data.empty()) {
         SDL_LogError(
             SDL_LOG_CATEGORY_APPLICATION,
@@ -186,7 +185,7 @@ AssetManager::getAudio(std::string_view relativePath, MIX_Mixer* mixerDevice, bo
     if (it != audioCache.end()) {
         return it->second.get();
     }
-    std::vector<std::byte> soundData = vfs.readFile(relativePath);
+    std::vector<std::byte> soundData = vfs.read_file(relativePath);
     if (soundData.empty()) {
         SDL_LogError(
             SDL_LOG_CATEGORY_APPLICATION,
@@ -247,7 +246,7 @@ SDL_Texture* AssetManager::getTexture(std::string_view relativePath) {
             return nullptr;
         }
     }
-    std::vector<std::byte> textureData = vfs.readFile(relativePath);
+    std::vector<std::byte> textureData = vfs.read_file(relativePath);
     if (textureData.empty()) {
         SDL_LogError(
             SDL_LOG_CATEGORY_APPLICATION,
@@ -290,7 +289,7 @@ SDL_Texture* AssetManager::getTexture(std::string_view relativePath) {
 }
 
 int AssetManager::addGameControllerMappings(std::string_view relativePath) {
-    std::vector<std::byte> controllerData = vfs.readFile(relativePath);
+    std::vector<std::byte> controllerData = vfs.read_file(relativePath);
     if (controllerData.empty()) {
         SDL_LogError(
             SDL_LOG_CATEGORY_APPLICATION,
