@@ -1,17 +1,26 @@
 CompileFlags:
-  CompilationDatabase: .
+  # Uncomment the one matching your active build preset:
+  CompilationDatabase: build/windows
+  # CompilationDatabase: build/windows-clang
+  # CompilationDatabase: build/linux
+  # CompilationDatabase: build/macos
+  # CompilationDatabase: build/android-arm64
+  # CompilationDatabase: build/android-x86_64
+  # CompilationDatabase: build
+  # CompilationDatabase: .
 
   Add:
-    # Windows & MSVC compatibility
-    - -fms-compatibility
-    - -fms-extensions
-
-    # Enables exceptions in both MSVC driver mode and Clang driver mode
-    - /EHsc
-    - -EHsc
-    - -fexceptions
-    - -fcxx-exceptions
-
-    # Suppress warnings about compiler flags clangd doesn't need
     - -Wno-unknown-warning-option
     - -Wno-unused-command-line-argument
+
+# Enable clangd's background index so project-wide renames (F2) work reliably
+Index:
+  Background: Build
+
+# Disables inline ghost parameter name badges
+InlayHints:
+  ParameterNames: false
+
+# Inserts parentheses () without filling in parameter names when autocompleting functions
+Completion:
+  ArgumentLists: Delimiters
