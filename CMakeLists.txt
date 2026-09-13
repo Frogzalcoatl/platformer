@@ -1,18 +1,5 @@
 cmake_minimum_required(VERSION 3.26)
 
-if(DEFINED ENV{VCPKG_ROOT})
-    set(VCPKG_DIR "$ENV{VCPKG_ROOT}")
-    message(STATUS "[vcpkg] Using global installation found in environment: ${VCPKG_DIR}")
-else()
-    set(VCPKG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/.vcpkg")
-endif()
-
-if(NOT EXISTS "${VCPKG_DIR}/vcpkg" AND NOT EXISTS "${VCPKG_DIR}/vcpkg.exe")
-    message(FATAL_ERROR "Vcpkg installation not found at '${VCPKG_DIR}'. Please run the setup script for your platform first.")
-endif()
-
-set(CMAKE_TOOLCHAIN_FILE "${VCPKG_DIR}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
-
 # Static lib setup
 cmake_policy(SET CMP0091 NEW)
 # $<$<CONFIG:Debug>:Debug> Explanation
@@ -24,6 +11,7 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 project(Platformer CXX C)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # Compile definition cmake var initialization
@@ -56,10 +44,6 @@ if(USE_DISCORD_RPC)
         # Directly construct the Release and Debug absolute paths
         set(DISCORD_LIBRARY_RELEASE "${DISCORD_ROOT}/lib/${DISCORD_LIB_NAME}")
         set(DISCORD_LIBRARY_DEBUG "${DISCORD_ROOT}/debug/lib/${DISCORD_LIB_NAME}")
-        # Print paths to the output during configuration for easy verification
-        message(STATUS "[Discord-RPC] Found header at: ${DISCORD_INCLUDE_DIR}")
-        message(STATUS "[Discord-RPC] Release library: ${DISCORD_LIBRARY_RELEASE}")
-        message(STATUS "[Discord-RPC] Debug library:   ${DISCORD_LIBRARY_DEBUG}")
         if(EXISTS "${DISCORD_LIBRARY_RELEASE}" AND EXISTS "${DISCORD_LIBRARY_DEBUG}")
             add_library(discord-rpc::discord-rpc STATIC IMPORTED)
             set_target_properties(discord-rpc::discord-rpc PROPERTIES
@@ -124,7 +108,7 @@ if(MSVC)
         $<$<CONFIG:Release>:/WX> # Warnings as errors only in release
     )
 else()
-    target_compile_options(${PROJECT_NAME} PRIVATE 
+    target_compile_options(${PROJECT_NAME} PRIVATE
         -Wall 
         -Wextra 
         -Wconversion
@@ -132,8 +116,8 @@ else()
     )
 endif()
 
-target_compile_definitions(${PROJECT_NAME} PRIVATE _USE_MATH_DEFINES)
 target_compile_definitions(${PROJECT_NAME} PRIVATE 
+    _USE_MATH_DEFINES
     GameVersion="${GAME_VERSION}"
     AssetsFolderName="${ASSETS_FOLDER_NAME}"
     PackFileName="${PACK_FILE_NAME}"
@@ -152,7 +136,7 @@ if(NOT ANDROID)
                 "${CMAKE_CURRENT_SOURCE_DIR}/${ASSETS_FOLDER_NAME}"
                 "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${ASSETS_FOLDER_NAME}"
         DEPENDS ${PROJECT_NAME}
-        COMMENT "VFS (Desktop): Copying raw assets directory next to executable and removing old pack file..."
+        COMMENT "VFS (Desktop): Copying raw assets next to binary..."
         VERBATIM
     )
     add_custom_target(pack_assets ALL
@@ -162,7 +146,7 @@ if(NOT ANDROID)
                 "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PACK_FILE_NAME}"
                 "${GAME_VERSION}"
         DEPENDS ${PROJECT_NAME} Packer
-        COMMENT "VFS (Desktop): Packing assets archive next to executable and removing raw assets..."
+        COMMENT "VFS (Desktop): Packing assets archive next to binary..."
         VERBATIM
     )
     add_custom_target(run
@@ -178,14 +162,7 @@ else()
     set(ANDROID_PROJ_DIR_MAIN "${ANDROID_PROJ_DIR}/app/src/main")
     set(ANDROID_JNILIBS_DIR "${ANDROID_PROJ_DIR_MAIN}/jniLibs/${CMAKE_ANDROID_ARCH_ABI}")
     set(ANDROID_ASSETS_DIR "${ANDROID_PROJ_DIR_MAIN}/assets")
-    # Map CMAKE_ANDROID_ARCH_ABI to the corresponding output directory name
-    if(CMAKE_ANDROID_ARCH_ABI STREQUAL "arm64-v8a")
-        set(ANDROID_OUTPUT_DIR "android-arm64")
-    elseif(CMAKE_ANDROID_ARCH_ABI STREQUAL "x86_64")
-        set(ANDROID_OUTPUT_DIR "android-x86_64")
-    else()
-        set(ANDROID_OUTPUT_DIR "android-${CMAKE_ANDROID_ARCH_ABI}")
-    endif()
+    set(ANDROID_BIN_DEST_DIR "${CMAKE_BINARY_DIR}/bin")
     # Explicitly direct the output folder to be inside the build/<arch>/bin directory
     set(ANDROID_BIN_DEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/build/${ANDROID_OUTPUT_DIR}/bin")
     if(CMAKE_HOST_WIN32)
@@ -207,11 +184,11 @@ else()
     )
     set(GRADLE_COMMANDS
         ${CHMOD_COMMAND}
-        COMMAND "${ANDROID_PROJ_DIR}/${GRADLE_CMD}" "assemble$<IF:$<CONFIG:Debug>,Debug,Release>"
+        COMMAND "${ANDROID_PROJ_DIR}/${GRADLE_CMD}" "assembleDebug"
         COMMAND ${CMAKE_COMMAND} -E make_directory "${ANDROID_BIN_DEST_DIR}"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${ANDROID_PROJ_DIR}/app/build/outputs/apk/$<IF:$<CONFIG:Debug>,debug/app-debug.apk,release/app-release-unsigned.apk>"
-                "${ANDROID_BIN_DEST_DIR}/$<IF:$<CONFIG:Debug>,app-debug.apk,app-release-unsigned.apk>"
+                "${ANDROID_PROJ_DIR}/app/build/outputs/apk/debug/app-debug.apk"
+                "${ANDROID_BIN_DEST_DIR}/app-debug.apk"
     )
     include(ExternalProject)
     set(HOST_BUILD_DIR "${CMAKE_BINARY_DIR}/host_packer_build")
@@ -222,8 +199,6 @@ else()
         "-DCMAKE_TOOLCHAIN_FILE=" # Clear the parent's Android cross-compiling toolchain
         "-DVCPKG_MANIFEST_MODE=OFF" # Prevent host packer from processing your game's vcpkg.json
     )
-    # Use single-config Ninja for the host tool to avoid complex configuration subdirectories
-    set(HOST_GENERATOR CMAKE_GENERATOR "Ninja")
     if(CMAKE_HOST_WIN32)
         set(PACKER_TOOL "${HOST_BUILD_DIR}/Packer.exe")
     else()
@@ -233,7 +208,7 @@ else()
     ExternalProject_Add(host_packer_project
         SOURCE_DIR "${vfs_SOURCE_DIR}"
         BINARY_DIR "${HOST_BUILD_DIR}"
-        ${HOST_GENERATOR}
+        CMAKE_GENERATOR "Ninja"
         CMAKE_ARGS ${HOST_CMAKE_ARGS}
         INSTALL_COMMAND ""
     )
@@ -249,7 +224,7 @@ else()
         ${GRADLE_COMMANDS}
         WORKING_DIRECTORY "${ANDROID_PROJ_DIR}"
         DEPENDS ${PROJECT_NAME}
-        COMMENT "VFS: Packaging raw assets folder and compiling APK..."
+        COMMENT "VFS: Packaging raw assets folder and compiling Debug APK..."
         VERBATIM
     )
     add_custom_target(pack_assets ALL
@@ -268,10 +243,10 @@ else()
         VERBATIM
     )
     add_custom_target(run
-        COMMAND adb install -r "${ANDROID_BIN_DEST_DIR}/$<IF:$<CONFIG:Debug>,app-debug.apk,app-release-unsigned.apk>"
+        COMMAND adb install -r "${ANDROID_BIN_DEST_DIR}/app-debug.apk"
         COMMAND adb shell am start -n "com.frogzalcoatl.platformer/org.libsdl.app.SDLActivity"
         DEPENDS pack_assets
-        COMMENT "VFS: Deploying APK and launching..."
+        COMMENT "VFS: Deploying Debug APK and launching..."
         USES_TERMINAL
         VERBATIM
     )

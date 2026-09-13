@@ -2,23 +2,30 @@
   "version": 3,
   "cmakeMinimumRequired": {
     "major": 3,
-    "minor": 22
+    "minor": 26
   },
   "configurePresets": [
     {
       "name": "base",
       "hidden": true,
+      "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${presetName}",
-      "generator": "Ninja Multi-Config",
       "cacheVariables": {
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-        "CMAKE_CONFIGURATION_TYPES": "Debug;Release;RelWithDebInfo"
-      }
+        "CMAKE_CXX_STANDARD": "20",
+        "CMAKE_CXX_STANDARD_REQUIRED": "ON",
+        "CMAKE_BUILD_TYPE": "Debug"
+      },
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
     },
     {
       "name": "windows",
       "displayName": "Windows",
       "inherits": "base",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
@@ -26,6 +33,11 @@
       },
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": "x64-windows-static"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "windows-msvc-x64"
+        }
       }
     },
     {
@@ -35,6 +47,11 @@
       "cacheVariables": {
         "CMAKE_C_COMPILER": "clang-cl",
         "CMAKE_CXX_COMPILER": "clang-cl"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "windows-clang-x64"
+        }
       }
     },
     {
@@ -65,6 +82,7 @@
         "CMAKE_SYSTEM_NAME": "Android",
         "CMAKE_SYSTEM_VERSION": "28",
         "ANDROID_PLATFORM": "android-28",
+        "ANDROID_STL": "c++_shared",
         "CMAKE_ANDROID_NDK": "$env{ANDROID_NDK_HOME}",
         "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "$env{ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake"
       }
@@ -80,7 +98,7 @@
     },
     {
       "name": "android-x86_64",
-      "displayName": "Android (x86_64 Emulator)",
+      "displayName": "Android (x86_64)",
       "inherits": "android-base",
       "cacheVariables": {
         "ANDROID_ABI": "x86_64",
