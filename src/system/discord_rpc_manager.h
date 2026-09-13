@@ -5,11 +5,11 @@
 #include <discord_rpc.h>
 #endif
 
-namespace DiscordRpcManager {
+namespace discord_rpc_manager {
 #ifdef USE_DISCORD_RPC
-void init(std::string_view applicationId, DiscordRichPresence presence);
+void init(std::string_view application_id, DiscordRichPresence presence);
 #endif
-void updateState(std::string_view state, std::string_view details);
+void update_state(std::string_view state, std::string_view details);
 void update();
 void shutdown();
 }

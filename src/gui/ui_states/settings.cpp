@@ -1,16 +1,17 @@
 #include "gui/ui_manager.h"
+#include <limits>
 
-void UiManager::drawSettings(
+void UiManager::draw_settings(
     WindowManager& window,
     SettingsManager& settings,
     AudioManager& audio,
     InputManager& input,
     Level* level
 ) {
-    setNextWindowSafeArea(window);
-    const ImVec2 verticalSpacingDummy{0.f, 10.f * uiScale};
-    const ImVec2 horizontalSpacingDummy{10.f * uiScale, 0.f};
-    ImVec2 resetButtonSize{100 * uiScale, 30 * uiScale};
+    set_next_window_safe_area(window);
+    const ImVec2 vertical_spacing_dummy{0.f, 10.f * ui_scale_};
+    const ImVec2 horizontal_spacing_dummy{10.f * ui_scale_, 0.f};
+    ImVec2 reset_button_size{100 * ui_scale_, 30 * ui_scale_};
     if (ImGui::Begin(
             "Settings",
             nullptr,
@@ -18,250 +19,254 @@ void UiManager::drawSettings(
                 ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground |
                 ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus
         )) {
-        ImGui::PushFont(fontLarge);
+        ImGui::PushFont(font_large_);
         if (ImGui::Button("Back")) {
-            runCancelEvent();
+            run_cancel_event();
         }
-        applyHoverSounds();
-        applyClickSounds();
+        apply_hover_sounds();
+        apply_click_sounds();
         ImGui::SameLine();
-        ImGui::Dummy(horizontalSpacingDummy);
+        ImGui::Dummy(horizontal_spacing_dummy);
         ImGui::SameLine();
         if (ImGui::BeginTabBar("SettingsTabBar")) {
-            ImGuiTabItemFlags displayTabFlags = ImGuiTabItemFlags_None;
+            ImGuiTabItemFlags display_tab_flags = ImGuiTabItemFlags_None;
             if (ImGui::IsWindowAppearing()) {
-                displayTabFlags |= ImGuiTabItemFlags_SetSelected;
+                display_tab_flags |= ImGuiTabItemFlags_SetSelected;
             }
-            if (ImGui::BeginTabItem("Display", nullptr, displayTabFlags)) {
-                applyHoverSounds();
-                applyClickSounds();
-                ImGui::PushFont(fontDoubleLarge);
+            if (ImGui::BeginTabItem("Display", nullptr, display_tab_flags)) {
+                apply_hover_sounds();
+                apply_click_sounds();
+                ImGui::PushFont(font_double_large_);
                 ImGui::Text("Display");
                 ImGui::PopFont();
-                ImGui::Dummy(verticalSpacingDummy);
-                fpsText(window);
-                ImGui::Dummy(verticalSpacingDummy);
-                bool vsync = window.isVsyncEnabled();
+                ImGui::Dummy(vertical_spacing_dummy);
+                fps_text(window);
+                ImGui::Dummy(vertical_spacing_dummy);
+                bool vsync = window.is_vsync_enabled();
 #ifndef SDL_PLATFORM_ANDROID
                 if (ImGui::Checkbox("VSync", &vsync)) {
-                    window.setVsync(vsync);
-                    settings.setVsyncEnabled(vsync);
-                    settings.setFpsUnlimited(window.getFpsUnlimited());
-                    didEditSettings = true;
+                    window.set_vsync(vsync);
+                    settings.set_vsync_enabled(vsync);
+                    settings.set_fps_unlimited(window.get_fps_unlimited());
+                    did_edit_settings_ = true;
                 }
-                applyHoverSounds();
-                applyClickSounds();
-                ImGui::Dummy(verticalSpacingDummy);
+                apply_hover_sounds();
+                apply_click_sounds();
+                ImGui::Dummy(vertical_spacing_dummy);
 #endif
-                bool fpsUnlimited = window.getFpsUnlimited();
-                if (ImGui::Checkbox("FPS Unlimited", &fpsUnlimited)) {
-                    window.setFpsUnlimited(fpsUnlimited);
-                    settings.setFpsUnlimited(fpsUnlimited);
-                    settings.setVsyncEnabled(window.isVsyncEnabled());
-                    didEditSettings = true;
+                bool fps_unlimited = window.get_fps_unlimited();
+                if (ImGui::Checkbox("FPS Unlimited", &fps_unlimited)) {
+                    window.set_fps_unlimited(fps_unlimited);
+                    settings.set_fps_unlimited(fps_unlimited);
+                    settings.set_vsync_enabled(window.is_vsync_enabled());
+                    did_edit_settings_ = true;
                 }
-                applyHoverSounds();
-                applyClickSounds();
-                if (!vsync && !fpsUnlimited) {
-                    ImGui::Dummy(verticalSpacingDummy);
-                    static int tempFps = static_cast<int>(window.getTargetFps());
+                apply_hover_sounds();
+                apply_click_sounds();
+                if (!vsync && !fps_unlimited) {
+                    ImGui::Dummy(vertical_spacing_dummy);
+                    static int temp_fps = static_cast<int>(window.get_target_fps());
                     ImGui::SliderInt(
-                        "Target FPS", &tempFps, 10, 300, "%d", ImGuiSliderFlags_NoInput
+                        "Target FPS", &temp_fps, 10, 300, "%d", ImGuiSliderFlags_NoInput
                     );
-                    applyClickSounds();
+                    apply_click_sounds();
                     if (ImGui::IsItemDeactivatedAfterEdit()) {
-                        window.setTargetFps(static_cast<Uint64>(tempFps));
-                        settings.setTargetFps(static_cast<unsigned int>(tempFps));
-                        didEditSettings = true;
+                        window.set_target_fps(static_cast<Uint64>(temp_fps));
+                        settings.set_target_fps(static_cast<unsigned int>(temp_fps));
+                        did_edit_settings_ = true;
                     }
                     if (!ImGui::IsItemActive()) {
-                        tempFps = static_cast<int>(window.getTargetFps());
+                        temp_fps = static_cast<int>(window.get_target_fps());
                     }
                 }
-                ImGui::Dummy(verticalSpacingDummy);
-                int activeIndex = 0;
-                float minDiff = std::numeric_limits<float>::max();
-                for (size_t i = 0; i < UiSizePresets.size(); i++) {
-                    float diff = std::abs(UiSizePresets[i].scale - userPreferredScale);
-                    if (diff < minDiff) {
-                        minDiff = diff;
-                        activeIndex = static_cast<int>(i);
+                ImGui::Dummy(vertical_spacing_dummy);
+                int active_index = 0;
+                float min_diff = std::numeric_limits<float>::max();
+                for (size_t i = 0; i < ui_size_presets_.size(); i++) {
+                    float diff = std::abs(ui_size_presets_[i].scale - user_preferred_scale_);
+                    if (diff < min_diff) {
+                        min_diff = diff;
+                        active_index = static_cast<int>(i);
                     }
                 }
-                static int tempIndex = activeIndex;
-                if (ImGui::Button("Reset##ResetUIScale", resetButtonSize)) {
-                    const Settings& defaultSettings = settings.getDefault();
-                    userPreferredScale = UiSizePresets[defaultSettings.uiScale].scale;
-                    tempIndex = static_cast<int>(defaultSettings.uiScale);
-                    settings.setUiScale(defaultSettings.uiScale);
-                    didEditSettings = true;
+                static int temp_index = active_index;
+                if (ImGui::Button("Reset##ResetUIScale", reset_button_size)) {
+                    const Settings& default_settings = settings.get_default();
+                    user_preferred_scale_ = ui_size_presets_[default_settings.ui_scale].scale;
+                    temp_index = static_cast<int>(default_settings.ui_scale);
+                    settings.set_ui_scale(default_settings.ui_scale);
+                    did_edit_settings_ = true;
                 }
-                applyHoverSounds();
-                applyClickSounds();
+                apply_hover_sounds();
+                apply_click_sounds();
                 ImGui::SameLine();
-                ImGui::Dummy(horizontalSpacingDummy);
+                ImGui::Dummy(horizontal_spacing_dummy);
                 ImGui::SameLine();
                 ImGui::SliderInt(
                     "UI Scale",
-                    &tempIndex,
+                    &temp_index,
                     0,
-                    static_cast<int>(UiSizePresets.size() - 1),
-                    UiSizePresets[static_cast<size_t>(tempIndex)].name
+                    static_cast<int>(ui_size_presets_.size() - 1),
+                    ui_size_presets_[static_cast<size_t>(temp_index)].name
                 );
-                applyClickSounds();
+                apply_click_sounds();
                 if (ImGui::IsItemDeactivatedAfterEdit()) {
-                    userPreferredScale = UiSizePresets[static_cast<size_t>(tempIndex)].scale;
-                    activeIndex = tempIndex;
-                    settings.setUiScale(static_cast<unsigned int>(tempIndex));
-                    didEditSettings = true;
+                    user_preferred_scale_ = ui_size_presets_[static_cast<size_t>(temp_index)].scale;
+                    active_index = temp_index;
+                    settings.set_ui_scale(static_cast<unsigned int>(temp_index));
+                    did_edit_settings_ = true;
                 }
                 if (!ImGui::IsItemActive()) {
-                    tempIndex = activeIndex;
+                    temp_index = active_index;
                 }
                 if (level) {
-                    ImGui::Dummy(verticalSpacingDummy);
-                    ImGui::Checkbox("Show Hitboxes", &level->showHitBoxes);
-                    applyHoverSounds();
-                    applyClickSounds();
+                    ImGui::Dummy(vertical_spacing_dummy);
+                    ImGui::Checkbox("Show Hitboxes", &level->show_hitboxes);
+                    apply_hover_sounds();
+                    apply_click_sounds();
                 }
                 ImGui::EndTabItem();
             } else {
-                applyHoverSounds(); // For tab above
-                applyClickSounds();
+                apply_hover_sounds();
+                apply_click_sounds();
             }
             if (ImGui::BeginTabItem("Audio")) {
-                applyHoverSounds();
-                applyClickSounds();
-                ImGui::PushFont(fontDoubleLarge);
+                apply_hover_sounds();
+                apply_click_sounds();
+                ImGui::PushFont(font_double_large_);
                 ImGui::Text("Audio");
                 ImGui::PopFont();
-                int masterVolume = static_cast<int>(audio.getVolume(AudioCategory::Master));
-                int soundVolume = static_cast<int>(audio.getVolume(AudioCategory::Sounds));
-                int musicVolume = static_cast<int>(audio.getVolume(AudioCategory::Music));
-                float pitch = audio.getMusicPitch();
-                ImGui::Dummy(verticalSpacingDummy);
-                if (ImGui::Button("Reset##ResetMaster", resetButtonSize)) {
-                    audio.setVolume(AudioCategory::Master, 100);
-                    settings.setMasterVolume(100);
-                    didEditSettings = true;
+                int master_volume = static_cast<int>(audio.get_volume(AudioCategory::master));
+                int sound_volume = static_cast<int>(audio.get_volume(AudioCategory::sounds));
+                int music_volume = static_cast<int>(audio.get_volume(AudioCategory::music));
+                float pitch = audio.get_music_pitch();
+                ImGui::Dummy(vertical_spacing_dummy);
+                if (ImGui::Button("Reset##ResetMaster", reset_button_size)) {
+                    audio.set_volume(AudioCategory::master, 100);
+                    settings.set_master_volume(100);
+                    did_edit_settings_ = true;
                 }
-                applyHoverSounds();
-                applyClickSounds();
+                apply_hover_sounds();
+                apply_click_sounds();
                 ImGui::SameLine();
-                ImGui::Dummy(horizontalSpacingDummy);
-                ImGui::SameLine();
-                if (ImGui::SliderInt(
-                        "Master", &masterVolume, 0, MaxVolume, "%d", ImGuiSliderFlags_NoInput
-                    )) {
-                    audio.setVolume(AudioCategory::Master, static_cast<unsigned int>(masterVolume));
-                    settings.setMasterVolume(static_cast<unsigned int>(masterVolume));
-                    didEditSettings = true;
-                }
-                applyClickSounds();
-                ImGui::Dummy(verticalSpacingDummy);
-                if (ImGui::Button("Reset##ResetSounds", resetButtonSize)) {
-                    audio.setVolume(AudioCategory::Sounds, 100);
-                    settings.setSoundsVolume(100);
-                    didEditSettings = true;
-                }
-                applyHoverSounds();
-                applyClickSounds();
-                ImGui::SameLine();
-                ImGui::Dummy(horizontalSpacingDummy);
+                ImGui::Dummy(horizontal_spacing_dummy);
                 ImGui::SameLine();
                 if (ImGui::SliderInt(
-                        "Sounds", &soundVolume, 0, MaxVolume, "%d", ImGuiSliderFlags_NoInput
+                        "Master", &master_volume, 0, max_volume_, "%d", ImGuiSliderFlags_NoInput
                     )) {
-                    audio.setVolume(AudioCategory::Sounds, static_cast<unsigned int>(soundVolume));
-                    settings.setSoundsVolume(static_cast<unsigned int>(soundVolume));
-                    didEditSettings = true;
+                    audio.set_volume(
+                        AudioCategory::master, static_cast<unsigned int>(master_volume)
+                    );
+                    settings.set_master_volume(static_cast<unsigned int>(master_volume));
+                    did_edit_settings_ = true;
                 }
-                applyClickSounds();
-                ImGui::Dummy(verticalSpacingDummy);
-                if (ImGui::Button("Reset##ResetMusic", resetButtonSize)) {
-                    audio.setVolume(AudioCategory::Music, 100);
-                    settings.setMusicVolume(100);
-                    didEditSettings = true;
+                apply_click_sounds();
+                ImGui::Dummy(vertical_spacing_dummy);
+                if (ImGui::Button("Reset##ResetSounds", reset_button_size)) {
+                    audio.set_volume(AudioCategory::sounds, 100);
+                    settings.set_sounds_volume(100);
+                    did_edit_settings_ = true;
                 }
+                apply_hover_sounds();
+                apply_click_sounds();
                 ImGui::SameLine();
-                ImGui::Dummy(horizontalSpacingDummy);
+                ImGui::Dummy(horizontal_spacing_dummy);
                 ImGui::SameLine();
                 if (ImGui::SliderInt(
-                        "Music", &musicVolume, 0, MaxVolume, "%d", ImGuiSliderFlags_NoInput
+                        "Sounds", &sound_volume, 0, max_volume_, "%d", ImGuiSliderFlags_NoInput
                     )) {
-                    audio.setVolume(AudioCategory::Music, static_cast<unsigned int>(musicVolume));
-                    settings.setMusicVolume(static_cast<unsigned int>(musicVolume));
-                    didEditSettings = true;
+                    audio.set_volume(
+                        AudioCategory::sounds, static_cast<unsigned int>(sound_volume)
+                    );
+                    settings.set_sounds_volume(static_cast<unsigned int>(sound_volume));
+                    did_edit_settings_ = true;
                 }
-                applyClickSounds();
-                ImGui::Dummy(verticalSpacingDummy);
-                if (ImGui::Button("Reset##ResetMusicPitch", resetButtonSize)) {
-                    audio.setMusicPitch(1.f);
-                    didEditSettings = true;
+                apply_click_sounds();
+                ImGui::Dummy(vertical_spacing_dummy);
+                if (ImGui::Button("Reset##ResetMusic", reset_button_size)) {
+                    audio.set_volume(AudioCategory::music, 100);
+                    settings.set_music_volume(100);
+                    did_edit_settings_ = true;
                 }
                 ImGui::SameLine();
-                ImGui::Dummy(horizontalSpacingDummy);
+                ImGui::Dummy(horizontal_spacing_dummy);
+                ImGui::SameLine();
+                if (ImGui::SliderInt(
+                        "Music", &music_volume, 0, max_volume_, "%d", ImGuiSliderFlags_NoInput
+                    )) {
+                    audio.set_volume(AudioCategory::music, static_cast<unsigned int>(music_volume));
+                    settings.set_music_volume(static_cast<unsigned int>(music_volume));
+                    did_edit_settings_ = true;
+                }
+                apply_click_sounds();
+                ImGui::Dummy(vertical_spacing_dummy);
+                if (ImGui::Button("Reset##ResetMusicPitch", reset_button_size)) {
+                    audio.set_music_pitch(1.f);
+                    did_edit_settings_ = true;
+                }
+                ImGui::SameLine();
+                ImGui::Dummy(horizontal_spacing_dummy);
                 ImGui::SameLine();
                 if (ImGui::SliderFloat(
                         "Music Pitch", &pitch, 0.5f, 1.5f, "%.2f", ImGuiSliderFlags_NoInput
                     )) {
-                    audio.setMusicPitch(pitch);
-                    didEditSettings = true;
+                    audio.set_music_pitch(pitch);
+                    did_edit_settings_ = true;
                 }
-                applyClickSounds();
-                ImGui::Dummy(verticalSpacingDummy);
+                apply_click_sounds();
+                ImGui::Dummy(vertical_spacing_dummy);
                 ImGui::Text(
                     "Current Music: %s %s",
-                    audio.getCurrentMusicName().c_str(),
-                    audio.isMusicLooping() ? "(Looping)" : ""
+                    audio.get_current_music_name().c_str(),
+                    audio.is_music_looping() ? "(Looping)" : ""
                 );
-                ImGui::Text("Timestamp: %s", audio.formattedMusicTime().c_str());
-                ImGui::Dummy(verticalSpacingDummy);
+                ImGui::Text("Timestamp: %s", audio.formatted_music_time().c_str());
+                ImGui::Dummy(vertical_spacing_dummy);
                 if (ImGui::Button("Play Random Music")) {
-                    audio.clearCurrentMusic();
+                    audio.clear_current_music();
                 }
-                applyClickSounds();
-                applyHoverSounds();
+                apply_click_sounds();
+                apply_hover_sounds();
                 ImGui::EndTabItem();
             } else {
-                applyHoverSounds(); // For tab above
-                applyClickSounds();
+                apply_hover_sounds();
+                apply_click_sounds();
             }
             if (ImGui::BeginTabItem("Controls")) {
-                applyClickSounds();
-                applyHoverSounds();
-                ImGui::PushFont(fontDoubleLarge);
+                apply_click_sounds();
+                apply_hover_sounds();
+                ImGui::PushFont(font_double_large_);
                 ImGui::Text("Controls (Unfinished)");
                 ImGui::PopFont();
-                const ScancodeBindings& scancodeBidings = input.getScancodeBindings();
-                for (size_t i = 0; i < static_cast<size_t>(InputVerb::VerbCount); i++) {
-                    ImGui::Dummy(ImVec2{0.f, 25.f * uiScale});
-                    std::string currentVerb = inputVerbToString(static_cast<InputVerb>(i)).c_str();
-                    ImGui::Text("%s: ", currentVerb.c_str());
-                    for (size_t j = 0; j < MaxBindsPerVerb; j++) {
-                        std::string current = SDL_GetScancodeName(scancodeBidings[i][j].scancode);
-                        current += "##" + currentVerb + "Index" + std::to_string(j);
-                        ImGui::Button(current.c_str(), ImVec2{200.f * uiScale, 50.f * uiScale});
-                        applyClickSounds();
-                        applyHoverSounds();
+                const ScancodeBindings& scancode_bindings = input.get_scancode_bindings();
+                for (size_t i = 0; i < static_cast<size_t>(InputVerb::verb_count); i++) {
+                    ImGui::Dummy(ImVec2{0.f, 25.f * ui_scale_});
+                    std::string current_verb = input_verb_to_string(static_cast<InputVerb>(i));
+                    ImGui::Text("%s: ", current_verb.c_str());
+                    for (size_t j = 0; j < max_binds_per_verb; j++) {
+                        std::string current = SDL_GetScancodeName(scancode_bindings[i][j].scancode);
+                        current += "##" + current_verb + "Index" + std::to_string(j);
+                        ImGui::Button(current.c_str(), ImVec2{200.f * ui_scale_, 50.f * ui_scale_});
+                        apply_click_sounds();
+                        apply_hover_sounds();
                         ImGui::SameLine();
-                        ImGui::Dummy(ImVec2{10.f * uiScale, 0.f});
+                        ImGui::Dummy(ImVec2{10.f * ui_scale_, 0.f});
                         ImGui::SameLine();
                     }
                     ImGui::NewLine();
                 }
                 ImGui::EndTabItem();
             } else {
-                applyHoverSounds(); // For tab above
-                applyClickSounds();
+                apply_hover_sounds();
+                apply_click_sounds();
             }
             ImGui::EndTabBar();
         }
-        applyTouchScroll();
+        apply_touch_scroll();
         ImGui::PopFont();
     }
     ImGui::End();
-    setNextWindowFullscreen();
+    set_next_window_fullscreen();
     ImGui::Begin(
         "SettingsBackground",
         nullptr,

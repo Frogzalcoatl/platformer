@@ -9,7 +9,7 @@
 int main(int argc, char* argv[]) {
     (void)argc;
     (void)argv;
-    initSdlLogFormatting();
+    init_sdl_log_formatting();
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD | SDL_INIT_AUDIO)) {
         SDL_LogError(
             SDL_LOG_CATEGORY_APPLICATION, "SDL3 Initialization failed: %s", SDL_GetError()
@@ -50,19 +50,19 @@ int main(int argc, char* argv[]) {
     presence.largeImageKey = "icon";
     presence.largeImageText = "Platformer";
     presence.state = "In Development";
-    DiscordRpcManager::init("1521649642360668300", presence);
+    discord_rpc_manager::init("1521649642360668300", presence);
 #endif
-    int returnVal = 0;
+    int return_val = 0;
     try {
         Platformer game;
         game.run();
     } catch (const std::exception& e) {
-        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Fatal Error", e.what(), NULL);
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Fatal Error", e.what(), nullptr);
         SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "Fatal exception caught: %s", e.what());
-        returnVal = 1;
+        return_val = 1;
     }
 #ifdef USE_DISCORD_RPC
-    DiscordRpcManager::shutdown();
+    discord_rpc_manager::shutdown();
 #endif
     ImGui_ImplSDLRenderer3_Shutdown();
     SDL_Log("Shutdown ImGui SDL3 renderer implementation");
@@ -76,5 +76,5 @@ int main(int argc, char* argv[]) {
     SDL_Log("Quit SDL3_ttf");
     SDL_Quit();
     SDL_Log("Quit SDL3");
-    return returnVal;
+    return return_val;
 }

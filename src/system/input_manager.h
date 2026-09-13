@@ -6,148 +6,143 @@
 #include <unordered_map>
 #include <vector>
 
-inline constexpr size_t MaxBindsPerVerb = 3;
+inline constexpr size_t max_binds_per_verb = 3;
 
-std::string inputVerbToString(InputVerb verb);
-std::string inputTypeToString(InputType type);
+std::string input_verb_to_string(InputVerb verb);
+std::string input_type_to_string(InputType type);
 
 struct ScancodeInfo {
     SDL_Scancode scancode = SDL_SCANCODE_UNKNOWN;
-    bool activateOnRepeat = false;
+    bool activate_on_repeat = false;
 };
 
 using ScancodeBindings = std::
-    array<std::array<ScancodeInfo, MaxBindsPerVerb>, static_cast<size_t>(InputVerb::VerbCount)>;
+    array<std::array<ScancodeInfo, max_binds_per_verb>, static_cast<size_t>(InputVerb::verb_count)>;
 
 using GamepadBindings = std::array<
-    std::array<SDL_GamepadButton, MaxBindsPerVerb>,
-    static_cast<size_t>(InputVerb::VerbCount)>;
+    std::array<SDL_GamepadButton, max_binds_per_verb>,
+    static_cast<size_t>(InputVerb::verb_count)>;
 
-inline constexpr size_t MaxPlayerSources = 4;
-using PlayerSources = std::array<std::optional<InputSource>, MaxPlayerSources>;
+inline constexpr size_t max_player_sources = 4;
+using PlayerSources = std::array<std::optional<InputSource>, max_player_sources>;
 
 class InputManager {
   private:
-    ScancodeBindings scancodeBindings = {};
-    GamepadBindings gamepadBindings = {};
+    ScancodeBindings scancode_bindings_ = {};
+    GamepadBindings gamepad_bindings_ = {};
     // Arrays of the amount a verb is pressed
     // e.g. two buttons bound to the same verb:
     // Prevents release event when one of the buttons is released and the other isnt.
-    std::unordered_map<SDL_JoystickID, std::array<int, static_cast<size_t>(InputVerb::VerbCount)>>
-        gamepadsVerbsPressed;
+    std::unordered_map<SDL_JoystickID, std::array<int, static_cast<size_t>(InputVerb::verb_count)>>
+        gamepads_verbs_pressed_;
+    std::array<int, static_cast<size_t>(InputVerb::verb_count)> keyboard_verbs_pressed_ = {};
 
-    std::array<int, static_cast<size_t>(InputVerb::VerbCount)> keyboardVerbsPressed = {};
+    PlayerSources player_sources_ = {};
+    size_t player_source_count_ = 0;
 
-    PlayerSources playerSources = {};
-    size_t playerSourceCount = 0;
-
-    const InputSource DefaultTouchSource = InputSource{InputType::Touch, 0};
-    const InputSource DefaultKeyboardSource = InputSource{InputType::Keyboard, 0};
-    const InputSource DefaultMouseSource = InputSource{InputType::Mouse, 0};
+    const InputSource default_touch_source_ = InputSource{InputType::touch, 0};
+    const InputSource default_keyboard_source_ = InputSource{InputType::keyboard, 0};
+    const InputSource default_mouse_source_ = InputSource{InputType::mouse, 0};
 
     // Returns true if player source is added/removed
-    bool addPlayerSource(const InputSource& source);
-    bool removePlayerSource(const InputSource& source);
+    bool add_player_source(const InputSource& source);
+    bool remove_player_source(const InputSource& source);
 
-    std::vector<GameEventTypes::Input> handleKeyboardEvent(SDL_KeyboardEvent& event);
-    std::vector<GameEventTypes::Input> handleMouseWheelEvent(SDL_MouseWheelEvent& event);
-    std::vector<GameEventTypes::Input> handleGamepadButtonEvent(SDL_GamepadButtonEvent& event);
+    std::vector<game_event_types::Input> handle_keyboard_event(SDL_KeyboardEvent& event);
+    std::vector<game_event_types::Input> handle_mouse_wheel_event(SDL_MouseWheelEvent& event);
+    std::vector<game_event_types::Input> handle_gamepad_button_event(SDL_GamepadButtonEvent& event);
 
   public:
     InputManager();
 
-    void bindScancodeToVerb(InputVerb verb, ScancodeInfo binding, std::optional<size_t> atIndexOpt);
-    void unbindScancodeFromVerb(InputVerb verb, SDL_Scancode scancode);
-    void clearScancodeBindingAtIndex(InputVerb verb, size_t index);
-    std::vector<InputVerbInfo> getVerbsFromScancode(SDL_Scancode scancode);
-    const std::array<ScancodeInfo, MaxBindsPerVerb>& getScancodesFromVerb(InputVerb verb) const;
-    const ScancodeBindings& getScancodeBindings() const;
+    void
+    bind_scancode_to_verb(InputVerb verb, ScancodeInfo binding, std::optional<size_t> at_index_opt);
+    void unbind_scancode_from_verb(InputVerb verb, SDL_Scancode scancode);
+    void clear_scancode_binding_at_index(InputVerb verb, size_t index);
+    std::vector<InputVerbInfo> get_verbs_from_scancode(SDL_Scancode scancode);
+    const std::array<ScancodeInfo, max_binds_per_verb>&
+    get_scancodes_from_verb(InputVerb verb) const;
+    const ScancodeBindings& get_scancode_bindings() const;
 
-    void bindGamepadButtonToVerb(
-        InputVerb verb, SDL_GamepadButton button, std::optional<size_t> atIndexOpt
+    void bind_gamepad_button_to_verb(
+        InputVerb verb, SDL_GamepadButton button, std::optional<size_t> at_index_opt
     );
-    void unbindGamepadButtonFromVerb(InputVerb verb, SDL_GamepadButton button);
-    void clearGamepadButtonBindingAtIndex(InputVerb verb, size_t index);
-    std::vector<InputVerb> getVerbsFromGamepadButton(SDL_GamepadButton button);
-    const std::array<SDL_GamepadButton, MaxBindsPerVerb>&
-    getGamepadButtonsFromVerb(InputVerb verb) const;
-    const GamepadBindings& getGamepadBindings() const;
+    void unbind_gamepad_button_from_verb(InputVerb verb, SDL_GamepadButton button);
+    void clear_gamepad_button_binding_at_index(InputVerb verb, size_t index);
+    std::vector<InputVerb> get_verbs_from_gamepad_button(SDL_GamepadButton button);
+    const std::array<SDL_GamepadButton, max_binds_per_verb>&
+    get_gamepad_buttons_from_verb(InputVerb verb) const;
+    const GamepadBindings& get_gamepad_bindings() const;
 
-    const PlayerSources& getPlayerSources() const;
+    const PlayerSources& get_player_sources() const;
+    size_t get_player_source_count() const;
+    int sdl_gamepads_detected() const;
 
-    size_t getPlayerSourceCount() const;
+    std::string get_source_name(const InputSource& source);
+    std::string get_gamepad_name(const SDL_JoystickID id);
 
-    int sdlGamepadsDetected() const;
+    bool listen_for_new_gamepad = false;
+    bool listen_for_valid_keyboard = false;
 
-    std::string getSourceName(const InputSource& source);
-
-    std::string getGamepadName(const SDL_JoystickID id);
-
-    bool listenForNewGamepad = false;
-    bool listenForValidKeyboard = false;
-
-    void handleGamepadRemoved(SDL_GamepadDeviceEvent& event);
+    void handle_gamepad_removed(SDL_GamepadDeviceEvent& event);
 
     // returns true if touch player is enabled/disabled.
     // only one touch player allowed on device at a time.
-    bool enableTouchPlayer();
-    bool disableTouchPlayer();
+    bool enable_touch_player();
+    bool disable_touch_player();
+    void remove_player_source_at_index(size_t index);
+    bool has_touch_screen();
+    bool is_touch_player_enabled(size_t* at_index);
 
-    void removePlayerSourceAtIndex(size_t index);
-
-    bool hasTouchScreen();
-
-    bool isTouchPlayerEnabled(size_t* atIndex);
-
-    std::vector<GameEventTypes::Input> getInputEventsFromSDLEvent(SDL_Event& event);
+    std::vector<game_event_types::Input> get_input_events_from_sdl_event(SDL_Event& event);
 
     // void listenForScancodeBinding(InputVerb forVerb, size_t atIndex);
 
     // void listenForGamepadBinding(InputVerb forVerb, size_t atIndex);
 
-    void handlePinchEvent(SDL_PinchFingerEvent& event);
+    void handle_pinch_event(SDL_PinchFingerEvent& event);
 
-    // Will probably remove default bindings vectors later, currently here for convenience
-    const std::vector<DefaultScancodeBinding> defaultVerbBindings = {
-        {InputVerb::Up, SDL_SCANCODE_UP},
-        {InputVerb::Down, SDL_SCANCODE_DOWN},
-        {InputVerb::Left, SDL_SCANCODE_LEFT},
-        {InputVerb::Right, SDL_SCANCODE_RIGHT},
-        {InputVerb::Up, SDL_SCANCODE_W},
-        {InputVerb::Down, SDL_SCANCODE_S},
-        {InputVerb::Left, SDL_SCANCODE_A},
-        {InputVerb::Right, SDL_SCANCODE_D},
-        {InputVerb::Jump, SDL_SCANCODE_UP},
-        {InputVerb::Jump, SDL_SCANCODE_W},
-        {InputVerb::Jump, SDL_SCANCODE_SPACE},
-        {InputVerb::Sprint, SDL_SCANCODE_LSHIFT},
-        {InputVerb::Sprint, SDL_SCANCODE_RSHIFT},
-        {InputVerb::Confirm, SDL_SCANCODE_RETURN},
-        {InputVerb::Cancel, SDL_SCANCODE_ESCAPE},
-        {InputVerb::Pause, SDL_SCANCODE_ESCAPE},
-        {InputVerb::ToggleFullscreen, SDL_SCANCODE_F11},
-        {InputVerb::Respawn, SDL_SCANCODE_R},
-        {InputVerb::ZoomIn, SDL_SCANCODE_KP_PLUS, true},
-        {InputVerb::ZoomOut, SDL_SCANCODE_KP_MINUS, true},
-        {InputVerb::ZoomIn, SDL_SCANCODE_EQUALS, true},
-        {InputVerb::ZoomOut, SDL_SCANCODE_MINUS, true},
-        {InputVerb::ZoomReset, SDL_SCANCODE_KP_0},
-        {InputVerb::ZoomReset, SDL_SCANCODE_0},
-        {InputVerb::ToggleDebug, SDL_SCANCODE_F3},
-        {InputVerb::ShowHitboxes, SDL_SCANCODE_F1}
+    const std::vector<DefaultScancodeBinding> default_verb_bindings = {
+        {InputVerb::up, SDL_SCANCODE_UP},
+        {InputVerb::down, SDL_SCANCODE_DOWN},
+        {InputVerb::left, SDL_SCANCODE_LEFT},
+        {InputVerb::right, SDL_SCANCODE_RIGHT},
+        {InputVerb::up, SDL_SCANCODE_W},
+        {InputVerb::down, SDL_SCANCODE_S},
+        {InputVerb::left, SDL_SCANCODE_A},
+        {InputVerb::right, SDL_SCANCODE_D},
+        {InputVerb::jump, SDL_SCANCODE_UP},
+        {InputVerb::jump, SDL_SCANCODE_W},
+        {InputVerb::jump, SDL_SCANCODE_SPACE},
+        {InputVerb::sprint, SDL_SCANCODE_LSHIFT},
+        {InputVerb::sprint, SDL_SCANCODE_RSHIFT},
+        {InputVerb::confirm, SDL_SCANCODE_RETURN},
+        {InputVerb::cancel, SDL_SCANCODE_ESCAPE},
+        {InputVerb::pause, SDL_SCANCODE_ESCAPE},
+        {InputVerb::toggle_fullscreen, SDL_SCANCODE_F11},
+        {InputVerb::respawn, SDL_SCANCODE_R},
+        {InputVerb::zoom_in, SDL_SCANCODE_KP_PLUS, true},
+        {InputVerb::zoom_out, SDL_SCANCODE_KP_MINUS, true},
+        {InputVerb::zoom_in, SDL_SCANCODE_EQUALS, true},
+        {InputVerb::zoom_out, SDL_SCANCODE_MINUS, true},
+        {InputVerb::zoom_reset, SDL_SCANCODE_KP_0},
+        {InputVerb::zoom_reset, SDL_SCANCODE_0},
+        {InputVerb::toggle_debug, SDL_SCANCODE_F3},
+        {InputVerb::show_hitboxes, SDL_SCANCODE_F1}
     };
-    const std::vector<DefaultButtonBinding> defaultGamepadBindings = {
-        {InputVerb::Up, SDL_GAMEPAD_BUTTON_DPAD_UP},
-        {InputVerb::Down, SDL_GAMEPAD_BUTTON_DPAD_DOWN},
-        {InputVerb::Left, SDL_GAMEPAD_BUTTON_DPAD_LEFT},
-        {InputVerb::Right, SDL_GAMEPAD_BUTTON_DPAD_RIGHT},
-        {InputVerb::Jump, SDL_GAMEPAD_BUTTON_EAST},
-        {InputVerb::Jump, SDL_GAMEPAD_BUTTON_SOUTH},
-        {InputVerb::Confirm, SDL_GAMEPAD_BUTTON_EAST},
-        {InputVerb::Pause, SDL_GAMEPAD_BUTTON_START},
-        {InputVerb::Pause, SDL_GAMEPAD_BUTTON_GUIDE},
-        {InputVerb::Cancel, SDL_GAMEPAD_BUTTON_SOUTH},
-        {InputVerb::Sprint, SDL_GAMEPAD_BUTTON_WEST},
-        {InputVerb::Sprint, SDL_GAMEPAD_BUTTON_NORTH},
+
+    const std::vector<DefaultButtonBinding> default_gamepad_bindings = {
+        {InputVerb::up, SDL_GAMEPAD_BUTTON_DPAD_UP},
+        {InputVerb::down, SDL_GAMEPAD_BUTTON_DPAD_DOWN},
+        {InputVerb::left, SDL_GAMEPAD_BUTTON_DPAD_LEFT},
+        {InputVerb::right, SDL_GAMEPAD_BUTTON_DPAD_RIGHT},
+        {InputVerb::jump, SDL_GAMEPAD_BUTTON_EAST},
+        {InputVerb::jump, SDL_GAMEPAD_BUTTON_SOUTH},
+        {InputVerb::confirm, SDL_GAMEPAD_BUTTON_EAST},
+        {InputVerb::pause, SDL_GAMEPAD_BUTTON_START},
+        {InputVerb::pause, SDL_GAMEPAD_BUTTON_GUIDE},
+        {InputVerb::cancel, SDL_GAMEPAD_BUTTON_SOUTH},
+        {InputVerb::sprint, SDL_GAMEPAD_BUTTON_WEST},
+        {InputVerb::sprint, SDL_GAMEPAD_BUTTON_NORTH},
     };
 };

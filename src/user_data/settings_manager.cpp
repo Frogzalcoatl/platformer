@@ -1,67 +1,67 @@
 #include "user_data/settings_manager.h"
 
-SettingsManager::SettingsManager(std::string_view relativeFilePath) : json(relativeFilePath) {
-    readFromDisk();
+SettingsManager::SettingsManager(std::string_view relative_file_path) : json_(relative_file_path) {
+    read_from_disk();
 }
 
-bool SettingsManager::createdNewFileOnRead() const {
-    return createdNewFile;
+bool SettingsManager::created_new_file_on_read() const {
+    return created_new_file_;
 }
 
-void SettingsManager::readFromDisk() {
-    ReadFromDiskResult result = json.readFromDisk();
-    createdNewFile = (result == ReadFromDiskResult::CreatedNewFile);
-    const rapidjson::Value& vsyncEnabled = json.get("vsyncEnabled");
-    if (vsyncEnabled.IsBool()) {
-        activeSettings.vsyncEnabled = vsyncEnabled.GetBool();
+void SettingsManager::read_from_disk() {
+    ReadFromDiskResult result = json_.read_from_disk();
+    created_new_file_ = (result == ReadFromDiskResult::created_new_file);
+    const rapidjson::Value& vsync_enabled = json_.get("vsyncEnabled");
+    if (vsync_enabled.IsBool()) {
+        active_settings_.vsync_enabled = vsync_enabled.GetBool();
     } else {
-        activeSettings.vsyncEnabled = defaultSettings.vsyncEnabled;
+        active_settings_.vsync_enabled = default_settings_.vsync_enabled;
     }
-    const rapidjson::Value& fpsUnlimited = json.get("fpsUnlimited");
-    if (fpsUnlimited.IsBool()) {
-        activeSettings.fpsUnlimited = fpsUnlimited.GetBool();
+    const rapidjson::Value& fps_unlimited = json_.get("fpsUnlimited");
+    if (fps_unlimited.IsBool()) {
+        active_settings_.fps_unlimited = fps_unlimited.GetBool();
     } else {
-        activeSettings.fpsUnlimited = defaultSettings.fpsUnlimited;
+        active_settings_.fps_unlimited = default_settings_.fps_unlimited;
     }
-    const rapidjson::Value& targetFps = json.get("targetFps");
-    if (targetFps.IsUint()) {
-        activeSettings.targetFps = targetFps.GetUint();
+    const rapidjson::Value& target_fps = json_.get("targetFps");
+    if (target_fps.IsUint()) {
+        active_settings_.target_fps = target_fps.GetUint();
     } else {
-        activeSettings.targetFps = defaultSettings.targetFps;
+        active_settings_.target_fps = default_settings_.target_fps;
     }
-    const rapidjson::Value& uiScale = json.get("uiScale");
-    if (uiScale.IsUint64()) {
-        activeSettings.uiScale = uiScale.GetUint64();
+    const rapidjson::Value& ui_scale = json_.get("uiScale");
+    if (ui_scale.IsUint64()) {
+        active_settings_.ui_scale = ui_scale.GetUint64();
     } else {
-        activeSettings.uiScale = defaultSettings.uiScale;
+        active_settings_.ui_scale = default_settings_.ui_scale;
     }
-    const rapidjson::Value& masterVolume = json.get("masterVolume");
-    if (masterVolume.IsUint()) {
-        activeSettings.masterVolume = masterVolume.GetUint();
+    const rapidjson::Value& master_volume = json_.get("masterVolume");
+    if (master_volume.IsUint()) {
+        active_settings_.master_volume = master_volume.GetUint();
     } else {
-        activeSettings.masterVolume = defaultSettings.masterVolume;
+        active_settings_.master_volume = default_settings_.master_volume;
     }
-    const rapidjson::Value& soundsVolume = json.get("soundsVolume");
-    if (soundsVolume.IsUint()) {
-        activeSettings.soundsVolume = soundsVolume.GetUint();
+    const rapidjson::Value& sounds_volume = json_.get("soundsVolume");
+    if (sounds_volume.IsUint()) {
+        active_settings_.sounds_volume = sounds_volume.GetUint();
     } else {
-        activeSettings.soundsVolume = defaultSettings.soundsVolume;
+        active_settings_.sounds_volume = default_settings_.sounds_volume;
     }
-    const rapidjson::Value& musicVolume = json.get("musicVolume");
-    if (musicVolume.IsUint()) {
-        activeSettings.musicVolume = musicVolume.GetUint();
+    const rapidjson::Value& music_volume = json_.get("musicVolume");
+    if (music_volume.IsUint()) {
+        active_settings_.music_volume = music_volume.GetUint();
     } else {
-        activeSettings.musicVolume = defaultSettings.musicVolume;
+        active_settings_.music_volume = default_settings_.music_volume;
     }
 }
 
-bool SettingsManager::saveToDisk() {
-    json.set("vsyncEnabled", activeSettings.vsyncEnabled);
-    json.set("fpsUnlimited", activeSettings.fpsUnlimited);
-    json.set("targetFps", activeSettings.targetFps);
-    json.set("uiScale", activeSettings.uiScale);
-    json.set("masterVolume", activeSettings.masterVolume);
-    json.set("soundsVolume", activeSettings.soundsVolume);
-    json.set("musicVolume", activeSettings.musicVolume);
-    return json.saveToDisk();
+bool SettingsManager::save_to_disk() {
+    json_.set("vsyncEnabled", active_settings_.vsync_enabled);
+    json_.set("fpsUnlimited", active_settings_.fps_unlimited);
+    json_.set("targetFps", active_settings_.target_fps);
+    json_.set("uiScale", active_settings_.ui_scale);
+    json_.set("masterVolume", active_settings_.master_volume);
+    json_.set("soundsVolume", active_settings_.sounds_volume);
+    json_.set("musicVolume", active_settings_.music_volume);
+    return json_.save_to_disk();
 }

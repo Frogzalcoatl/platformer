@@ -6,39 +6,39 @@
 #include <rapidjson/writer.h>
 
 enum class FileExistsResult : uint8_t {
-    Success,
-    DoesNotExist,
-    HoldsNonFileType
+    success,
+    does_not_exist,
+    holds_non_file_type
 };
 
 enum class ReadFromDiskResult : uint8_t {
-    ReadFromFile,
-    CreatedNewFile,
-    Failure,
+    read_from_file,
+    created_new_file,
+    failure
 };
 
 class JsonManager {
   private:
-    std::filesystem::path filePath;
-    std::string filePathStr;
-    std::string relativeFilePath;
-    rapidjson::Document doc;
-    const rapidjson::Value nullValue;
+    std::filesystem::path file_path_;
+    std::string file_path_str_;
+    std::string relative_file_path_;
+    rapidjson::Document doc_;
+    const rapidjson::Value null_value_;
 
-    FileExistsResult fileExists();
-    bool createFile();
+    FileExistsResult file_exists();
+    bool create_file();
 
   public:
-    JsonManager(std::string_view relativeFilePath);
+    JsonManager(std::string_view relative_file_path);
 
-    ReadFromDiskResult readFromDisk();
+    ReadFromDiskResult read_from_disk();
 
-    bool saveToDisk();
+    bool save_to_disk();
 
     // Template helper (Idea from AI)
     template <typename T> void set(std::string_view key, T value) {
-        rapidjson::Value rJsonValue{value};
-        set(key, rJsonValue);
+        rapidjson::Value rjson_value{value};
+        set(key, rjson_value);
     }
 
     void set(std::string_view key, rapidjson::Value& value);

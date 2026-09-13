@@ -8,81 +8,83 @@ struct WindowVec2 {
     int y;
 };
 
-struct SDL_Window_Deleter {
+struct SdlWindowDeleter {
     void operator()(SDL_Window* w) const {
         if (w) {
             SDL_DestroyWindow(w);
         }
     }
 };
-struct SDL_Renderer_Deleter {
+
+struct SdlRendererDeleter {
     void operator()(SDL_Renderer* r) const {
         if (r) {
             SDL_DestroyRenderer(r);
         }
     }
 };
-using UniqueWindow = std::unique_ptr<SDL_Window, SDL_Window_Deleter>;
-using UniqueRenderer = std::unique_ptr<SDL_Renderer, SDL_Renderer_Deleter>;
+
+using UniqueWindow = std::unique_ptr<SDL_Window, SdlWindowDeleter>;
+using UniqueRenderer = std::unique_ptr<SDL_Renderer, SdlRendererDeleter>;
 
 class WindowManager {
   private:
-    UniqueWindow sdlWindow;
-    UniqueRenderer sdlRenderer;
-    WindowVec2 size;
-    WindowVec2 mousePos;
-    Uint64 targetFps = 120;
-    Uint64 targetFrameTimeNs = 1000000000ULL / targetFps;
-    Uint64 lastFrameTimeNs = 0;
-    float deltaTime = 0.f;
-    bool vsync = true;
-    bool fpsUnlimited = false;
-    bool isFullscreen = false;
+    UniqueWindow sdl_window_;
+    UniqueRenderer sdl_renderer_;
+    WindowVec2 size_;
+    WindowVec2 mouse_pos_;
+    Uint64 target_fps_ = 120;
+    Uint64 target_frame_time_ns_ = 1000000000ULL / target_fps_;
+    Uint64 last_frame_time_ns_ = 0;
+    float delta_time_ = 0.f;
+    bool vsync_ = true;
+    bool fps_unlimited_ = false;
+    bool is_fullscreen_ = false;
 
   public:
-    SDL_Color backgroundColor;
+    SDL_Color background_color;
 
-    WindowManager(const char* windowName, SDL_Color backgroundColor);
+    WindowManager(const char* window_name, SDL_Color background_color);
 
-    void clearFrame();
+    void clear_frame();
 
-    void render(Uint64 frameStartNs);
+    void render(Uint64 frame_start_ns);
 
-    SDL_Window* getSdlWindow() const;
+    SDL_Window* get_sdl_window() const;
 
-    SDL_Renderer* getSdlRenderer() const;
+    SDL_Renderer* get_sdl_renderer() const;
 
-    WindowVec2 getSize() const;
+    WindowVec2 get_size() const;
 
-    SDL_Rect getSafeArea() const;
+    SDL_Rect get_safe_area() const;
 
-    void handleResize(int sizeX, int sizeY);
+    void handle_resize(int size_x, int size_y);
 
-    WindowVec2 getMousePos() const;
+    WindowVec2 get_mouse_pos() const;
 
-    void handleMouseMotionEvent(const SDL_MouseMotionEvent& event);
+    void handle_mouse_motion_event(const SDL_MouseMotionEvent& event);
 
-    Uint64 getTargetFps() const;
+    Uint64 get_target_fps() const;
 
-    float getMonitorRefreshRate() const;
+    float get_monitor_refresh_rate() const;
 
-    std::string targetFpsStr() const;
+    std::string target_fps_str() const;
 
-    void setTargetFps(Uint64 value);
+    void set_target_fps(Uint64 value);
 
-    float getDeltaTime() const {
-        return deltaTime;
+    float get_delta_time() const {
+        return delta_time_;
     }
 
-    bool isVsyncEnabled() const;
+    bool is_vsync_enabled() const;
 
-    void setVsync(bool value);
+    void set_vsync(bool value);
 
-    bool getFpsUnlimited() const;
+    bool get_fps_unlimited() const;
 
-    void setFpsUnlimited(bool value);
+    void set_fps_unlimited(bool value);
 
-    bool getIsFullscreen() const;
+    bool get_is_fullscreen() const;
 
-    void toggleFullscreen();
+    void toggle_fullscreen();
 };

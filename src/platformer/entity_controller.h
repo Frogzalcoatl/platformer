@@ -6,34 +6,28 @@
 
 class EntityController {
   private:
-    Entity* entity;
+    Entity* entity_ = nullptr;
 
   public:
     EntityController() = default;
     EntityController(Entity& entity);
 
-    void setEntity(Entity& entity);
-
-    void clearEntity();
-
-    Entity* getEntity() const;
+    void set_entity(Entity& entity);
+    void clear_entity();
+    Entity* get_entity() const;
 
     void update();
-
     void jump();
-
     void respawn();
+    void reset_input();
+    void handle_input(game_event_types::Input event, Camera* camera, float alpha);
 
-    void resetInput();
-
-    void handleInput(GameEventTypes::Input event, Camera* camera, float alpha);
-
-    b2Vec2 spawnPoint = {0.f, 0.f};
-    float jumpForceNewtons = 160.f;
-    float horizontalSpeed = 10.f;
-    float horizontalAcceleration = 0.1f;
-    float downwardAcceleration = 2.5f;
-    std::array<bool, static_cast<size_t>(EntityMovement::EntityMovementCount)> movement = {false};
-    bool isSprinting = false;
-    float sprintMultiplier = 2.f;
+    b2Vec2 spawn_point = {0.f, 0.f};
+    float jump_force_newtons = 160.f;
+    float horizontal_speed = 10.f;
+    float horizontal_acceleration = 0.1f;
+    float downward_acceleration = 2.5f;
+    std::array<bool, static_cast<size_t>(EntityMovement::entity_movement_count)> movement = {false};
+    bool is_sprinting = false;
+    float sprint_multiplier = 2.f;
 };

@@ -2,114 +2,112 @@
 #include "assets/asset_paths.h"
 #include <cassert>
 
-static std::optional<EntityMovement> inputVerbToDirection(InputVerb verb) {
+static std::optional<EntityMovement> input_verb_to_direction(InputVerb verb) {
     switch (verb) {
-    case InputVerb::Up:
-        return EntityMovement::Up;
-    case InputVerb::Down:
-        return EntityMovement::Down;
-    case InputVerb::Left:
-        return EntityMovement::Left;
-    case InputVerb::Right:
-        return EntityMovement::Right;
+    case InputVerb::up:
+        return EntityMovement::up;
+    case InputVerb::down:
+        return EntityMovement::down;
+    case InputVerb::left:
+        return EntityMovement::left;
+    case InputVerb::right:
+        return EntityMovement::right;
     default:
         return std::nullopt;
     }
 }
 
-EntityController::EntityController(Entity& entity) : entity(&entity) {
+EntityController::EntityController(Entity& entity) : entity_(&entity) {
 }
 
-void EntityController::setEntity(Entity& newEntity) {
-    entity = &newEntity;
+void EntityController::set_entity(Entity& new_entity) {
+    entity_ = &new_entity;
 }
 
-void EntityController::clearEntity() {
-    entity = nullptr;
+void EntityController::clear_entity() {
+    entity_ = nullptr;
 }
 
-Entity* EntityController::getEntity() const {
-    return entity;
+Entity* EntityController::get_entity() const {
+    return entity_;
 }
 
 void EntityController::update() {
-    if (!entity) {
+    if (!entity_) {
         return;
     }
-    b2BodyId bodyId = entity->getBodyId();
-    b2Vec2 velocity = b2Body_GetLinearVelocity(bodyId);
-    b2Vec2 targetVelocity = {
-        0.f,
-        0.f,
-    };
-    if (movement[static_cast<size_t>(EntityMovement::Down)]) {
-        targetVelocity.y -= downwardAcceleration;
+    b2BodyId body_id = entity_->get_body_id();
+    b2Vec2 velocity = b2Body_GetLinearVelocity(body_id);
+    b2Vec2 target_velocity = {0.f, 0.f};
+
+    if (movement[static_cast<size_t>(EntityMovement::down)]) {
+        target_velocity.y -= downward_acceleration;
     }
-    if (movement[static_cast<size_t>(EntityMovement::Left)]) {
-        targetVelocity.x -= horizontalSpeed;
+    if (movement[static_cast<size_t>(EntityMovement::left)]) {
+        target_velocity.x -= horizontal_speed;
     }
-    if (movement[static_cast<size_t>(EntityMovement::Right)]) {
-        targetVelocity.x += horizontalSpeed;
+    if (movement[static_cast<size_t>(EntityMovement::right)]) {
+        target_velocity.x += horizontal_speed;
     }
-    if (isSprinting) {
-        targetVelocity.x *= sprintMultiplier;
-        targetVelocity.y *= sprintMultiplier;
+    if (is_sprinting) {
+        target_velocity.x *= sprint_multiplier;
+        target_velocity.y *= sprint_multiplier;
     }
-    velocity.x = velocity.x + (targetVelocity.x - velocity.x) * horizontalAcceleration;
-    velocity.y += targetVelocity.y;
-    b2Body_SetLinearVelocity(bodyId, velocity);
+    velocity.x = velocity.x + (target_velocity.x - velocity.x) * horizontal_acceleration;
+    velocity.y += target_velocity.y;
+    b2Body_SetLinearVelocity(body_id, velocity);
 }
 
 void EntityController::jump() {
-    if (!entity) {
+    if (!entity_) {
         return;
     }
-    b2BodyId bodyId = entity->getBodyId();
-    b2Vec2 velocity = b2Body_GetLinearVelocity(bodyId);
-    b2Body_SetLinearVelocity(bodyId, b2Vec2{velocity.x, 0.f});
-    b2Body_ApplyLinearImpulseToCenter(bodyId, b2Vec2{0.f, jumpForceNewtons}, true);
+    b2BodyId body_id = entity_->get_body_id();
+    b2Vec2 velocity = b2Body_GetLinearVelocity(body_id);
+    b2Body_SetLinearVelocity(body_id, b2Vec2{velocity.x, 0.f});
+    b2Body_ApplyLinearImpulseToCenter(body_id, b2Vec2{0.f, jump_force_newtons}, true);
 }
 
 void EntityController::respawn() {
-    if (!entity) {
+    if (!entity_) {
         return;
     }
-    entity->teleport(spawnPoint);
+    entity_->teleport(spawn_point);
 }
 
-void EntityController::resetInput() {
+void EntityController::reset_input() {
     for (size_t i = 0; i < movement.size(); i++) {
         movement[i] = false;
     }
-    isSprinting = false;
+    is_sprinting = false;
 }
 
-void EntityController::handleInput(GameEventTypes::Input event, Camera* camera, float alpha) {
-    assert(event.state == InputState::Pressed || event.state == InputState::Released);
-    assert(event.verb < InputVerb::VerbCount);
-    if (!entity) {
+void EntityController::handle_input(game_event_types::Input event, Camera* camera, float alpha) {
+    assert(event.state == InputState::pressed || event.state == InputState::released);
+    assert(event.verb < InputVerb::verb_count);
+    if (!entity_) {
         return;
     }
-    if (event.state == InputState::Pressed) {
-        if (event.verb == InputVerb::Respawn) {
+    if (event.state == InputState::pressed) {
+        if (event.verb == InputVerb::respawn) {
             respawn();
-            if (camera && camera->entityToFollow == entity) {
-                camera->centerOnEntity(alpha);
+            if (camera && camera->entity_to_follow == entity_) {
+                camera->center_on_entity(alpha);
             }
-        } else if (event.verb == InputVerb::Jump) {
+        } else if (event.verb == InputVerb::jump) {
             jump();
             float pitch = SDL_randf() * (1.25f - 1.f) + 1.f;
-            GameEvents::Push(GameEventTypes::PlaySound{AssetPaths::Sounds::Jump, 100, pitch});
+            game_events::push(game_event_types::PlaySound{asset_paths::sounds::jump, 100, pitch});
         }
     }
-    if (event.verb == InputVerb::Sprint) {
-        isSprinting = event.state == InputState::Pressed;
+    if (event.verb == InputVerb::sprint) {
+        is_sprinting = event.state == InputState::pressed;
     }
-    std::optional<EntityMovement> directionOpt = inputVerbToDirection(event.verb);
-    if (!directionOpt.has_value()) {
+    std::optional<EntityMovement> direction_opt = input_verb_to_direction(event.verb);
+    if (!direction_opt.has_value()) {
         return;
     }
-    EntityMovement direction = directionOpt.value();
-    bool shouldBeMoving = event.state == InputState::Pressed;
-    movement[static_cast<size_t>(direction)] = shouldBeMoving;
+    EntityMovement direction = direction_opt.value();
+    bool should_be_moving = event.state == InputState::pressed;
+    movement[static_cast<size_t>(direction)] = should_be_moving;
 }

@@ -1,17 +1,19 @@
 #include "gui/ui_manager.h"
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <format>
 #include <imgui_internal.h>
 
-UiManager::UiManager(AssetManager& assets, UiState startingState) : currentState(startingState) {
-    fontSmall = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 12.f);
-    fontMedium = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 18.f);
-    fontLarge = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 24.f);
-    fontDoubleLarge = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 36.f);
-    fontTripleLarge = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 48.f);
-    fontTitle = assets.getImGuiFont(AssetPaths::Fonts::Consolas, 128.f);
-    defaultStyle = ImGui::GetStyle();
+UiManager::UiManager(AssetManager& assets, UiState starting_state)
+    : current_state_(starting_state) {
+    font_small_ = assets.load_imgui_font(asset_paths::fonts::consolas, 12.f);
+    font_medium_ = assets.load_imgui_font(asset_paths::fonts::consolas, 18.f);
+    font_large_ = assets.load_imgui_font(asset_paths::fonts::consolas, 24.f);
+    font_double_large_ = assets.load_imgui_font(asset_paths::fonts::consolas, 36.f);
+    font_triple_large_ = assets.load_imgui_font(asset_paths::fonts::consolas, 48.f);
+    font_title_ = assets.load_imgui_font(asset_paths::fonts::consolas, 128.f);
+    default_style_ = ImGui::GetStyle();
 }
 
 void UiManager::update(
@@ -21,54 +23,55 @@ void UiManager::update(
     InputManager& input,
     Level* level
 ) {
-    stateChangedThisFrame = false;
+    state_changed_this_frame_ = false;
     draw(window, settings, audio, input, level);
 }
 
-UiState UiManager::getState() const {
-    return currentState;
+UiState UiManager::get_state() const {
+    return current_state_;
 }
 
-std::string UiManager::getStateStr() const {
-    switch (currentState) {
-    case UiState::MainMenu:
+std::string UiManager::get_state_str() const {
+    switch (current_state_) {
+    case UiState::main_menu:
         return "Main Menu";
-    case UiState::Settings:
+    case UiState::settings:
         return "Settings";
-    case UiState::PlayerSourceSetup:
+    case UiState::player_source_setup:
         return "Player Source Setup";
-    case UiState::Playing:
+    case UiState::playing:
         return "Playing";
-    case UiState::Paused:
+    case UiState::paused:
         return "Paused";
-    case UiState::PausedSettings:
+    case UiState::paused_settings:
         return "Paused (Settings)";
     default:
         return "Invalid";
     }
 }
 
-void UiManager::setState(UiState newState) {
-    if (newState >= UiState::UiStateCount || stateChangedThisFrame || newState == currentState) {
+void UiManager::set_state(UiState new_state) {
+    if (new_state >= UiState::ui_state_count || state_changed_this_frame_ ||
+        new_state == current_state_) {
         return;
     }
-    UiState previousState = currentState;
-    currentState = newState;
-    stateChangedThisFrame = true;
-    if (previousState == UiState::PlayerSourceSetup) {
+    UiState previous_state = current_state_;
+    current_state_ = new_state;
+    state_changed_this_frame_ = true;
+    if (previous_state == UiState::player_source_setup) {
         // Switching off setup screen
-        GameEvents::Push(GameEventTypes::ShouldDetectNewPlayerSources{false});
+        game_events::push(game_event_types::ShouldDetectNewPlayerSources{false});
     }
-    if (newState == UiState::PlayerSourceSetup) {
+    if (new_state == UiState::player_source_setup) {
         // Switching to player source setup screen
-        GameEvents::Push(GameEventTypes::ShouldDetectNewPlayerSources{true});
+        game_events::push(game_event_types::ShouldDetectNewPlayerSources{true});
     }
-    if (previousState == UiState::Settings && didEditSettings) {
-        GameEvents::Push(GameEventTypes::SaveUserData{UserDataTypes::Settings});
-        didEditSettings = false;
+    if (previous_state == UiState::settings && did_edit_settings_) {
+        game_events::push(game_event_types::SaveUserData{UserDataTypes::settings});
+        did_edit_settings_ = false;
     }
     ImGuiIO& io = ImGui::GetIO();
-    if (newState == UiState::Playing) {
+    if (new_state == UiState::playing) {
         io.ConfigFlags &= ~ImGuiConfigFlags_NavEnableGamepad;
         io.ConfigFlags &= ~ImGuiConfigFlags_NavEnableKeyboard;
     } else {
@@ -77,100 +80,99 @@ void UiManager::setState(UiState newState) {
     }
 }
 
-void UiManager::runCancelEvent() {
-    switch (currentState) {
-    case UiState::Settings:
-        setState(UiState::MainMenu);
+void UiManager::run_cancel_event() {
+    switch (current_state_) {
+    case UiState::settings:
+        set_state(UiState::main_menu);
         break;
-    case UiState::PlayerSourceSetup:
-        setState(UiState::MainMenu);
+    case UiState::player_source_setup:
+        set_state(UiState::main_menu);
         break;
-    case UiState::Playing:
-        setState(UiState::Paused);
+    case UiState::playing:
+        set_state(UiState::paused);
         break;
-    case UiState::Paused:
-        setState(UiState::Playing);
+    case UiState::paused:
+        set_state(UiState::playing);
         break;
-    case UiState::PausedSettings:
-        setState(UiState::Paused);
+    case UiState::paused_settings:
+        set_state(UiState::paused);
         break;
     default:
         break;
     }
 }
 
-void UiManager::toggleDebug() {
-    if (std::find(debugVisibleIn.begin(), debugVisibleIn.end(), currentState) !=
-        debugVisibleIn.end()) {
-        showDebug = !showDebug;
+void UiManager::toggle_debug() {
+    if (std::find(debug_visible_in_.begin(), debug_visible_in_.end(), current_state_) !=
+        debug_visible_in_.end()) {
+        show_debug_ = !show_debug_;
     }
 }
 
-void UiManager::passInputToImGui(const GameEventTypes::Input& event) {
+void UiManager::pass_input_to_imgui(const game_event_types::Input& event) {
     ImGuiIO& io = ImGui::GetIO();
-    ImGuiKey imguiKey = ImGuiKey_None;
-    if (event.sourceInfo.type == InputType::Keyboard) {
+    ImGuiKey imgui_key = ImGuiKey_None;
+    if (event.source_info.type == InputType::keyboard) {
         switch (event.verb) {
-        case InputVerb::Up:
-            imguiKey = ImGuiKey_UpArrow;
+        case InputVerb::up:
+            imgui_key = ImGuiKey_UpArrow;
             break;
-        case InputVerb::Down:
-            imguiKey = ImGuiKey_DownArrow;
+        case InputVerb::down:
+            imgui_key = ImGuiKey_DownArrow;
             break;
-        case InputVerb::Left:
-            imguiKey = ImGuiKey_LeftArrow;
+        case InputVerb::left:
+            imgui_key = ImGuiKey_LeftArrow;
             break;
-        case InputVerb::Right:
-            imguiKey = ImGuiKey_RightArrow;
+        case InputVerb::right:
+            imgui_key = ImGuiKey_RightArrow;
             break;
         default:
             break;
         }
     }
-    if (imguiKey != ImGuiKey_None) {
-        io.AddKeyEvent(imguiKey, event.state == InputState::Pressed);
+    if (imgui_key != ImGuiKey_None) {
+        io.AddKeyEvent(imgui_key, event.state == InputState::pressed);
     }
 }
 
-void UiManager::enableTouchController(Entity& entity) {
-    touchController = std::make_unique<TouchController>(entity);
+void UiManager::enable_touch_controller(Entity& entity) {
+    touch_controller_ = std::make_unique<TouchController>(entity);
 }
 
-void UiManager::disableTouchController() {
-    touchController.reset();
+void UiManager::disable_touch_controller() {
+    touch_controller_.reset();
 }
 
-int UiManager::getFreeFingerCount() const {
-    if (touchController) {
-        return touchController->getFreeFingerCount();
-    } else {
-        return 999;
+int UiManager::get_free_finger_count() const {
+    if (touch_controller_) {
+        return touch_controller_->get_free_finger_count();
     }
+    return 999;
 }
 
-void UiManager::setScaleIndex(size_t scaleIndex) {
-    const size_t MaxScaleIndex = UiSizePresets.size() - 1;
-    if (scaleIndex > MaxScaleIndex) {
+void UiManager::set_scale_index(size_t scale_index) {
+    const size_t max_scale_index = ui_size_presets_.size() - 1;
+    if (scale_index > max_scale_index) {
         SDL_LogWarn(
             SDL_LOG_CATEGORY_APPLICATION,
             "Clamping user preferred scale from %zu to %zu",
-            scaleIndex,
-            MaxScaleIndex
+            scale_index,
+            max_scale_index
         );
-        scaleIndex = MaxScaleIndex;
+        scale_index = max_scale_index;
     }
-    userPreferredScale = UiSizePresets[scaleIndex].scale;
-    SDL_Log("User preferred UI scale set to %zu", scaleIndex);
+    user_preferred_scale_ = ui_size_presets_[scale_index].scale;
+    SDL_Log("User preferred UI scale set to %zu", scale_index);
 }
 
-size_t UiManager::getScaleIndex() const {
+size_t UiManager::get_scale_index() const {
     const float epsilon = 0.001f;
-    for (size_t i = 0; i < UiSizePresets.size(); i++) {
-        if (std::abs(UiSizePresets[i].scale - userPreferredScale) < epsilon) {
+    for (size_t i = 0; i < ui_size_presets_.size(); i++) {
+        if (std::abs(ui_size_presets_[i].scale - user_preferred_scale_) < epsilon) {
             return i;
         }
     }
-    return 2; // fallback
+    return 2;
 }
 
 void UiManager::draw(
@@ -180,70 +182,73 @@ void UiManager::draw(
     InputManager& input,
     Level* level
 ) {
-    updateActiveScale(window);
-    Entity* playerEntity = nullptr;
+    update_active_scale(window);
+    Entity* player_entity = nullptr;
     Camera* camera = nullptr;
     if (level) {
-        const std::vector<Player>& players = level->getPlayers();
+        const std::vector<Player>& players = level->get_players();
         if (!players.empty()) {
-            EntityController* entityController = players.begin()->controller.get();
-            if (entityController) {
-                playerEntity = entityController->getEntity();
+            EntityController* entity_controller = players.begin()->controller.get();
+            if (entity_controller) {
+                player_entity = entity_controller->get_entity();
             }
         }
-        camera = level->getCamera();
+        camera = level->get_camera();
     }
-    if (showDebug && std::find(debugVisibleIn.begin(), debugVisibleIn.end(), currentState) !=
-                         debugVisibleIn.end()) {
-        drawDebug(window, playerEntity, camera, input, level);
+    if (show_debug_ &&
+        std::find(debug_visible_in_.begin(), debug_visible_in_.end(), current_state_) !=
+            debug_visible_in_.end()) {
+        draw_debug(window, player_entity, camera, input, level);
     }
-    switch (currentState) {
-    case UiState::MainMenu: {
-        drawMainMenu(window);
-    }; break;
-    case UiState::Settings: {
-        drawSettings(window, settings, audio, input, level);
-    }; break;
-    case UiState::PlayerSourceSetup: {
-        drawPlayerSourceSetup(window, input);
-    }; break;
-    case UiState::Paused: {
-        drawPauseMenu(window);
-    }; break;
-    case UiState::PausedSettings: {
-        drawSettings(window, settings, audio, input, level);
-    }; break;
+    switch (current_state_) {
+    case UiState::main_menu:
+        draw_main_menu(window);
+        break;
+    case UiState::settings:
+        draw_settings(window, settings, audio, input, level);
+        break;
+    case UiState::player_source_setup:
+        draw_player_source_setup(window, input);
+        break;
+    case UiState::paused:
+        draw_pause_menu(window);
+        break;
+    case UiState::paused_settings:
+        draw_settings(window, settings, audio, input, level);
+        break;
     default:
         break;
     }
-    if (touchController && currentState == UiState::Playing) {
-        touchController->draw(window, uiScale);
+    if (touch_controller_ && current_state_ == UiState::playing) {
+        touch_controller_->draw(window, ui_scale_);
     }
-    playerSourceAddedThisFrame = false;
-    itemActiveThisFrame = ImGui::IsAnyItemActive();
+    player_source_added_this_frame_ = false;
+    item_active_this_frame_ = ImGui::IsAnyItemActive();
 }
 
-void UiManager::drawLargeLogo(WindowManager& window, float menuHeight) {
-    SDL_Rect safeArea = window.getSafeArea();
-    SDL_FRect safeAreaF{
-        static_cast<float>(safeArea.x),
-        static_cast<float>(safeArea.y),
-        static_cast<float>(safeArea.w),
-        static_cast<float>(safeArea.h)
+void UiManager::draw_large_logo(WindowManager& window, float menu_height) {
+    SDL_Rect safe_area = window.get_safe_area();
+    SDL_FRect safe_area_f{
+        static_cast<float>(safe_area.x),
+        static_cast<float>(safe_area.y),
+        static_cast<float>(safe_area.w),
+        static_cast<float>(safe_area.h)
     };
-    float absoluteCenterX = static_cast<float>(window.getSize().x) * 0.5f;
-    float idealPadding = 5.f;
-    float logoMenuSpacing = 5.f * uiScale;
-    float totalRequiredHeight = logoHeight + logoMenuSpacing + menuHeight;
-    float maxAllowedPadding = safeAreaF.h - totalRequiredHeight;
-    float actualLogoTopPadding =
-        (maxAllowedPadding < idealPadding) ? maxAllowedPadding : idealPadding;
-    if (actualLogoTopPadding < 0.f) {
-        actualLogoTopPadding = 0.f;
+    float absolute_center_x = static_cast<float>(window.get_size().x) * 0.5f;
+    float ideal_padding = 5.f;
+    float logo_menu_spacing = 5.f * ui_scale_;
+    float total_required_height = logo_height_ + logo_menu_spacing + menu_height;
+    float max_allowed_padding = safe_area_f.h - total_required_height;
+    float actual_logo_top_padding =
+        (max_allowed_padding < ideal_padding) ? max_allowed_padding : ideal_padding;
+    if (actual_logo_top_padding < 0.f) {
+        actual_logo_top_padding = 0.f;
     }
-    logoTopPadding = actualLogoTopPadding;
+    logo_top_padding_ = actual_logo_top_padding;
     ImGui::SetNextWindowPos(
-        ImVec2{absoluteCenterX, safeAreaF.y + logoTopPadding}, ImGuiCond_Always, ImVec2{0.5f, 0.f}
+        ImVec2{absolute_center_x, safe_area_f.y + logo_top_padding_},
+        ImGuiCond_Always,
+        ImVec2{0.5f, 0.f}
     );
     if (ImGui::Begin(
             "Main Menu Title",
@@ -252,15 +257,15 @@ void UiManager::drawLargeLogo(WindowManager& window, float menuHeight) {
                 ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings |
                 ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing
         )) {
-        ImGui::PushFont(fontTitle);
+        ImGui::PushFont(font_title_);
         ImGui::Text("Platformer");
         ImGui::PopFont();
-        logoHeight = ImGui::GetWindowSize().y;
+        logo_height_ = ImGui::GetWindowSize().y;
     }
     ImGui::End();
 }
 
-void UiManager::fpsText(WindowManager& window) {
+void UiManager::fps_text(WindowManager& window) {
     float fps = ImGui::GetIO().Framerate;
     std::string text;
     if (fps >= 1000) {
@@ -268,24 +273,24 @@ void UiManager::fpsText(WindowManager& window) {
     } else {
         text += std::format("{:.1f}", fps);
     }
-    if (!window.isVsyncEnabled() && !window.getFpsUnlimited()) {
-        text += "/" + window.targetFpsStr();
+    if (!window.is_vsync_enabled() && !window.get_fps_unlimited()) {
+        text += "/" + window.target_fps_str();
     }
     text += " FPS (" + std::format("{:.3f}", 1000.f / fps) + " ms/frame)";
     ImGui::Text("%s", text.c_str());
 }
 
-void UiManager::applyClickSounds(
-    std::string_view soundRelativePath, unsigned int volume, float pitch
+void UiManager::apply_click_sounds(
+    std::string_view sound_relative_path, unsigned int volume, float pitch
 ) {
-    if (!itemActiveThisFrame && ImGui::IsItemActivated()) {
-        itemActiveThisFrame = true;
-        GameEvents::Push(GameEventTypes::PlaySound{soundRelativePath, volume, pitch});
+    if (!item_active_this_frame_ && ImGui::IsItemActivated()) {
+        item_active_this_frame_ = true;
+        game_events::push(game_event_types::PlaySound{sound_relative_path, volume, pitch});
     }
 }
 
-void UiManager::applyHoverSounds(
-    std::string_view soundRelativePath, unsigned int volume, float pitch
+void UiManager::apply_hover_sounds(
+    std::string_view sound_relative_path, unsigned int volume, float pitch
 ) {
     // Got idea to use item ids like this from ai.
     // Before was just using a simple boolean like in applyClickSounds.
@@ -293,26 +298,26 @@ void UiManager::applyHoverSounds(
     // So if i went from hovering one item in frame 1 to another in frame 2, no sound would trigger
     // Also using func below from imgui internal prevents me from having to pass const char* ids in
     // this func.
-    ImGuiID currentItemId = ImGui::GetItemID();
+    ImGuiID current_item_id = ImGui::GetItemID();
     if (ImGui::IsItemHovered()) {
-        if (lastHoveredId != currentItemId) {
-            lastHoveredId = currentItemId;
-            GameEvents::Push(GameEventTypes::PlaySound{soundRelativePath, volume, pitch});
+        if (last_hovered_id_ != current_item_id) {
+            last_hovered_id_ = current_item_id;
+            game_events::push(game_event_types::PlaySound{sound_relative_path, volume, pitch});
         }
-    } else if (lastHoveredId == currentItemId) {
-        lastHoveredId = 0;
+    } else if (last_hovered_id_ == current_item_id) {
+        last_hovered_id_ = 0;
     }
 }
 
-void UiManager::applyEditSounds(
-    std::string_view soundRelativePath, unsigned int volume, float pitch
+void UiManager::apply_edit_sounds(
+    std::string_view sound_relative_path, unsigned int volume, float pitch
 ) {
     if (ImGui::IsItemEdited()) {
-        GameEvents::Push(GameEventTypes::PlaySound{soundRelativePath, volume, pitch});
+        game_events::push(game_event_types::PlaySound{sound_relative_path, volume, pitch});
     }
 }
 
-void UiManager::applyTouchScroll() {
+void UiManager::apply_touch_scroll() {
     ImGuiIO& io = ImGui::GetIO();
     if (io.MouseSource != ImGuiMouseSource_TouchScreen) {
         return;
@@ -325,41 +330,42 @@ void UiManager::applyTouchScroll() {
     }
 }
 
-void UiManager::updateActiveScale(WindowManager& window) {
-    SDL_Rect safeArea = window.getSafeArea();
-    const float baseMinWidth = 480.f;
-    const float baseMinHeight = 540.f;
-    const float baseDiagonal =
-        std::sqrt(baseMinWidth * baseMinWidth + baseMinHeight * baseMinHeight);
-    float currentDiagonal =
-        std::sqrt(static_cast<float>(safeArea.w * safeArea.w + safeArea.h * safeArea.h));
-    float maxSafeScale = currentDiagonal / baseDiagonal;
-    const float maxMenuWidth = 320.f;
-    const float maxMenuHeight = 350.f;
+void UiManager::update_active_scale(WindowManager& window) {
+    SDL_Rect safe_area = window.get_safe_area();
+    const float base_min_width = 480.f;
+    const float base_min_height = 540.f;
+    const float base_diagonal =
+        std::sqrt(base_min_width * base_min_width + base_min_height * base_min_height);
+    float current_diagonal =
+        std::sqrt(static_cast<float>(safe_area.w * safe_area.w + safe_area.h * safe_area.h));
+    float max_safe_scale = current_diagonal / base_diagonal;
+    const float max_menu_width = 320.f;
+    const float max_menu_height = 350.f;
 
-    float fitScaleW = static_cast<float>(safeArea.w) / maxMenuWidth;
-    float fitScaleH = static_cast<float>(safeArea.h) / maxMenuHeight;
-    float absoluteMaxScale = (fitScaleW < fitScaleH) ? fitScaleW : fitScaleH;
-    if (maxSafeScale > absoluteMaxScale) {
-        maxSafeScale = absoluteMaxScale;
+    float fit_scale_w = static_cast<float>(safe_area.w) / max_menu_width;
+    float fit_scale_h = static_cast<float>(safe_area.h) / max_menu_height;
+    float absolute_max_scale = (fit_scale_w < fit_scale_h) ? fit_scale_w : fit_scale_h;
+    if (max_safe_scale > absolute_max_scale) {
+        max_safe_scale = absolute_max_scale;
     }
-    if (maxSafeScale < 0.25f) {
-        maxSafeScale = 0.25f;
+    if (max_safe_scale < 0.25f) {
+        max_safe_scale = 0.25f;
     }
-    float targetScale = (userPreferredScale < maxSafeScale) ? userPreferredScale : maxSafeScale;
-    if (targetScale != uiScale) {
-        updateStyleScale(targetScale);
+    float target_scale =
+        (user_preferred_scale_ < max_safe_scale) ? user_preferred_scale_ : max_safe_scale;
+    if (target_scale != ui_scale_) {
+        update_style_scale(target_scale);
     }
 }
 
-void UiManager::updateStyleScale(float scale) {
-    uiScale = scale;
+void UiManager::update_style_scale(float scale) {
+    ui_scale_ = scale;
     ImGuiIO& io = ImGui::GetIO();
     io.FontGlobalScale = scale;
     ImGuiStyle& style = ImGui::GetStyle();
-    style = defaultStyle;
+    style = default_style_;
     style.ScaleAllSizes(scale);
-    setNextWindowFullscreen();
+    set_next_window_fullscreen();
     ImGui::Begin(
         "SettingsBackdrop",
         nullptr,
@@ -370,25 +376,27 @@ void UiManager::updateStyleScale(float scale) {
     ImGui::End();
 }
 
-void UiManager::setNextWindowFullscreen() {
+void UiManager::set_next_window_fullscreen() {
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->Pos);
     ImGui::SetNextWindowSize(viewport->Size);
 }
 
-void UiManager::setNextWindowSafeArea(WindowManager& window) {
-    SDL_Rect safeArea = window.getSafeArea();
-    ImGui::SetNextWindowPos(ImVec2{static_cast<float>(safeArea.x), static_cast<float>(safeArea.y)});
+void UiManager::set_next_window_safe_area(WindowManager& window) {
+    SDL_Rect safe_area = window.get_safe_area();
+    ImGui::SetNextWindowPos(
+        ImVec2{static_cast<float>(safe_area.x), static_cast<float>(safe_area.y)}
+    );
     ImGui::SetNextWindowSize(
-        ImVec2{static_cast<float>(safeArea.w), static_cast<float>(safeArea.h)}
+        ImVec2{static_cast<float>(safe_area.w), static_cast<float>(safe_area.h)}
     );
 }
 
-void UiManager::setNextWindowYOnlySafeArea(WindowManager& window) {
-    SDL_Rect safeArea = window.getSafeArea();
-    WindowVec2 windowSize = window.getSize();
-    ImGui::SetNextWindowPos(ImVec2{0.f, static_cast<float>(safeArea.y)});
+void UiManager::set_next_window_y_only_safe_area(WindowManager& window) {
+    SDL_Rect safe_area = window.get_safe_area();
+    WindowVec2 window_size = window.get_size();
+    ImGui::SetNextWindowPos(ImVec2{0.f, static_cast<float>(safe_area.y)});
     ImGui::SetNextWindowSize(
-        ImVec2{static_cast<float>(windowSize.x), static_cast<float>(safeArea.h)}
+        ImVec2{static_cast<float>(window_size.x), static_cast<float>(safe_area.h)}
     );
 }

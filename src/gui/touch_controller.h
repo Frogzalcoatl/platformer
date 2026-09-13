@@ -1,6 +1,7 @@
 #pragma once
 #include "platformer/entity_controller.h"
 #include "system/window_manager.h"
+#include <vector>
 
 struct TouchButtonRect {
     ImVec2 min;
@@ -9,21 +10,21 @@ struct TouchButtonRect {
 
 class TouchController {
   private:
-    EntityController entityController;
+    EntityController entity_controller_;
 
-    bool wasUpTouched = false;
-    bool wasPauseTouched = false;
-    int freeFingerCount = 0;
+    bool was_up_touched_ = false;
+    bool was_pause_touched_ = false;
+    int free_finger_count_ = 0;
 
-    bool isLastItemTouched(const std::vector<ImVec2>& touchPositions);
+    bool is_last_item_touched(const std::vector<ImVec2>& touch_positions);
 
   public:
     TouchController();
     TouchController(Entity& entity);
 
-    void draw(WindowManager& window, float uiScale);
+    void draw(WindowManager& window, float ui_scale);
 
-    int getFreeFingerCount() const {
-        return freeFingerCount;
+    int get_free_finger_count() const {
+        return free_finger_count_;
     }
 };

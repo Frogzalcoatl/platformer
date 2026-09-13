@@ -1,7 +1,7 @@
 #include "gui/ui_manager.h"
 
-void UiManager::drawPlayerSourceSetup(WindowManager& window, InputManager& input) {
-    setNextWindowSafeArea(window);
+void UiManager::draw_player_source_setup(WindowManager& window, InputManager& input) {
+    set_next_window_safe_area(window);
     ImGui::Begin(
         "Player Source Setup",
         nullptr,
@@ -9,76 +9,76 @@ void UiManager::drawPlayerSourceSetup(WindowManager& window, InputManager& input
             ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings |
             ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoBringToFrontOnFocus
     );
-    ImGui::PushFont(fontDoubleLarge);
+    ImGui::PushFont(font_double_large_);
     ImGui::Text("Player Source Setup:");
     ImGui::PopFont();
-    ImGui::PushFont(fontLarge);
-    ImGui::Dummy(ImVec2{0.f, 10.f * uiScale});
+    ImGui::PushFont(font_large_);
+    ImGui::Dummy(ImVec2{0.f, 10.f * ui_scale_});
     ImGui::Text("Press any button to join!");
-    static bool touchPlayerEnabled = input.isTouchPlayerEnabled(nullptr);
-    if (input.hasTouchScreen()) {
-        ImGui::Dummy(ImVec2{0.f, 25.f * uiScale});
-        if (ImGui::Checkbox("Touch Player", &touchPlayerEnabled)) {
-            if (touchPlayerEnabled) {
-                input.enableTouchPlayer();
+    static bool touch_player_enabled = input.is_touch_player_enabled(nullptr);
+    if (input.has_touch_screen()) {
+        ImGui::Dummy(ImVec2{0.f, 25.f * ui_scale_});
+        if (ImGui::Checkbox("Touch Player", &touch_player_enabled)) {
+            if (touch_player_enabled) {
+                input.enable_touch_player();
             } else {
-                input.disableTouchPlayer();
+                input.disable_touch_player();
             }
-            touchPlayerEnabled = input.isTouchPlayerEnabled(nullptr);
+            touch_player_enabled = input.is_touch_player_enabled(nullptr);
         }
-        applyHoverSounds();
-        applyClickSounds();
+        apply_hover_sounds();
+        apply_click_sounds();
     }
     if (!ImGui::IsItemActive()) {
-        touchPlayerEnabled = input.isTouchPlayerEnabled(nullptr);
+        touch_player_enabled = input.is_touch_player_enabled(nullptr);
     }
-    ImGui::Dummy(ImVec2{0.f, 25.f * uiScale});
-    const PlayerSources& playerSources = input.getPlayerSources();
-    for (size_t i = 0; i < playerSources.size(); i++) {
-        std::string childId = "Player " + std::to_string(i + 1);
-        std::string sourceName;
-        if (playerSources[i].has_value()) {
-            sourceName = input.getSourceName(playerSources[i].value());
+    ImGui::Dummy(ImVec2{0.f, 25.f * ui_scale_});
+    const PlayerSources& player_sources = input.get_player_sources();
+    for (size_t i = 0; i < player_sources.size(); i++) {
+        std::string child_id = "Player " + std::to_string(i + 1);
+        std::string source_name;
+        if (player_sources[i].has_value()) {
+            source_name = input.get_source_name(player_sources[i].value());
         } else {
-            sourceName = "Empty";
+            source_name = "Empty";
         }
-        ImGui::Text("%s: %s", childId.c_str(), sourceName.c_str());
-        if (playerSources[i].has_value()) {
+        ImGui::Text("%s: %s", child_id.c_str(), source_name.c_str());
+        if (player_sources[i].has_value()) {
             ImGui::SameLine();
-            std::string buttonId = "Remove##" + std::to_string(i + 1);
-            if (ImGui::Button(buttonId.c_str()) && !playerSourceAddedThisFrame) {
-                input.removePlayerSourceAtIndex(i);
+            std::string button_id = "Remove##" + std::to_string(i + 1);
+            if (ImGui::Button(button_id.c_str()) && !player_source_added_this_frame_) {
+                input.remove_player_source_at_index(i);
             }
-            applyHoverSounds();
-            applyClickSounds();
+            apply_hover_sounds();
+            apply_click_sounds();
         }
-        ImGui::Dummy(ImVec2{0.f, 50.f * uiScale});
+        ImGui::Dummy(ImVec2{0.f, 50.f * ui_scale_});
     }
-    if (ImGui::Button("Play", ImVec2{200.f * uiScale, 45.f * uiScale})) {
-        const size_t playerSourceCount = input.getPlayerSourceCount();
-        if (playerSourceCount > 0 && !playerSourceAddedThisFrame) {
-            GameEvents::Push(GameEventTypes::ShouldDetectNewPlayerSources{false});
-            GameEvents::Push(GameEventTypes::SetLevelName{LevelName::Test});
+    if (ImGui::Button("Play", ImVec2{200.f * ui_scale_, 45.f * ui_scale_})) {
+        const size_t player_source_count = input.get_player_source_count();
+        if (player_source_count > 0 && !player_source_added_this_frame_) {
+            game_events::push(game_event_types::ShouldDetectNewPlayerSources{false});
+            game_events::push(game_event_types::SetLevelName{LevelName::test});
             // To make sure the ui screen is switched after the level is loaded.
-            GameEvents::Push(GameEventTypes::SetUiState{UiState::Playing});
+            game_events::push(game_event_types::SetUiState{UiState::playing});
         } else {
-            GameEvents::Push(
-                GameEventTypes::SendNotification{"Must connect at least one valid player source"}
+            game_events::push(
+                game_event_types::SendNotification{"Must connect at least one valid player source"}
             );
         }
     }
-    applyHoverSounds();
-    applyClickSounds();
+    apply_hover_sounds();
+    apply_click_sounds();
     ImGui::SameLine();
-    if (ImGui::Button("Back", ImVec2{200.f * uiScale, 45.f * uiScale})) {
-        runCancelEvent();
+    if (ImGui::Button("Back", ImVec2{200.f * ui_scale_, 45.f * ui_scale_})) {
+        run_cancel_event();
     }
-    applyHoverSounds();
-    applyClickSounds();
+    apply_hover_sounds();
+    apply_click_sounds();
     ImGui::PopFont();
-    applyTouchScroll();
+    apply_touch_scroll();
     ImGui::End();
-    setNextWindowFullscreen();
+    set_next_window_fullscreen();
     ImGui::Begin(
         "PlayerSetupBackground",
         nullptr,

@@ -3,58 +3,58 @@
 #include <cstdint>
 
 struct Settings {
-    bool vsyncEnabled = true;
-    bool fpsUnlimited = false;
-    unsigned int targetFps = 120;
-    uint64_t uiScale = 2;
-    unsigned int masterVolume = 100;
-    unsigned int soundsVolume = 100;
-    unsigned int musicVolume = 50;
+    bool vsync_enabled = true;
+    bool fps_unlimited = false;
+    unsigned int target_fps = 120;
+    uint64_t ui_scale = 2;
+    unsigned int master_volume = 100;
+    unsigned int sounds_volume = 100;
+    unsigned int music_volume = 50;
 };
 
 class SettingsManager {
   private:
-    JsonManager json;
-    const Settings defaultSettings;
-    Settings activeSettings;
-    bool createdNewFile;
+    JsonManager json_;
+    const Settings default_settings_;
+    Settings active_settings_;
+    bool created_new_file_ = false;
 
-    void readFromDisk();
+    void read_from_disk();
 
   public:
-    SettingsManager(std::string_view relativeFilePath);
+    SettingsManager(std::string_view relative_file_path);
 
-    bool saveToDisk();
+    bool save_to_disk();
 
     const Settings& get() const {
-        return activeSettings;
+        return active_settings_;
     }
 
-    const Settings& getDefault() const {
-        return defaultSettings;
+    const Settings& get_default() const {
+        return default_settings_;
     }
 
-    bool createdNewFileOnRead() const;
+    bool created_new_file_on_read() const;
 
-    void setVsyncEnabled(bool val) {
-        activeSettings.vsyncEnabled = val;
+    void set_vsync_enabled(bool val) {
+        active_settings_.vsync_enabled = val;
     }
-    void setFpsUnlimited(bool val) {
-        activeSettings.fpsUnlimited = val;
+    void set_fps_unlimited(bool val) {
+        active_settings_.fps_unlimited = val;
     }
-    void setTargetFps(unsigned int val) {
-        activeSettings.targetFps = val;
+    void set_target_fps(unsigned int val) {
+        active_settings_.target_fps = val;
     }
-    void setUiScale(uint64_t val) {
-        activeSettings.uiScale = val;
+    void set_ui_scale(uint64_t val) {
+        active_settings_.ui_scale = val;
     }
-    void setMasterVolume(unsigned int val) {
-        activeSettings.masterVolume = val;
+    void set_master_volume(unsigned int val) {
+        active_settings_.master_volume = val;
     }
-    void setSoundsVolume(unsigned int val) {
-        activeSettings.soundsVolume = val;
+    void set_sounds_volume(unsigned int val) {
+        active_settings_.sounds_volume = val;
     }
-    void setMusicVolume(unsigned int val) {
-        activeSettings.musicVolume = val;
+    void set_music_volume(unsigned int val) {
+        active_settings_.music_volume = val;
     }
 };

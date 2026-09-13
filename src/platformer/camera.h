@@ -6,61 +6,51 @@
 
 class Camera {
   private:
-    b2Vec2 entitySafeAreaVal = {0.f, 0.f};
-    b2Vec2 safeAreaSize = {0.f, 0.f};
-    WindowManager& window;
-    b2Vec2 offsetWorld = {0.f, 0.f};
-    float scaleFactor = 1.f;
-    float scaleMultiplier = 1.f;
-    float MinScaleMultiplier = 0.05f;
-    float MaxScaleMultiplier = 2.5f;
+    b2Vec2 entity_safe_area_val_ = {0.f, 0.f};
+    b2Vec2 safe_area_size_ = {0.f, 0.f};
+    WindowManager& window_;
+    b2Vec2 offset_world_ = {0.f, 0.f};
+    float scale_factor_ = 1.f;
+    float scale_multiplier_ = 1.f;
+    float min_scale_multiplier_ = 0.05f;
+    float max_scale_multiplier_ = 2.5f;
 
-    float targetScaleMultiplier = 1.f;
-    float zoomSmoothingSpeed = 10.f;
+    float target_scale_multiplier_ = 1.f;
+    float zoom_smoothing_speed_ = 10.f;
 
-    void applyViewableLimits(b2Vec2& camPos);
-
-    void updateScaleFactor(int windowSizeX, int windowSizeY);
-
-    void updateOffset(b2Vec2 worldPosition);
+    void apply_viewable_limits(b2Vec2& cam_pos);
+    void update_scale_factor(int window_size_x, int window_size_y);
+    void update_offset(b2Vec2 world_position);
 
   public:
-    Camera(Entity* followEntity, WindowManager& window);
+    Camera(Entity* follow_entity, WindowManager& window);
 
     void run(float alpha);
 
-    b2Vec2 getSize() const;
+    b2Vec2 get_size() const;
+    void handle_window_resize(int x, int y);
 
-    void handleWindowResize(int x, int y);
+    WindowVec2 get_offset_pixels() const;
+    b2Vec2 get_offset_world() const;
 
-    WindowVec2 getOffsetPixels() const;
+    float get_scale_factor() const;
+    float get_scale_multiplier() const;
 
-    b2Vec2 getOffsetWorld() const;
+    b2Vec2 get_safe_area_size() const;
+    b2Vec2 get_entity_safe_area_value() const;
 
-    float getScaleFactor() const;
+    void center_on_entity(float alpha);
+    void increment_scale_multiplier(float amount);
+    void increment_scale_multiplier_smooth(float amount);
+    void reset_scale_multiplier();
 
-    float getScaleMultiplier() const;
+    b2Vec2 pixel_pos_to_world_pos(WindowVec2 pos);
 
-    b2Vec2 getSafeAreaSize() const;
+    b2Vec2 safe_area = {0.15f, 0.15f};
+    Entity* entity_to_follow = nullptr;
 
-    b2Vec2 getEntitySafeAreaValue() const;
-
-    void centerOnEntity(float alpha);
-
-    void incrementScaleMultiplier(float amount);
-
-    void incrementScaleMultiplierSmooth(float amount);
-
-    void resetScaleMultiplier();
-
-    b2Vec2 pixelPosToWorldPos(WindowVec2 pos);
-
-    b2Vec2 safeArea = {0.15f, 0.15f};
-
-    Entity* entityToFollow;
-
-    std::optional<float> minViewableY = 0.f;
-    std::optional<float> maxViewableY;
-    std::optional<float> minViewableX = 0.f;
-    std::optional<float> maxViewableX;
+    std::optional<float> min_viewable_y = 0.f;
+    std::optional<float> max_viewable_y;
+    std::optional<float> min_viewable_x = 0.f;
+    std::optional<float> max_viewable_x;
 };

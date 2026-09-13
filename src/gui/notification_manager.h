@@ -8,25 +8,22 @@
 struct Notification {
     std::string message;
     bool dismissed = false;
-    Uint64 timestamp;
-    std::function<void()> onClick = nullptr;
+    Uint64 timestamp = 0;
+    std::function<void()> on_click = nullptr;
 };
 
 class NotificationManager {
   private:
-    std::vector<Notification> notifications;
+    std::vector<Notification> notifications_;
 
-    void removeIndex(size_t i);
-
-    void draw(WindowManager& window, const float uiScale);
+    void remove_index(size_t i);
+    void draw(WindowManager& window, const float ui_scale);
 
   public:
     NotificationManager() = default;
 
-    // Length of time notifications are shown before being removed
-    unsigned int durationSeconds = 10;
+    unsigned int duration_seconds = 10;
 
-    void send(std::string_view message, std::function<void()> onClick = nullptr);
-
-    void update(WindowManager& windowManager, const float uiScale);
+    void send(std::string_view message, std::function<void()> on_click = nullptr);
+    void update(WindowManager& window, const float ui_scale);
 };

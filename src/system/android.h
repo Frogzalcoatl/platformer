@@ -1,5 +1,5 @@
 #pragma once
 
-namespace Android {
-void quitAndRemoveTask();
+namespace android {
+void quit_and_remove_task();
 }

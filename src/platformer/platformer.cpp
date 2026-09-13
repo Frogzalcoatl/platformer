@@ -3,355 +3,367 @@
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_sdlrenderer3.h>
+#include <vector>
 
 #ifdef SDL_PLATFORM_ANDROID
-#include "system/Android.hpp"
+#include "system/android.h"
 #endif
 
 Platformer::Platformer()
-    : window{"C++ Platformer", Colors::Background}, assets(window.getSdlRenderer()), audio(assets),
-      settings("Settings.json"), ui(assets) {
-    loadSettings();
-    assets.addGameControllerMappings("gamepads/gamecontrollerdb.txt");
-    assets.addGameControllerMappings("gamepads/retrolink.txt");
-    MIX_Mixer* mixerDevice = audio.getMixerDevice();
-    if (mixerDevice) {
-        assets.getAudio(AssetPaths::Sounds::Hover, mixerDevice, true);
-        assets.getAudio(AssetPaths::Sounds::Click, mixerDevice, true);
+    : window_{"C++ Platformer", colors::background}, assets_(window_.get_sdl_renderer()),
+      audio_(assets_), settings_("Settings.json"), ui_(assets_) {
+    load_settings();
+    assets_.add_controller_mappings("gamepads/gamecontrollerdb.txt");
+    assets_.add_controller_mappings("gamepads/retrolink.txt");
+    MIX_Mixer* mixer_device = audio_.get_mixer_device();
+    if (mixer_device) {
+        assets_.load_audio(asset_paths::sounds::hover, mixer_device, true);
+        assets_.load_audio(asset_paths::sounds::click, mixer_device, true);
     }
 }
 
-void Platformer::loadSettings() {
-    const Settings& currentSettings = settings.get();
+void Platformer::load_settings() {
+    const Settings& current_settings = settings_.get();
 #ifdef SDL_PLATFORM_ANDROID
-    // Cannot toggle vsync on android anyways
-    window.setVsync(false);
+    window_.set_vsync(false);
 #else
-    window.setVsync(currentSettings.vsyncEnabled);
+    window_.set_vsync(current_settings.vsync_enabled);
 #endif
-    const unsigned int MinTargetFps = 1;
-    const unsigned int MaxTargetFps = 1000;
-    if (currentSettings.targetFps < MinTargetFps) {
+    const unsigned int min_target_fps = 1;
+    const unsigned int max_target_fps = 1000;
+    if (current_settings.target_fps < min_target_fps) {
         SDL_LogWarn(
             SDL_LOG_CATEGORY_APPLICATION,
             "Clamping target fps from %u to %u",
-            currentSettings.targetFps,
-            MinTargetFps
+            current_settings.target_fps,
+            min_target_fps
         );
-        settings.setTargetFps(MinTargetFps);
-    } else if (currentSettings.targetFps > MaxTargetFps) {
+        settings_.set_target_fps(min_target_fps);
+    } else if (current_settings.target_fps > max_target_fps) {
         SDL_LogWarn(
             SDL_LOG_CATEGORY_APPLICATION,
             "Clamping target fps from %u to %u",
-            currentSettings.targetFps,
-            MaxTargetFps
+            current_settings.target_fps,
+            max_target_fps
         );
-        settings.setTargetFps(MaxTargetFps);
+        settings_.set_target_fps(max_target_fps);
     }
-    if (settings.createdNewFileOnRead()) {
-        const Uint64 monitorRefreshRate =
-            static_cast<Uint64>(SDL_roundf(window.getMonitorRefreshRate()));
-        settings.setTargetFps(static_cast<unsigned int>(monitorRefreshRate));
-        window.setTargetFps(monitorRefreshRate);
+    if (settings_.created_new_file_on_read()) {
+        const Uint64 monitor_refresh_rate =
+            static_cast<Uint64>(SDL_roundf(window_.get_monitor_refresh_rate()));
+        settings_.set_target_fps(static_cast<unsigned int>(monitor_refresh_rate));
+        window_.set_target_fps(monitor_refresh_rate);
     } else {
-        window.setTargetFps(currentSettings.targetFps);
+        window_.set_target_fps(current_settings.target_fps);
     }
-    window.setFpsUnlimited(currentSettings.fpsUnlimited);
-    ui.setScaleIndex(currentSettings.uiScale);
-    size_t userPreferredScale = ui.getScaleIndex();
-    if (userPreferredScale != currentSettings.uiScale) {
-        settings.setUiScale(userPreferredScale);
+    window_.set_fps_unlimited(current_settings.fps_unlimited);
+    ui_.set_scale_index(current_settings.ui_scale);
+    size_t user_preferred_scale = ui_.get_scale_index();
+    if (user_preferred_scale != current_settings.ui_scale) {
+        settings_.set_ui_scale(user_preferred_scale);
     }
-    const unsigned int MaxVolume = 200;
-    if (currentSettings.masterVolume > MaxVolume) {
+    const unsigned int max_volume = 200;
+    if (current_settings.master_volume > max_volume) {
         SDL_LogWarn(
             SDL_LOG_CATEGORY_APPLICATION,
             "Clamping master volume from %u to %u",
-            currentSettings.masterVolume,
-            MaxVolume
+            current_settings.master_volume,
+            max_volume
         );
-        settings.setMasterVolume(MaxVolume);
+        settings_.set_master_volume(max_volume);
     }
-    if (currentSettings.soundsVolume > MaxVolume) {
+    if (current_settings.sounds_volume > max_volume) {
         SDL_LogWarn(
             SDL_LOG_CATEGORY_APPLICATION,
             "Clamping sounds volume from %u to %u",
-            currentSettings.soundsVolume,
-            MaxVolume
+            current_settings.sounds_volume,
+            max_volume
         );
-        settings.setSoundsVolume(MaxVolume);
+        settings_.set_sounds_volume(max_volume);
     }
-    if (currentSettings.musicVolume > MaxVolume) {
+    if (current_settings.music_volume > max_volume) {
         SDL_LogWarn(
             SDL_LOG_CATEGORY_APPLICATION,
             "Clamping music volume from %u to %u",
-            currentSettings.musicVolume,
-            MaxVolume
+            current_settings.music_volume,
+            max_volume
         );
-        settings.setMusicVolume(MaxVolume);
+        settings_.set_music_volume(max_volume);
     }
-    audio.setVolume(AudioCategory::Master, currentSettings.masterVolume);
-    audio.setVolume(AudioCategory::Sounds, currentSettings.soundsVolume);
-    audio.setVolume(AudioCategory::Music, currentSettings.musicVolume);
+    audio_.set_volume(AudioCategory::master, current_settings.master_volume);
+    audio_.set_volume(AudioCategory::sounds, current_settings.sounds_volume);
+    audio_.set_volume(AudioCategory::music, current_settings.music_volume);
 }
 
-void Platformer::handleSdlEvent() {
+void Platformer::handle_sdl_event() {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
         ImGui_ImplSDL3_ProcessEvent(&event);
         switch (event.type) {
         case SDL_EVENT_QUIT: {
-            running = false;
+            running_ = false;
 #ifdef SDL_PLATFORM_ANDROID
-            Android::quitAndRemoveTask();
+            android::quit_and_remove_task();
 #endif
-        }; break;
+        } break;
         case SDL_EVENT_WINDOW_RESIZED: {
-            window.handleResize(event.window.data1, event.window.data2);
-            if (currentLevel) {
-                Camera* camera = currentLevel->getCamera();
+            window_.handle_resize(event.window.data1, event.window.data2);
+            if (current_level_) {
+                Camera* camera = current_level_->get_camera();
                 if (camera) {
-                    camera->handleWindowResize(event.window.data1, event.window.data2);
+                    camera->handle_window_resize(event.window.data1, event.window.data2);
                 }
             }
-        }; break;
+        } break;
         case SDL_EVENT_MOUSE_MOTION: {
-            window.handleMouseMotionEvent(event.motion);
-        }; break;
+            window_.handle_mouse_motion_event(event.motion);
+        } break;
         case SDL_EVENT_KEY_DOWN:
         case SDL_EVENT_KEY_UP:
         case SDL_EVENT_MOUSE_WHEEL:
         case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
         case SDL_EVENT_GAMEPAD_BUTTON_UP: {
-            std::vector<GameEventTypes::Input> inputEvents =
-                input.getInputEventsFromSDLEvent(event);
-            for (const auto& inputEvent : inputEvents) {
-                GameEvents::Push(inputEvent);
+            std::vector<game_event_types::Input> input_events =
+                input_.get_input_events_from_sdl_event(event);
+            for (const auto& input_event : input_events) {
+                game_events::push(input_event);
             }
-        }; break;
+        } break;
         case SDL_EVENT_PINCH_BEGIN:
         case SDL_EVENT_PINCH_UPDATE:
         case SDL_EVENT_PINCH_END: {
-            if (ui.getFreeFingerCount() >= 2) {
-                input.handlePinchEvent(event.pinch);
+            if (ui_.get_free_finger_count() >= 2) {
+                input_.handle_pinch_event(event.pinch);
             }
-        }; break;
+        } break;
         case SDL_EVENT_GAMEPAD_ADDED: {
-            GameEvents::Schedule(
-                GameEventTypes::GamepadConnectedNotification{event.gdevice.which}, 25
+            game_events::schedule(
+                game_event_types::GamepadConnectedNotification{event.gdevice.which}, 25
             );
-        }; break;
+        } break;
         case SDL_EVENT_GAMEPAD_REMOVED: {
-            input.handleGamepadRemoved(event.gdevice);
+            input_.handle_gamepad_removed(event.gdevice);
             std::string message =
-                "Controller Disconnected: " + input.getGamepadName(event.gdevice.which);
-            notificationManager.send(message);
-        }; break;
+                "Controller Disconnected: " + input_.get_gamepad_name(event.gdevice.which);
+            notification_manager_.send(message);
+        } break;
         case SDL_EVENT_DID_ENTER_BACKGROUND: {
-            settings.saveToDisk();
-        }; break;
-        };
-    }
-}
-
-void Platformer::handleInputGameEvent(const GameEventTypes::Input& inputEvent) {
-    UiState uiState = ui.getState();
-    if (inputEvent.state == InputState::Pressed) {
-        switch (inputEvent.verb) {
-        case InputVerb::ToggleFullscreen:
-#if defined(SDL_PLATFORM_WINDOWS) || defined(SDL_PLATFORM_MACOS) || defined(SDL_PLATFORM_LINUX)
-            window.toggleFullscreen(); // Toggling fullscreen should only be accessible on desktop
-#endif
-            break;
-        case InputVerb::ZoomIn:
-            if (currentLevel && uiState == UiState::Playing) {
-                Camera* camera = currentLevel->getCamera();
-                if (camera) {
-                    camera->incrementScaleMultiplierSmooth(0.05f);
-                }
-            }
-            break;
-        case InputVerb::ZoomOut:
-            if (currentLevel && uiState == UiState::Playing) {
-                Camera* camera = currentLevel->getCamera();
-                if (camera) {
-                    camera->incrementScaleMultiplierSmooth(-0.05f);
-                }
-            }
-            break;
-        case InputVerb::ZoomReset:
-            if (currentLevel && uiState == UiState::Playing) {
-                Camera* camera = currentLevel->getCamera();
-                if (camera) {
-                    camera->resetScaleMultiplier();
-                }
-            }
-            break;
-        case InputVerb::ToggleDebug:
-            ui.toggleDebug();
-            break;
-        case InputVerb::Cancel:
-            // Purposely continuing into pause, cancel and pause are nearly identical
-            // Only difference is cancel cannot be used to pause the game
-            if (uiState == UiState::Playing) {
-                break;
-            }
-            SDL_FALLTHROUGH;
-        case InputVerb::Pause:
-            if (ImGui::IsAnyItemActive()) {
-                break;
-            }
-            ui.runCancelEvent();
-            if (currentLevel) {
-                const auto& players = currentLevel.get()->getPlayers();
-                for (const auto& player : players) {
-                    if (player.controller) {
-                        player.controller->resetInput();
-                    }
-                }
-            }
-            break;
-        case InputVerb::ShowHitboxes:
-            if (currentLevel) {
-                currentLevel->showHitBoxes = !currentLevel->showHitBoxes;
-            }
+            settings_.save_to_disk();
+        } break;
         default:
             break;
         }
     }
-    if (currentLevel && uiState == UiState::Playing) {
-        currentLevel->handleInput(inputEvent);
-    }
-    ui.passInputToImGui(inputEvent);
 }
 
-void Platformer::handleGameEvent() {
-    GameEvents::UpdateScheduledEvents();
-    GameEvent event;
-    while (GameEvents::Poll(event)) {
-        if (std::holds_alternative<GameEventTypes::CloseWindow>(event)) {
-            running = false;
-#ifdef SDL_PLATFORM_ANDROID
-            Android::quitAndRemoveTask();
+void Platformer::handle_input_game_event(const game_event_types::Input& input_event) {
+    UiState ui_state = ui_.get_state();
+    if (input_event.state == InputState::pressed) {
+        switch (input_event.verb) {
+        case InputVerb::toggle_fullscreen:
+#if defined(SDL_PLATFORM_WINDOWS) || defined(SDL_PLATFORM_MACOS) || defined(SDL_PLATFORM_LINUX)
+            window_.toggle_fullscreen();
 #endif
-        } else if (const auto* playSoundEvent = std::get_if<GameEventTypes::PlaySound>(&event)) {
-            audio.playSound(
-                playSoundEvent->relativePath, playSoundEvent->volume, playSoundEvent->pitch
-            );
-        } else if (const auto* playMusicEvent = std::get_if<GameEventTypes::PlayMusic>(&event)) {
-            audio.playMusic(
-                playMusicEvent->relativePath,
-                playMusicEvent->volume,
-                playMusicEvent->pitch,
-                playMusicEvent->loop
-            );
-        } else if (const auto* setVolume = std::get_if<GameEventTypes::SetVolume>(&event)) {
-            audio.setVolume(setVolume->category, setVolume->volume);
-        } else if (const auto* inputEvent = std::get_if<GameEventTypes::Input>(&event)) {
-            handleInputGameEvent(*inputEvent);
-        } else if (const auto* setUiState = std::get_if<GameEventTypes::SetUiState>(&event)) {
-            ui.setState(setUiState->state);
-        } else if (const auto* setLevelName = std::get_if<GameEventTypes::SetLevelName>(&event)) {
-            const LevelAssetsVector& previousLevelAssets =
-                currentLevel ? currentLevel->getRequiredAssets() : LevelAssetsVector{};
-            if (setLevelName->level == LevelName::None) {
-                currentLevel->unloadRequiredAssets(assets);
-                currentLevel = nullptr;
-                window.backgroundColor = Colors::Background;
-                continue;
-            } else if (setLevelName->level == LevelName::Test) {
-                currentLevel = getTestLevel(assets, window, audio, previousLevelAssets);
-            }
-            currentLevel->updatePlayers(input.getPlayerSources(), assets);
-            size_t touchPlayerIndex;
-            if (!input.isTouchPlayerEnabled(&touchPlayerIndex)) {
-                ui.disableTouchController();
-            } else {
-                Entity* touchEntity = currentLevel->getPlayerEntity(touchPlayerIndex);
-                if (touchEntity) {
-                    ui.enableTouchController(*touchEntity);
-                } else {
-                    ui.disableTouchController();
+            break;
+        case InputVerb::zoom_in:
+            if (current_level_ && ui_state == UiState::playing) {
+                Camera* camera = current_level_->get_camera();
+                if (camera) {
+                    camera->increment_scale_multiplier_smooth(0.05f);
                 }
             }
-            window.backgroundColor = currentLevel->backgroundColor;
-        } else if (
-            const auto* playerSourceAdded = std::get_if<GameEventTypes::PlayerSourceAdded>(&event)
-        ) {
-            (void)playerSourceAdded;
-            if (currentLevel) {
-                currentLevel->updatePlayers(input.getPlayerSources(), assets);
+            break;
+        case InputVerb::zoom_out:
+            if (current_level_ && ui_state == UiState::playing) {
+                Camera* camera = current_level_->get_camera();
+                if (camera) {
+                    camera->increment_scale_multiplier_smooth(-0.05f);
+                }
             }
-            ui.setPlayerSourceAddedThisFrame(true);
-            if (ui.getState() != UiState::PlayerSourceSetup) {
+            break;
+        case InputVerb::zoom_reset:
+            if (current_level_ && ui_state == UiState::playing) {
+                Camera* camera = current_level_->get_camera();
+                if (camera) {
+                    camera->reset_scale_multiplier();
+                }
+            }
+            break;
+        case InputVerb::toggle_debug:
+            ui_.toggle_debug();
+            break;
+        case InputVerb::cancel:
+            if (ui_state == UiState::playing) {
+                break;
+            }
+            SDL_FALLTHROUGH;
+        case InputVerb::pause:
+            if (ImGui::IsAnyItemActive()) {
+                break;
+            }
+            ui_.run_cancel_event();
+            if (current_level_) {
+                const auto& players = current_level_->get_players();
+                for (const auto& player : players) {
+                    if (player.controller) {
+                        player.controller->reset_input();
+                    }
+                }
+            }
+            break;
+        case InputVerb::show_hitboxes:
+            if (current_level_) {
+                current_level_->show_hitboxes = !current_level_->show_hitboxes;
+            }
+            break;
+        default:
+            break;
+        }
+    }
+    if (current_level_ && ui_state == UiState::playing) {
+        current_level_->handle_input(input_event);
+    }
+    ui_.pass_input_to_imgui(input_event);
+}
+
+void Platformer::handle_game_event() {
+    game_events::update_scheduled_events();
+    GameEvent event;
+    while (game_events::poll(event)) {
+        if (std::holds_alternative<game_event_types::CloseWindow>(event)) {
+            running_ = false;
+#ifdef SDL_PLATFORM_ANDROID
+            android::quit_and_remove_task();
+#endif
+        } else if (
+            const auto* play_sound_event = std::get_if<game_event_types::PlaySound>(&event)
+        ) {
+            audio_.play_sound(
+                play_sound_event->relative_path, play_sound_event->volume, play_sound_event->pitch
+            );
+        } else if (
+            const auto* play_music_event = std::get_if<game_event_types::PlayMusic>(&event)
+        ) {
+            audio_.play_music(
+                play_music_event->relative_path,
+                play_music_event->volume,
+                play_music_event->pitch,
+                play_music_event->loop
+            );
+        } else if (const auto* set_volume = std::get_if<game_event_types::SetVolume>(&event)) {
+            audio_.set_volume(set_volume->category, set_volume->volume);
+        } else if (const auto* input_event = std::get_if<game_event_types::Input>(&event)) {
+            handle_input_game_event(*input_event);
+        } else if (const auto* set_ui_state = std::get_if<game_event_types::SetUiState>(&event)) {
+            ui_.set_state(set_ui_state->state);
+        } else if (
+            const auto* set_level_name = std::get_if<game_event_types::SetLevelName>(&event)
+        ) {
+            const LevelAssetsVector& previous_level_assets =
+                current_level_ ? current_level_->get_required_assets() : LevelAssetsVector{};
+            if (set_level_name->level == LevelName::none) {
+                current_level_->unload_required_assets(assets_);
+                current_level_ = nullptr;
+                window_.background_color = colors::background;
+                continue;
+            } else if (set_level_name->level == LevelName::test) {
+                current_level_ = get_test_level(assets_, window_, audio_, previous_level_assets);
+            }
+            current_level_->update_players(input_.get_player_sources(), assets_);
+            size_t touch_player_index;
+            if (!input_.is_touch_player_enabled(&touch_player_index)) {
+                ui_.disable_touch_controller();
+            } else {
+                Entity* touch_entity = current_level_->get_player_entity(touch_player_index);
+                if (touch_entity) {
+                    ui_.enable_touch_controller(*touch_entity);
+                } else {
+                    ui_.disable_touch_controller();
+                }
+            }
+            window_.background_color = current_level_->background_color;
+        } else if (
+            const auto* player_source_added =
+                std::get_if<game_event_types::PlayerSourceAdded>(&event)
+        ) {
+            if (current_level_) {
+                current_level_->update_players(input_.get_player_sources(), assets_);
+            }
+            ui_.set_player_source_added_this_frame(true);
+            if (ui_.get_state() != UiState::player_source_setup) {
                 std::string notification = "Player Source Added: \"" +
-                                           input.getSourceName(playerSourceAdded->source) + "\"";
-                notificationManager.send(notification);
+                                           input_.get_source_name(player_source_added->source) +
+                                           "\"";
+                notification_manager_.send(notification);
             }
         } else if (
-            const auto* playerSourceRemoved =
-                std::get_if<GameEventTypes::PlayerSourceRemoved>(&event)
+            const auto* player_source_removed =
+                std::get_if<game_event_types::PlayerSourceRemoved>(&event)
         ) {
-            if (currentLevel) {
-                currentLevel->updatePlayers(input.getPlayerSources(), assets);
+            if (current_level_) {
+                current_level_->update_players(input_.get_player_sources(), assets_);
             }
-            if (ui.getState() != UiState::PlayerSourceSetup) {
+            if (ui_.get_state() != UiState::player_source_setup) {
                 std::string notification = "Player Source Removed: \"" +
-                                           input.getSourceName(playerSourceRemoved->source) + "\"";
-                notificationManager.send(notification);
+                                           input_.get_source_name(player_source_removed->source) +
+                                           "\"";
+                notification_manager_.send(notification);
             }
         } else if (
-            const auto* detectNewPlayers =
-                std::get_if<GameEventTypes::ShouldDetectNewPlayerSources>(&event)
+            const auto* detect_new_players =
+                std::get_if<game_event_types::ShouldDetectNewPlayerSources>(&event)
         ) {
-            if (detectNewPlayers->value) {
-                input.listenForValidKeyboard = true;
-                input.listenForNewGamepad = true;
-                input.enableTouchPlayer(); // Is ignored if user does not have touch screen
+            if (detect_new_players->value) {
+                input_.listen_for_valid_keyboard = true;
+                input_.listen_for_new_gamepad = true;
+                input_.enable_touch_player();
                 SDL_Log("Enabled input detection for adding new player sources.");
             } else {
-                bool valueWillBeChanged = input.listenForValidKeyboard || input.listenForNewGamepad;
-                input.listenForValidKeyboard = false;
-                input.listenForNewGamepad = false;
-                if (valueWillBeChanged) {
+                bool value_will_be_changed =
+                    input_.listen_for_valid_keyboard || input_.listen_for_new_gamepad;
+                input_.listen_for_valid_keyboard = false;
+                input_.listen_for_new_gamepad = false;
+                if (value_will_be_changed) {
                     SDL_Log("Disabled input detection for adding new player sources.");
                 }
             }
         } else if (
-            const auto* changeLevelZoom = std::get_if<GameEventTypes::ChangeLevelZoom>(&event)
+            const auto* change_level_zoom = std::get_if<game_event_types::ChangeLevelZoom>(&event)
         ) {
-            if (currentLevel && ui.getState() == UiState::Playing) {
-                Camera* camera = currentLevel->getCamera();
+            if (current_level_ && ui_.get_state() == UiState::playing) {
+                Camera* camera = current_level_->get_camera();
                 if (camera) {
-                    if (changeLevelZoom->smooth) {
-                        camera->incrementScaleMultiplierSmooth(changeLevelZoom->amount);
+                    if (change_level_zoom->smooth) {
+                        camera->increment_scale_multiplier_smooth(change_level_zoom->amount);
                     } else {
-                        camera->incrementScaleMultiplier(changeLevelZoom->amount);
+                        camera->increment_scale_multiplier(change_level_zoom->amount);
                     }
                 }
             }
         } else if (
-            const auto* sendNotification = std::get_if<GameEventTypes::SendNotification>(&event)
+            const auto* send_notification = std::get_if<game_event_types::SendNotification>(&event)
         ) {
-            notificationManager.send(sendNotification->message, sendNotification->onClick);
+            notification_manager_.send(send_notification->message, send_notification->on_click);
         } else if (
-            const auto* gamepadEventNotification =
-                std::get_if<GameEventTypes::GamepadConnectedNotification>(&event)
+            const auto* gamepad_event_notification =
+                std::get_if<game_event_types::GamepadConnectedNotification>(&event)
         ) {
             std::string message =
-                "Controller Connected: " + input.getGamepadName(gamepadEventNotification->id);
-            notificationManager.send(message);
-        } else if (const auto* saveUserData = std::get_if<GameEventTypes::SaveUserData>(&event)) {
-            if (saveUserData->type == UserDataTypes::Settings) {
-                settings.saveToDisk();
+                "Controller Connected: " + input_.get_gamepad_name(gamepad_event_notification->id);
+            notification_manager_.send(message);
+        } else if (
+            const auto* save_user_data = std::get_if<game_event_types::SaveUserData>(&event)
+        ) {
+            if (save_user_data->type == UserDataTypes::settings) {
+                settings_.save_to_disk();
             }
         }
     }
 }
 
 // Just for testing
-static bool playMusicFailed = false;
-const std::vector<const char*> MusicFileNames = {
+static bool play_music_failed = false;
+const std::vector<const char*> music_file_names = {
     "2023_4 (unfinished).ogg",
     "2023_11(3).ogg",
     "2023_14.ogg",
@@ -371,33 +383,33 @@ const std::vector<const char*> MusicFileNames = {
 };
 
 void Platformer::run() {
-    running = true;
-    while (running) {
-        if (!audio.isMusicPlaying() && !playMusicFailed) {
-            size_t randomSongId = static_cast<size_t>(
-                SDL_floorf(static_cast<float>(MusicFileNames.size()) * SDL_randf())
+    running_ = true;
+    while (running_) {
+        if (!audio_.is_music_playing() && !play_music_failed) {
+            size_t random_song_id = static_cast<size_t>(
+                SDL_floorf(static_cast<float>(music_file_names.size()) * SDL_randf())
             );
-            std::string relativePath = "music/";
-            relativePath += MusicFileNames[randomSongId];
-            if (!audio.playMusic(relativePath, 100, audio.getMusicPitch(), false)) {
-                playMusicFailed = true;
+            std::string relative_path = "music/";
+            relative_path += music_file_names[random_song_id];
+            if (!audio_.play_music(relative_path, 100, audio_.get_music_pitch(), false)) {
+                play_music_failed = true;
             }
         }
-        const Uint64 frameStartNs = SDL_GetTicksNS();
-        handleSdlEvent();
-        handleGameEvent();
-        window.clearFrame();
-        if (currentLevel) {
-            UiState currentState = ui.getState();
-            if (currentState == UiState::Playing) {
-                currentLevel->update();
+        const Uint64 frame_start_ns = SDL_GetTicksNS();
+        handle_sdl_event();
+        handle_game_event();
+        window_.clear_frame();
+        if (current_level_) {
+            UiState current_state = ui_.get_state();
+            if (current_state == UiState::playing) {
+                current_level_->update();
             }
-            currentLevel->draw(window, assets);
+            current_level_->draw(window_, assets_);
         }
-        ui.update(window, settings, audio, input, currentLevel.get());
-        notificationManager.update(window, ui.getActualScale());
-        window.render(frameStartNs);
-        DiscordRpcManager::update();
+        ui_.update(window_, settings_, audio_, input_, current_level_.get());
+        notification_manager_.update(window_, ui_.get_actual_scale());
+        window_.render(frame_start_ns);
+        discord_rpc_manager::update();
     }
-    settings.saveToDisk();
+    settings_.save_to_disk();
 }

@@ -5,48 +5,48 @@
 #include <variant>
 
 enum class InputVerb : uint8_t {
-    Up,
-    Down,
-    Left,
-    Right,
-    Jump,
-    Sprint,
-    Respawn,
-    Confirm,
-    Cancel,
-    Pause,
-    ZoomIn,
-    ZoomOut,
-    ZoomReset,
-    ToggleFullscreen,
-    ToggleDebug,
-    ShowHitboxes,
-    VerbCount
+    up,
+    down,
+    left,
+    right,
+    jump,
+    sprint,
+    respawn,
+    confirm,
+    cancel,
+    pause,
+    zoom_in,
+    zoom_out,
+    zoom_reset,
+    toggle_fullscreen,
+    toggle_debug,
+    show_hitboxes,
+    verb_count
 };
 
 struct InputVerbInfo {
     InputVerb verb;
-    bool activateOnRepeat = false;
+    bool activate_on_repeat = false;
 };
 
 enum class InputState : uint8_t {
-    Pressed,
-    Released,
-    InputStateCount
+    pressed,
+    released,
+    input_state_count
 };
 
 enum class InputType : uint8_t {
-    Keyboard,
-    Mouse,
-    Controller,
-    Touch,
-    InputTypeCount
+    keyboard,
+    mouse,
+    controller,
+    touch,
+    input_type_count
 };
 
 struct DefaultScancodeBinding {
     InputVerb verb;
     SDL_Scancode scancode;
-    bool activateOnRepeat = false;
+    bool activate_on_repeat = false;
 };
 
 struct DefaultButtonBinding {
@@ -56,69 +56,65 @@ struct DefaultButtonBinding {
 
 struct InputSource {
     InputType type;
-    Uint32 sdlId;
-    // operator == is a suggestion from AI.
-    // Means i can simply compare inputSources with ==
-    // instead of having to compare the two individual properties.
+    Uint32 sdl_id;
     bool operator==(const InputSource& other) const = default;
 };
 
 enum class AudioCategory : uint8_t {
-    Master,
-    Sounds,
-    Music,
-    AudioCategoryCount,
+    master,
+    sounds,
+    music,
+    audio_category_count
 };
 
 enum class UiState : uint8_t {
-    MainMenu,
-    Settings,
-    PlayerSourceSetup,
-    Playing,
-    Paused,
-    PausedSettings,
-    UiStateCount
+    main_menu,
+    settings,
+    player_source_setup,
+    playing,
+    paused,
+    paused_settings,
+    ui_state_count
 };
 
 enum class LevelName : uint8_t {
-    None,
-    Test,
-    LevelNameCount
+    none,
+    test,
+    level_name_count
 };
 
 enum class UserDataTypes : uint8_t {
-    Settings,
-    UserDataTypesCount
+    settings,
+    user_data_types_count
 };
 
-namespace GameEventTypes {
+namespace game_event_types {
 struct CloseWindow {};
 
 struct Input {
     InputVerb verb;
     InputState state;
-    InputSource sourceInfo;
+    InputSource source_info;
 };
 
 struct PlaySound {
-    std::string relativePath;
+    std::string relative_path;
     unsigned int volume = 100;
     float pitch = 1.f;
 
-    // Cleanly accept std::string_view
     PlaySound(std::string_view path, unsigned int vol = 100, float p = 1.f)
-        : relativePath(path), volume(vol), pitch(p) {
+        : relative_path(path), volume(vol), pitch(p) {
     }
 };
 
 struct PlayMusic {
-    std::string relativePath;
+    std::string relative_path;
     unsigned int volume = 100;
     float pitch = 1.f;
     bool loop = false;
 
     PlayMusic(std::string_view path, unsigned int vol = 100, float p = 1.f, bool l = false)
-        : relativePath(path), volume(vol), pitch(p), loop(l) {
+        : relative_path(path), volume(vol), pitch(p), loop(l) {
     }
 };
 
@@ -137,12 +133,12 @@ struct SetLevelName {
 
 struct PlayerSourceAdded {
     InputSource source;
-    size_t atIndex;
+    size_t at_index;
 };
 
 struct PlayerSourceRemoved {
     InputSource source;
-    size_t atIndex;
+    size_t at_index;
 };
 
 struct ShouldDetectNewPlayerSources {
@@ -156,11 +152,9 @@ struct ChangeLevelZoom {
 
 struct SendNotification {
     std::string message;
-    std::function<void()> onClick = nullptr;
+    std::function<void()> on_click = nullptr;
 };
 
-// You have to wait a bit before the actual gamepad name is accessible
-// Use event scheduler
 struct GamepadConnectedNotification {
     SDL_JoystickID id;
 };
@@ -170,34 +164,33 @@ struct SaveUserData {
 };
 }
 
-// Learned about std::variant from AI. Seems like a reasonable choice here.
 using GameEvent = std::variant<
-    GameEventTypes::CloseWindow,
-    GameEventTypes::PlaySound,
-    GameEventTypes::PlayMusic,
-    GameEventTypes::SetVolume,
-    GameEventTypes::Input,
-    GameEventTypes::SetUiState,
-    GameEventTypes::SetLevelName,
-    GameEventTypes::PlayerSourceAdded,
-    GameEventTypes::PlayerSourceRemoved,
-    GameEventTypes::ShouldDetectNewPlayerSources,
-    GameEventTypes::ChangeLevelZoom,
-    GameEventTypes::SendNotification,
-    GameEventTypes::GamepadConnectedNotification,
-    GameEventTypes::SaveUserData>;
+    game_event_types::CloseWindow,
+    game_event_types::PlaySound,
+    game_event_types::PlayMusic,
+    game_event_types::SetVolume,
+    game_event_types::Input,
+    game_event_types::SetUiState,
+    game_event_types::SetLevelName,
+    game_event_types::PlayerSourceAdded,
+    game_event_types::PlayerSourceRemoved,
+    game_event_types::ShouldDetectNewPlayerSources,
+    game_event_types::ChangeLevelZoom,
+    game_event_types::SendNotification,
+    game_event_types::GamepadConnectedNotification,
+    game_event_types::SaveUserData>;
 
 struct ScheduledEvent {
-    Uint64 executeTimeMS; // SDL_GetTicks() timestamp of when this should happen
+    Uint64 execute_time_ms;
     GameEvent event;
     bool operator>(const ScheduledEvent& other) const {
-        return executeTimeMS > other.executeTimeMS;
+        return execute_time_ms > other.execute_time_ms;
     }
 };
 
-namespace GameEvents {
-bool Poll(GameEvent& event);
-void Push(GameEvent event);
-void Schedule(GameEvent event, Uint64 delayMS);
-void UpdateScheduledEvents();
+namespace game_events {
+bool poll(GameEvent& event);
+void push(GameEvent event);
+void schedule(GameEvent event, Uint64 delay_ms);
+void update_scheduled_events();
 }

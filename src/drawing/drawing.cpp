@@ -2,30 +2,31 @@
 #include <SDL3_image/SDL_image.h>
 #include <array>
 #include <cassert>
+#include <cmath>
 #include <vector>
 
-void Drawing::polygon(
+void drawing::polygon(
     const b2Polygon& polygon,
     WindowManager& window,
     b2Transform& transform,
-    float cameraScale,
-    WindowVec2 cameraOffsetPixels,
+    float camera_scale,
+    WindowVec2 camera_offset_pixels,
     SDL_FColor color
 ) {
     assert(polygon.count >= 3 && polygon.count <= B2_MAX_POLYGON_VERTICES);
-    SDL_Renderer* renderer = window.getSdlRenderer();
+    SDL_Renderer* renderer = window.get_sdl_renderer();
     if (!renderer) {
         return;
     }
     std::array<SDL_FPoint, B2_MAX_POLYGON_VERTICES> points;
-    float windowHeight = static_cast<float>(window.getSize().y);
-    float cameraOffsetX = static_cast<float>(cameraOffsetPixels.x);
-    float cameraOffsetY = static_cast<float>(cameraOffsetPixels.y);
+    float window_height = static_cast<float>(window.get_size().y);
+    float camera_offset_x = static_cast<float>(camera_offset_pixels.x);
+    float camera_offset_y = static_cast<float>(camera_offset_pixels.y);
     if (polygon.radius < 0.001f) {
         for (size_t i = 0; i < static_cast<size_t>(polygon.count); i++) {
             b2Vec2 pos = b2TransformPoint(transform, polygon.vertices[i]);
-            pos.x = pos.x * cameraScale - cameraOffsetX;
-            pos.y = windowHeight - (pos.y * cameraScale - cameraOffsetY);
+            pos.x = pos.x * camera_scale - camera_offset_x;
+            pos.y = window_height - (pos.y * camera_scale - camera_offset_y);
             points[i] = SDL_FPoint{pos.x, pos.y};
         }
         std::array<SDL_Vertex, B2_MAX_POLYGON_VERTICES> vertices;
@@ -43,7 +44,7 @@ void Drawing::polygon(
         }
         SDL_RenderGeometry(
             renderer,
-            NULL,
+            nullptr,
             vertices.data(),
             polygon.count,
             indices.data(),
@@ -52,49 +53,49 @@ void Drawing::polygon(
         return;
     }
     // Used AI for help with radius stuff
-    std::vector<SDL_FPoint> roundedPoints;
+    std::vector<SDL_FPoint> rounded_points;
     const size_t count = static_cast<size_t>(polygon.count);
     for (size_t i = 0; i < count; i++) {
         b2Vec2 v = polygon.vertices[i];
-        size_t prevIndex = (i + count - 1) % count;
-        b2Vec2 nIn = polygon.normals[prevIndex];
-        b2Vec2 nOut = polygon.normals[i];
-        float thetaStart = atan2f(nIn.y, nIn.x);
-        float thetaEnd = atan2f(nOut.y, nOut.x);
-        float diff = thetaEnd - thetaStart;
+        size_t prev_index = (i + count - 1) % count;
+        b2Vec2 n_in = polygon.normals[prev_index];
+        b2Vec2 n_out = polygon.normals[i];
+        float theta_start = atan2f(n_in.y, n_in.x);
+        float theta_end = atan2f(n_out.y, n_out.x);
+        float diff = theta_end - theta_start;
         if (diff < 0.f) {
             diff += 2.f * SDL_PI_F;
         }
-        float radiusPixels = polygon.radius * cameraScale;
-        float arcLengthPixels = radiusPixels * diff;
-        int arcSegments = static_cast<int>(arcLengthPixels / 3.f);
-        if (arcSegments < 3) {
-            arcSegments = 3;
+        float radius_pixels = polygon.radius * camera_scale;
+        float arc_length_pixels = radius_pixels * diff;
+        int arc_segments = static_cast<int>(arc_length_pixels / 3.f);
+        if (arc_segments < 3) {
+            arc_segments = 3;
         }
-        for (int j = 0; j <= arcSegments; j++) {
+        for (int j = 0; j <= arc_segments; j++) {
             float angle =
-                thetaStart + diff * (static_cast<float>(j) / static_cast<float>(arcSegments));
+                theta_start + diff * (static_cast<float>(j) / static_cast<float>(arc_segments));
             b2Vec2 offset = {polygon.radius * cosf(angle), polygon.radius * sinf(angle)};
-            b2Vec2 pLocal = {v.x + offset.x, v.y + offset.y};
-            b2Vec2 pWorld = b2TransformPoint(transform, pLocal);
-            SDL_FPoint pScreen;
-            pScreen.x = pWorld.x * cameraScale - cameraOffsetX;
-            pScreen.y = windowHeight - (pWorld.y * cameraScale - cameraOffsetY);
-            roundedPoints.push_back(pScreen);
+            b2Vec2 p_local = {v.x + offset.x, v.y + offset.y};
+            b2Vec2 p_world = b2TransformPoint(transform, p_local);
+            SDL_FPoint p_screen;
+            p_screen.x = p_world.x * camera_scale - camera_offset_x;
+            p_screen.y = window_height - (p_world.y * camera_scale - camera_offset_y);
+            rounded_points.push_back(p_screen);
         }
     }
-    size_t vertexCount = roundedPoints.size();
-    if (vertexCount < 3) {
+    size_t vertex_count = rounded_points.size();
+    if (vertex_count < 3) {
         return;
     }
-    std::vector<SDL_Vertex> vertices(vertexCount);
-    for (size_t i = 0; i < vertexCount; i++) {
+    std::vector<SDL_Vertex> vertices(vertex_count);
+    for (size_t i = 0; i < vertex_count; i++) {
         vertices[i].color = color;
-        vertices[i].position = roundedPoints[i];
+        vertices[i].position = rounded_points[i];
     }
     std::vector<int> indices;
-    indices.reserve(vertexCount * 3 - 2);
-    for (size_t current = 2; current < vertexCount; current++) {
+    indices.reserve(vertex_count * 3 - 2);
+    for (size_t current = 2; current < vertex_count; current++) {
         indices.push_back(0);
         indices.push_back(static_cast<int>(current - 1));
         indices.push_back(static_cast<int>(current));
@@ -103,34 +104,34 @@ void Drawing::polygon(
         renderer,
         nullptr,
         vertices.data(),
-        static_cast<int>(vertexCount),
+        static_cast<int>(vertex_count),
         indices.data(),
         static_cast<int>(indices.size())
     );
 }
 
-void Drawing::polygonBorders(
+void drawing::polygon_borders(
     const b2Polygon& polygon,
     WindowManager& window,
     b2Transform& transform,
-    float cameraScale,
-    WindowVec2 cameraOffsetPixels,
+    float camera_scale,
+    WindowVec2 camera_offset_pixels,
     SDL_FColor color
 ) {
     assert(polygon.count >= 3 && polygon.count <= B2_MAX_POLYGON_VERTICES);
-    SDL_Renderer* renderer = window.getSdlRenderer();
+    SDL_Renderer* renderer = window.get_sdl_renderer();
     if (!renderer) {
         return;
     }
-    float windowHeight = static_cast<float>(window.getSize().y);
-    float cameraOffsetX = static_cast<float>(cameraOffsetPixels.x);
-    float cameraOffsetY = static_cast<float>(cameraOffsetPixels.y);
+    float window_height = static_cast<float>(window.get_size().y);
+    float camera_offset_x = static_cast<float>(camera_offset_pixels.x);
+    float camera_offset_y = static_cast<float>(camera_offset_pixels.y);
     if (polygon.radius < 0.001f) {
         std::array<SDL_FPoint, B2_MAX_POLYGON_VERTICES + 1> points;
         for (size_t i = 0; i < static_cast<size_t>(polygon.count); i++) {
             b2Vec2 pos = b2TransformPoint(transform, polygon.vertices[i]);
-            points[i].x = pos.x * cameraScale - cameraOffsetX;
-            points[i].y = windowHeight - (pos.y * cameraScale - cameraOffsetY);
+            points[i].x = pos.x * camera_scale - camera_offset_x;
+            points[i].y = window_height - (pos.y * camera_scale - camera_offset_y);
         }
         points[static_cast<size_t>(polygon.count)] = points[0];
         SDL_SetRenderDrawColorFloat(renderer, color.r, color.g, color.b, color.a);
@@ -138,65 +139,65 @@ void Drawing::polygonBorders(
         return;
     }
     // Used AI for help with the polygon radius drawing
-    std::vector<SDL_FPoint> roundedPoints;
+    std::vector<SDL_FPoint> rounded_points;
     const size_t count = static_cast<size_t>(polygon.count);
     for (size_t i = 0; i < count; i++) {
         b2Vec2 v = polygon.vertices[i];
-        size_t prevIndex = (i + count - 1) % count;
-        b2Vec2 nIn = polygon.normals[prevIndex];
-        b2Vec2 nOut = polygon.normals[i];
-        float thetaStart = atan2f(nIn.y, nIn.x);
-        float thetaEnd = atan2f(nOut.y, nOut.x);
-        float diff = thetaEnd - thetaStart;
+        size_t prev_index = (i + count - 1) % count;
+        b2Vec2 n_in = polygon.normals[prev_index];
+        b2Vec2 n_out = polygon.normals[i];
+        float theta_start = atan2f(n_in.y, n_in.x);
+        float theta_end = atan2f(n_out.y, n_out.x);
+        float diff = theta_end - theta_start;
         if (diff < 0.f) {
             diff += 2.f * SDL_PI_F;
         }
-        float radiusPixels = polygon.radius * cameraScale;
-        float arcLengthPixels = radiusPixels * diff;
-        int arcSegments = static_cast<int>(arcLengthPixels / 3.f);
-        if (arcSegments < 3) {
-            arcSegments = 3;
+        float radius_pixels = polygon.radius * camera_scale;
+        float arc_length_pixels = radius_pixels * diff;
+        int arc_segments = static_cast<int>(arc_length_pixels / 3.f);
+        if (arc_segments < 3) {
+            arc_segments = 3;
         }
-        for (int j = 0; j <= arcSegments; j++) {
+        for (int j = 0; j <= arc_segments; j++) {
             float angle =
-                thetaStart + diff * (static_cast<float>(j) / static_cast<float>(arcSegments));
+                theta_start + diff * (static_cast<float>(j) / static_cast<float>(arc_segments));
             b2Vec2 offset = {polygon.radius * cosf(angle), polygon.radius * sinf(angle)};
-            b2Vec2 pLocal = {v.x + offset.x, v.y + offset.y};
-            b2Vec2 pWorld = b2TransformPoint(transform, pLocal);
-            SDL_FPoint pScreen;
-            pScreen.x = pWorld.x * cameraScale - cameraOffsetX;
-            pScreen.y = windowHeight - (pWorld.y * cameraScale - cameraOffsetY);
-            roundedPoints.push_back(pScreen);
+            b2Vec2 p_local = {v.x + offset.x, v.y + offset.y};
+            b2Vec2 p_world = b2TransformPoint(transform, p_local);
+            SDL_FPoint p_screen;
+            p_screen.x = p_world.x * camera_scale - camera_offset_x;
+            p_screen.y = window_height - (p_world.y * camera_scale - camera_offset_y);
+            rounded_points.push_back(p_screen);
         }
     }
-    if (!roundedPoints.empty()) {
-        roundedPoints.push_back(roundedPoints[0]);
+    if (!rounded_points.empty()) {
+        rounded_points.push_back(rounded_points[0]);
     }
     SDL_SetRenderDrawColorFloat(renderer, color.r, color.g, color.b, color.a);
-    SDL_RenderLines(renderer, roundedPoints.data(), static_cast<int>(roundedPoints.size()));
+    SDL_RenderLines(renderer, rounded_points.data(), static_cast<int>(rounded_points.size()));
 }
 
-void Drawing::showFanTriangulation(
+void drawing::show_fan_triangulation(
     const b2Polygon& polygon,
     WindowManager& window,
     b2Transform& transform,
-    float cameraScale,
-    WindowVec2 cameraOffsetPixels,
+    float camera_scale,
+    WindowVec2 camera_offset_pixels,
     SDL_FColor color
 ) {
     assert(polygon.count >= 3 && polygon.count <= B2_MAX_POLYGON_VERTICES);
-    SDL_Renderer* renderer = window.getSdlRenderer();
+    SDL_Renderer* renderer = window.get_sdl_renderer();
     if (!renderer) {
         return;
     }
     std::array<SDL_FPoint, B2_MAX_POLYGON_VERTICES + 1> points;
-    float windowHeight = static_cast<float>(window.getSize().y);
-    float cameraOffsetX = static_cast<float>(cameraOffsetPixels.x);
-    float cameraOffsetY = static_cast<float>(cameraOffsetPixels.y);
+    float window_height = static_cast<float>(window.get_size().y);
+    float camera_offset_x = static_cast<float>(camera_offset_pixels.x);
+    float camera_offset_y = static_cast<float>(camera_offset_pixels.y);
     for (size_t i = 0; i < static_cast<size_t>(polygon.count); i++) {
         b2Vec2 pos = b2TransformPoint(transform, polygon.vertices[i]);
-        points[i].x = pos.x * cameraScale - cameraOffsetX;
-        points[i].y = windowHeight - (pos.y * cameraScale - cameraOffsetY);
+        points[i].x = pos.x * camera_scale - camera_offset_x;
+        points[i].y = window_height - (pos.y * camera_scale - camera_offset_y);
     }
     points[static_cast<size_t>(polygon.count)] = points[0];
     SDL_SetRenderDrawColorFloat(renderer, color.r, color.g, color.b, color.a);
@@ -206,154 +207,162 @@ void Drawing::showFanTriangulation(
     }
 }
 
-void Drawing::rectangleBorders(
+void drawing::rectangle_borders(
     b2Vec2 min,
     b2Vec2 max,
     WindowManager& window,
-    float cameraScale,
-    WindowVec2 cameraOffsetPixels,
+    float camera_scale,
+    WindowVec2 camera_offset_pixels,
     SDL_FColor color
 ) {
-    SDL_Renderer* renderer = window.getSdlRenderer();
+    SDL_Renderer* renderer = window.get_sdl_renderer();
     if (!renderer) {
         return;
     }
-    float windowHeight = static_cast<float>(window.getSize().y);
-    float cameraOffsetX = static_cast<float>(cameraOffsetPixels.x);
-    float cameraOffsetY = static_cast<float>(cameraOffsetPixels.y);
+    float window_height = static_cast<float>(window.get_size().y);
+    float camera_offset_x = static_cast<float>(camera_offset_pixels.x);
+    float camera_offset_y = static_cast<float>(camera_offset_pixels.y);
     SDL_FPoint points[5];
-    points[0].x = min.x * cameraScale - cameraOffsetX;
-    points[0].y = windowHeight - (min.y * cameraScale - cameraOffsetY);
-    points[1].x = max.x * cameraScale - cameraOffsetX;
-    points[1].y = windowHeight - (min.y * cameraScale - cameraOffsetY);
-    points[2].x = max.x * cameraScale - cameraOffsetX;
-    points[2].y = windowHeight - (max.y * cameraScale - cameraOffsetY);
-    points[3].x = min.x * cameraScale - cameraOffsetX;
-    points[3].y = windowHeight - (max.y * cameraScale - cameraOffsetY);
+    points[0].x = min.x * camera_scale - camera_offset_x;
+    points[0].y = window_height - (min.y * camera_scale - camera_offset_y);
+    points[1].x = max.x * camera_scale - camera_offset_x;
+    points[1].y = window_height - (min.y * camera_scale - camera_offset_y);
+    points[2].x = max.x * camera_scale - camera_offset_x;
+    points[2].y = window_height - (max.y * camera_scale - camera_offset_y);
+    points[3].x = min.x * camera_scale - camera_offset_x;
+    points[3].y = window_height - (max.y * camera_scale - camera_offset_y);
     points[4] = points[0];
     SDL_SetRenderDrawColorFloat(renderer, color.r, color.g, color.b, color.a);
     SDL_RenderLines(renderer, points, 5);
 }
 
-void Drawing::text(
+void drawing::text(
     TTF_Text* text,
     WindowManager& window,
-    b2Vec2 worldPosition,
-    float cameraScale,
-    WindowVec2 cameraOffsetPixels,
-    float textRenderScale,
-    float textWorldSizeMultiplier,
-    SDL_FColor textColor,
-    std::optional<SDL_FColor> backgroundColor
+    b2Vec2 world_position,
+    float camera_scale,
+    WindowVec2 camera_offset_pixels,
+    float text_render_scale,
+    float text_world_size_multiplier,
+    SDL_FColor text_color,
+    std::optional<SDL_FColor> background_color
 ) {
     if (!text) {
         return;
     }
-    SDL_Renderer* renderer = window.getSdlRenderer();
+    SDL_Renderer* renderer = window.get_sdl_renderer();
     if (!renderer) {
         return;
     }
-    int textWidthPixels, textHeightPixels;
-    if (!TTF_GetTextSize(text, &textWidthPixels, &textHeightPixels)) {
+    int text_width_pixels, text_height_pixels;
+    if (!TTF_GetTextSize(text, &text_width_pixels, &text_height_pixels)) {
         return;
     }
-    float textScale = cameraScale / textRenderScale * textWorldSizeMultiplier;
-    float textHeight = static_cast<float>(textHeightPixels);
-    float textWidth = static_cast<float>(textWidthPixels);
-    float windowHeight = static_cast<float>(window.getSize().y);
-    float cameraOffsetX = static_cast<float>(cameraOffsetPixels.x);
-    float cameraOffsetY = static_cast<float>(cameraOffsetPixels.y);
-    SDL_FRect unscaledTextRect;
-    unscaledTextRect.x =
-        (worldPosition.x * cameraScale - cameraOffsetX) / textScale - (textWidth / 2.f);
-    unscaledTextRect.y =
-        (windowHeight - (worldPosition.y * cameraScale - cameraOffsetY)) / textScale -
-        (textHeight / 2.f);
-    unscaledTextRect.w = static_cast<float>(textWidthPixels);
-    unscaledTextRect.h = static_cast<float>(textHeightPixels);
-    float oldRenderScaleX, oldRenderScaleY;
-    SDL_GetRenderScale(renderer, &oldRenderScaleX, &oldRenderScaleY);
-    SDL_SetRenderScale(renderer, textScale, textScale);
-    if (backgroundColor.has_value()) {
-        SDL_BlendMode oldBlendMode;
-        SDL_GetRenderDrawBlendMode(renderer, &oldBlendMode);
+    float text_scale = camera_scale / text_render_scale * text_world_size_multiplier;
+    float text_height = static_cast<float>(text_height_pixels);
+    float text_width = static_cast<float>(text_width_pixels);
+    float window_height = static_cast<float>(window.get_size().y);
+    float camera_offset_x = static_cast<float>(camera_offset_pixels.x);
+    float camera_offset_y = static_cast<float>(camera_offset_pixels.y);
+    SDL_FRect unscaled_text_rect;
+    unscaled_text_rect.x =
+        (world_position.x * camera_scale - camera_offset_x) / text_scale - (text_width / 2.f);
+    unscaled_text_rect.y =
+        (window_height - (world_position.y * camera_scale - camera_offset_y)) / text_scale -
+        (text_height / 2.f);
+    unscaled_text_rect.w = static_cast<float>(text_width_pixels);
+    unscaled_text_rect.h = static_cast<float>(text_height_pixels);
+    float old_render_scale_x, old_render_scale_y;
+    SDL_GetRenderScale(renderer, &old_render_scale_x, &old_render_scale_y);
+    SDL_SetRenderScale(renderer, text_scale, text_scale);
+    if (background_color.has_value()) {
+        SDL_BlendMode old_blend_mode;
+        SDL_GetRenderDrawBlendMode(renderer, &old_blend_mode);
         SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
         SDL_SetRenderDrawColorFloat(
             renderer,
-            backgroundColor.value().r,
-            backgroundColor.value().g,
-            backgroundColor.value().b,
-            backgroundColor.value().a
+            background_color.value().r,
+            background_color.value().g,
+            background_color.value().b,
+            background_color.value().a
         );
-        SDL_RenderFillRect(renderer, &unscaledTextRect);
-        SDL_SetRenderDrawBlendMode(renderer, oldBlendMode);
+        SDL_RenderFillRect(renderer, &unscaled_text_rect);
+        SDL_SetRenderDrawBlendMode(renderer, old_blend_mode);
     }
-    TTF_SetTextColorFloat(text, textColor.r, textColor.g, textColor.b, textColor.a);
-    TTF_DrawRendererText(text, unscaledTextRect.x, unscaledTextRect.y);
-    SDL_SetRenderScale(renderer, oldRenderScaleX, oldRenderScaleY);
+    TTF_SetTextColorFloat(text, text_color.r, text_color.g, text_color.b, text_color.a);
+    TTF_DrawRendererText(text, unscaled_text_rect.x, unscaled_text_rect.y);
+    SDL_SetRenderScale(renderer, old_render_scale_x, old_render_scale_y);
 }
 
-void Drawing::texture(
+void drawing::texture(
     SDL_Texture* texture,
     WindowManager& window,
-    b2Vec2 worldPosition,
-    b2Vec2 worldSize,
-    float cameraScale,
-    WindowVec2 cameraOffsetPixels,
-    double sdlAngle,
+    b2Vec2 world_position,
+    b2Vec2 world_size,
+    float camera_scale,
+    WindowVec2 camera_offset_pixels,
+    double sdl_angle,
     SDL_FlipMode flip
 ) {
     if (!texture) {
         return;
     }
-    SDL_Renderer* renderer = window.getSdlRenderer();
+    SDL_Renderer* renderer = window.get_sdl_renderer();
     if (!renderer) {
         return;
     }
-    float windowHeight = static_cast<float>(window.getSize().y);
-    float cameraOffsetX = static_cast<float>(cameraOffsetPixels.x);
-    float cameraOffsetY = static_cast<float>(cameraOffsetPixels.y);
+    float window_height = static_cast<float>(window.get_size().y);
+    float camera_offset_x = static_cast<float>(camera_offset_pixels.x);
+    float camera_offset_y = static_cast<float>(camera_offset_pixels.y);
     SDL_FRect rect;
-    rect.w = worldSize.x * cameraScale;
-    rect.h = worldSize.y * cameraScale;
-    rect.x = (worldPosition.x - worldSize.x / 2.f) * cameraScale - cameraOffsetX;
-    rect.y = windowHeight - ((worldPosition.y + worldSize.y / 2.f) * cameraScale - cameraOffsetY);
-    if (sdlAngle == 0.0 && flip == SDL_FLIP_NONE) {
+    rect.w = world_size.x * camera_scale;
+    rect.h = world_size.y * camera_scale;
+    rect.x = (world_position.x - world_size.x / 2.f) * camera_scale - camera_offset_x;
+    rect.y =
+        window_height - ((world_position.y + world_size.y / 2.f) * camera_scale - camera_offset_y);
+    if (sdl_angle == 0.0 && flip == SDL_FLIP_NONE) {
         SDL_RenderTexture(renderer, texture, nullptr, &rect);
     } else {
-        SDL_RenderTextureRotated(renderer, texture, nullptr, &rect, sdlAngle, nullptr, flip);
+        SDL_RenderTextureRotated(renderer, texture, nullptr, &rect, sdl_angle, nullptr, flip);
     }
 }
 
-double Drawing::b2RotToSdlAngle(b2Rot rotation) {
+double drawing::b2_rot_to_sdl_angle(b2Rot rotation) {
     float radians = b2Rot_GetAngle(rotation);
     return -static_cast<double>(radians) * (180.0 / SDL_PI_D);
 }
 
-b2Vec2
-Drawing::getTextWorldSize(TTF_Text* text, float textRenderScale, float textWorldSizeMultiplier) {
+b2Vec2 drawing::get_text_world_size(
+    TTF_Text* text, float text_render_scale, float text_world_size_multiplier
+) {
     if (!text) {
         return b2Vec2{0.f, 0.f};
     }
-    int textWidthPixels, textHeightPixels;
-    if (!TTF_GetTextSize(text, &textWidthPixels, &textHeightPixels)) {
+    int text_width_pixels, text_height_pixels;
+    if (!TTF_GetTextSize(text, &text_width_pixels, &text_height_pixels)) {
         return b2Vec2{0.f, 0.f};
     }
-    float worldWidth =
-        (static_cast<float>(textWidthPixels) / textRenderScale) * textWorldSizeMultiplier;
-    float worldHeight =
-        (static_cast<float>(textHeightPixels) / textRenderScale) * textWorldSizeMultiplier;
-    return b2Vec2{worldWidth, worldHeight};
+    float world_width =
+        (static_cast<float>(text_width_pixels) / text_render_scale) * text_world_size_multiplier;
+    float world_height =
+        (static_cast<float>(text_height_pixels) / text_render_scale) * text_world_size_multiplier;
+    return b2Vec2{world_width, world_height};
 }
 
-bool Drawing::shouldDrawObject(
-    b2Vec2 objectPosBottomLeft, b2Vec2 objectSize, float minX, float maxX, float minY, float maxY
+bool drawing::should_draw_object(
+    b2Vec2 object_pos_bottom_left,
+    b2Vec2 object_size,
+    float min_x,
+    float max_x,
+    float min_y,
+    float max_y
 ) {
-    float objectMinX = objectPosBottomLeft.x;
-    float objectMaxX = objectPosBottomLeft.x + objectSize.x;
-    float objectMinY = objectPosBottomLeft.y;
-    float objectMaxY = objectPosBottomLeft.y + objectSize.y;
-    if (objectMinX > maxX || objectMinY > maxY || objectMaxX < minX || objectMaxY < minY) {
+    float object_min_x = object_pos_bottom_left.x;
+    float object_max_x = object_pos_bottom_left.x + object_size.x;
+    float object_min_y = object_pos_bottom_left.y;
+    float object_max_y = object_pos_bottom_left.y + object_size.y;
+    if (object_min_x > max_x || object_min_y > max_y || object_max_x < min_x ||
+        object_max_y < min_y) {
         return false;
     } else {
         return true;

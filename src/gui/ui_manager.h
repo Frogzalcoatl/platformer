@@ -19,7 +19,7 @@ struct UiSizePreset {
 
 class UiManager {
   public:
-    UiManager(AssetManager& assets, UiState startingState = UiState::MainMenu);
+    UiManager(AssetManager& assets, UiState starting_state = UiState::main_menu);
 
     void update(
         WindowManager& window,
@@ -29,28 +29,28 @@ class UiManager {
         Level* level
     );
 
-    UiState getState() const;
-    std::string getStateStr() const;
-    void setState(UiState state);
-    void runCancelEvent();
-    void toggleDebug();
+    UiState get_state() const;
+    std::string get_state_str() const;
+    void set_state(UiState state);
+    void run_cancel_event();
+    void toggle_debug();
 
-    void passInputToImGui(const GameEventTypes::Input& event);
-    void enableTouchController(Entity& entity);
-    void disableTouchController();
-    int getFreeFingerCount() const;
+    void pass_input_to_imgui(const game_event_types::Input& event);
+    void enable_touch_controller(Entity& entity);
+    void disable_touch_controller();
+    int get_free_finger_count() const;
 
-    void setScaleIndex(size_t scaleIndex);
-    size_t getScaleIndex() const;
-    float getActualScale() const {
-        return uiScale;
+    void set_scale_index(size_t scale_index);
+    size_t get_scale_index() const;
+    float get_actual_scale() const {
+        return ui_scale_;
     }
 
-    void setPlayerSourceAddedThisFrame(bool value) {
-        playerSourceAddedThisFrame = value;
+    void set_player_source_added_this_frame(bool value) {
+        player_source_added_this_frame_ = value;
     }
-    bool isPlayerSourceAddedThisFrame() const {
-        return playerSourceAddedThisFrame;
+    bool is_player_source_added_this_frame() const {
+        return player_source_added_this_frame_;
     }
 
   private:
@@ -61,76 +61,76 @@ class UiManager {
         InputManager& input,
         Level* level
     );
-    void drawMainMenu(WindowManager& window);
-    void drawSettings(
+    void draw_main_menu(WindowManager& window);
+    void draw_settings(
         WindowManager& window,
         SettingsManager& settings,
         AudioManager& audio,
         InputManager& input,
         Level* level
     );
-    void drawPlayerSourceSetup(WindowManager& window, InputManager& input);
-    void drawPauseMenu(WindowManager& window);
-    void drawDebug(
+    void draw_player_source_setup(WindowManager& window, InputManager& input);
+    void draw_pause_menu(WindowManager& window);
+    void draw_debug(
         WindowManager& window, Entity* player, Camera* camera, InputManager& input, Level* level
     );
-    void drawLargeLogo(WindowManager& window, float menuHeight);
-    void fpsText(WindowManager& window);
+    void draw_large_logo(WindowManager& window, float menu_height);
+    void fps_text(WindowManager& window);
 
-    void applyClickSounds(
-        std::string_view soundRelativePath = AssetPaths::Sounds::Click,
+    void apply_click_sounds(
+        std::string_view sound_relative_path = asset_paths::sounds::click,
         unsigned int volume = 100,
         float pitch = 1.f
     );
-    void applyHoverSounds(
-        std::string_view soundRelativePath = AssetPaths::Sounds::Hover,
+    void apply_hover_sounds(
+        std::string_view sound_relative_path = asset_paths::sounds::hover,
         unsigned int volume = 100,
         float pitch = 1.f
     );
-    void applyEditSounds(
-        std::string_view soundRelativePath = AssetPaths::Sounds::Edit,
+    void apply_edit_sounds(
+        std::string_view sound_relative_path = asset_paths::sounds::edit,
         unsigned int volume = 100,
         float pitch = 1.f
     );
-    void applyTouchScroll();
-    void updateActiveScale(WindowManager& window);
-    void updateStyleScale(float scale);
-    void setNextWindowFullscreen();
-    void setNextWindowSafeArea(WindowManager& window);
-    void setNextWindowYOnlySafeArea(WindowManager& window);
+    void apply_touch_scroll();
+    void update_active_scale(WindowManager& window);
+    void update_style_scale(float scale);
+    void set_next_window_fullscreen();
+    void set_next_window_safe_area(WindowManager& window);
+    void set_next_window_y_only_safe_area(WindowManager& window);
 
-    UiState currentState = UiState::MainMenu;
-    bool stateChangedThisFrame = false;
-    bool playerSourceAddedThisFrame = false;
+    UiState current_state_ = UiState::main_menu;
+    bool state_changed_this_frame_ = false;
+    bool player_source_added_this_frame_ = false;
 
-    ImGuiID lastHoveredId = 0;
-    bool itemActiveThisFrame = false;
-    bool didEditSettings = false;
+    ImGuiID last_hovered_id_ = 0;
+    bool item_active_this_frame_ = false;
+    bool did_edit_settings_ = false;
 
-    float uiScale = 1.f;
-    float userPreferredScale = 1.5f;
-    ImGuiStyle defaultStyle;
+    float ui_scale_ = 1.f;
+    float user_preferred_scale_ = 1.5f;
+    ImGuiStyle default_style_;
 
-    float logoHeight = 0.f;
-    float logoTopPadding = 0.f;
+    float logo_height_ = 0.f;
+    float logo_top_padding_ = 0.f;
 
-    ImFont* fontSmall = nullptr;
-    ImFont* fontMedium = nullptr;
-    ImFont* fontLarge = nullptr;
-    ImFont* fontDoubleLarge = nullptr;
-    ImFont* fontTripleLarge = nullptr;
-    ImFont* fontTitle = nullptr;
+    ImFont* font_small_ = nullptr;
+    ImFont* font_medium_ = nullptr;
+    ImFont* font_large_ = nullptr;
+    ImFont* font_double_large_ = nullptr;
+    ImFont* font_triple_large_ = nullptr;
+    ImFont* font_title_ = nullptr;
 
-    const int MaxVolume = 100;
+    const int max_volume_ = 100;
 
-    std::unique_ptr<TouchController> touchController = nullptr;
+    std::unique_ptr<TouchController> touch_controller_ = nullptr;
 
-    bool showDebug = false;
-    const std::vector<UiState> debugVisibleIn = {
-        UiState::MainMenu, UiState::Paused, UiState::Playing
+    bool show_debug_ = false;
+    const std::vector<UiState> debug_visible_in_ = {
+        UiState::main_menu, UiState::paused, UiState::playing
     };
 
-    const std::array<UiSizePreset, 6> UiSizePresets = {
+    const std::array<UiSizePreset, 6> ui_size_presets_ = {
         {{0.5f, "Extra Small"},
          {1.0f, "Small"},
          {1.5f, "Normal"},

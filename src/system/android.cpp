@@ -6,7 +6,7 @@
 #endif
 
 // Needed AI for help with jni
-void Android::quitAndRemoveTask() {
+void android::quit_and_remove_task() {
 #ifdef SDL_PLATFORM_ANDROID
     JNIEnv* env = (JNIEnv*)SDL_GetAndroidJNIEnv();
     if (!env) {
@@ -18,22 +18,22 @@ void Android::quitAndRemoveTask() {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Android Activity object is not available");
         return;
     }
-    jclass activityClass = env->GetObjectClass(activity);
-    if (!activityClass) {
+    jclass activity_class = env->GetObjectClass(activity);
+    if (!activity_class) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to get android activity class");
         env->DeleteLocalRef(activity);
         return;
     }
-    jmethodID finishMethodId = env->GetMethodID(activityClass, "finishAndRemoveTask", "()V");
-    if (!finishMethodId) {
+    jmethodID finish_method_id = env->GetMethodID(activity_class, "finishAndRemoveTask", "()V");
+    if (!finish_method_id) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to find finishAndRemoveTask method.");
-        env->DeleteLocalRef(activityClass);
+        env->DeleteLocalRef(activity_class);
         env->DeleteLocalRef(activity);
         return;
     }
     SDL_Log("Requesting android to finish and remove task from recents");
-    env->CallVoidMethod(activity, finishMethodId);
-    env->DeleteLocalRef(activityClass);
+    env->CallVoidMethod(activity, finish_method_id);
+    env->DeleteLocalRef(activity_class);
     env->DeleteLocalRef(activity);
 #endif
 }

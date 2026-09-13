@@ -5,78 +5,79 @@
 #include <SDL3/SDL.h>
 #include <box2d/box2d.h>
 #include <optional>
+#include <string>
 
 enum class EntityMovement : uint8_t {
-    Up,
-    Down,
-    Left,
-    Right,
-    EntityMovementCount
+    up,
+    down,
+    left,
+    right,
+    entity_movement_count
 };
 
 class Entity {
   private:
-    b2BodyId bodyId;
-    b2Polygon polygon;
-    b2Vec2 positionLastRealFrame;
-    float angleLastRealFrame;
-    SDL_Texture* texture;
-    std::optional<b2Vec2> textureSize;
-    UniqueText nametag;
+    b2BodyId body_id_;
+    b2Polygon polygon_;
+    b2Vec2 position_last_real_frame_;
+    float angle_last_real_frame_;
+    SDL_Texture* texture_;
+    std::optional<b2Vec2> texture_size_;
+    UniqueText nametag_;
 
   public:
     Entity(
         b2WorldId world,
         b2Polygon polygon,
         b2Vec2 position,
-        b2BodyDef bodyDef = b2DefaultBodyDef(),
-        b2ShapeDef shapeDef = b2DefaultShapeDef(),
-        SDL_FColor hitboxColor = colorToFColor(Colors::Yellow),
+        b2BodyDef body_def = b2DefaultBodyDef(),
+        b2ShapeDef shape_def = b2DefaultShapeDef(),
+        SDL_FColor hitbox_color = color_to_fcolor(colors::yellow),
         SDL_Texture* texture = nullptr,
-        std::optional<b2Vec2> textureSize = std::nullopt
+        std::optional<b2Vec2> texture_size = std::nullopt
     );
     ~Entity();
 
     Entity(const Entity&) = delete;
     Entity& operator=(const Entity&) = delete;
 
-    SDL_FColor hitboxColor;
+    SDL_FColor hitbox_color;
 
-    const b2BodyId& getBodyId() const;
-    const b2Polygon& getPolygon() const;
-    b2Vec2 getPosition() const;
-    b2Vec2 getInterpolatedPosition(float alpha) const;
-    b2Rot getInterpolatedRotation(float alpha) const;
+    const b2BodyId& get_body_id() const;
+    const b2Polygon& get_polygon() const;
+    b2Vec2 get_position() const;
+    b2Vec2 get_interpolated_position(float alpha) const;
+    b2Rot get_interpolated_rotation(float alpha) const;
 
-    void savePreviousState();
+    void save_previous_state();
 
     bool draw(
         WindowManager& window,
         float alpha,
-        float cameraScale,
-        WindowVec2 cameraOffsetPixels,
+        float camera_scale,
+        WindowVec2 camera_offset_pixels,
         AssetManager& assets
     ) const;
 
-    bool drawNametag(
+    bool draw_nametag(
         WindowManager& window,
         float alpha,
-        float cameraScale,
-        WindowVec2 cameraOffsetPixels,
+        float camera_scale,
+        WindowVec2 camera_offset_pixels,
         AssetManager& assets
     ) const;
 
-    void drawHitbox(
-        WindowManager& window, float alpha, float cameraScale, WindowVec2 cameraOffsetPixels
+    void draw_hitbox(
+        WindowManager& window, float alpha, float camera_scale, WindowVec2 camera_offset_pixels
     ) const;
 
     void teleport(b2Vec2 location);
 
-    void setNametag(std::string_view text, AssetManager& assets);
+    void set_nametag(std::string_view text, AssetManager& assets);
 
-    b2Vec2 getNametagWorldSize(float textRenderScale, float textWorldSizeMultiplier) const;
+    b2Vec2 get_nametag_world_size(float text_render_scale, float text_world_size_multiplier) const;
 
-    b2Vec2 getNametagWorldPos(float alpha) const;
+    b2Vec2 get_nametag_world_pos(float alpha) const;
 
-    std::string getNametagStr() const;
+    std::string get_nametag_str() const;
 };

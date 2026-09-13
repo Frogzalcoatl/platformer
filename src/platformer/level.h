@@ -2,12 +2,14 @@
 #include "assets/asset_paths.h"
 #include "assets/colors.h"
 #include "assets/level_assets.h"
+#include "platformer/camera.h"
 #include "platformer/entity_controller.h"
 #include "platformer/game_events.h"
 #include "system/audio_manager.h"
 #include "system/input_manager.h"
 #include <box2d/box2d.h>
 #include <optional>
+#include <vector>
 
 struct LevelDimensions {
     size_t width;
@@ -20,10 +22,10 @@ struct LevelDrawInfo {
 };
 
 struct LevelDrawDimensions {
-    size_t minX = 0;
-    size_t maxX = 0;
-    size_t minY = 0;
-    size_t maxY = 0;
+    size_t min_x = 0;
+    size_t max_x = 0;
+    size_t min_y = 0;
+    size_t max_y = 0;
 };
 
 struct Player {
@@ -31,120 +33,108 @@ struct Player {
     std::unique_ptr<EntityController> controller;
 };
 
-using LevelTileVector = std::vector<std::vector<AssetPaths::Textures::TileTypes>>;
+using LevelTileVector = std::vector<std::vector<asset_paths::textures::TileTypes>>;
 using EntitiesVector = std::vector<std::unique_ptr<Entity>>;
 
 class Level {
   private:
-    LevelTileVector tiles;
-    EntitiesVector entities;
-    std::vector<Player> players;
-    b2WorldId world;
-    LevelDimensions levelSize;
-    const char* levelName;
-    LevelAssetsVector requiredAssets;
-    Camera camera;
-    LevelDrawInfo drawInfo;
-    size_t tileCount = 0; // Incremented when addTile is run
+    LevelTileVector tiles_;
+    EntitiesVector entities_;
+    std::vector<Player> players_;
+    b2WorldId world_;
+    LevelDimensions level_size_;
+    const char* level_name_;
+    LevelAssetsVector required_assets_;
+    Camera camera_;
+    LevelDrawInfo draw_info_;
+    size_t tile_count_ = 0; // Incremented when addTile is run
 
-    std::array<SDL_Texture*, static_cast<size_t>(AssetPaths::Textures::TileTypes::TileCount)>
-        tileTextureCache{};
+    std::array<SDL_Texture*, static_cast<size_t>(asset_paths::textures::TileTypes::tile_count)>
+        tile_texture_cache_{};
 
-    uint64_t currentTime = 0;
-    uint64_t lastTime = 0;
-    float accumulator = 0.f;
-    const float physicsStep = 1.0f / 60.0f;
-    float alpha = 0.f; // Value between 0.0 and 1.0 representing how far the game is between the
-                       // last physics step and the next.
+    uint64_t current_time_ = 0;
+    uint64_t last_time_ = 0;
+    float accumulator_ = 0.f;
+    const float physics_step_ = 1.0f / 60.0f;
+    float alpha_ = 0.f; // Value between 0.0 and 1.0 representing how far the game is between the
+                        // last physics step and the next.
 
-    void drawTile(
-        AssetPaths::Textures::TileTypes tileId,
+    void draw_tile(
+        asset_paths::textures::TileTypes tile_id,
         size_t x,
         size_t y,
         WindowManager& window,
-        float cameraScale
+        float camera_scale
     );
 
-    void
-    loadLevelAsset(const LevelAsset& asset, AssetManager& assetManager, AudioManager& audioManager);
-
-    void unloadLevelAsset(const LevelAsset& asset, AssetManager& assetManager);
-
-    void
-    handlePreviousAssetsVector(const LevelAssetsVector& previousAssets, AssetManager& assetManager);
+    void load_level_asset(
+        const LevelAsset& asset, AssetManager& asset_manager, AudioManager& audio_manager
+    );
+    void unload_level_asset(const LevelAsset& asset, AssetManager& asset_manager);
+    void handle_previous_assets_vector(
+        const LevelAssetsVector& previous_assets, AssetManager& asset_manager
+    );
 
   public:
     Level(
-        const char* levelName,
+        const char* level_name,
         LevelDimensions size,
         WindowManager& window,
-        AssetManager& assetManager,
-        AudioManager& audioManager,
-        LevelAssetsVector requiredAssets,
-        std::optional<const LevelAssetsVector> previousAssets = std::nullopt
+        AssetManager& asset_manager,
+        AudioManager& audio_manager,
+        LevelAssetsVector required_assets,
+        std::optional<const LevelAssetsVector> previous_assets = std::nullopt
     );
     ~Level();
-    bool showFanTriangulation = false;
-    bool showHitBoxes = false;
-    bool showLevelBounds = false;
-    SDL_Color backgroundColor = Colors::SkyBlue;
+
+    bool show_fan_triangulation = false;
+    bool show_hitboxes = false;
+    bool show_level_bounds = false;
+    SDL_Color background_color = colors::sky_blue;
 
     void update();
+    void handle_input(game_event_types::Input event);
+    void draw(WindowManager& window, AssetManager& asset_manager);
 
-    void handleInput(GameEventTypes::Input event);
+    b2WorldId get_world_id() const;
+    LevelDimensions get_size() const;
+    Camera* get_camera();
+    std::string_view get_name() const;
+    size_t get_tile_count() const;
+    const EntitiesVector& get_entities() const;
 
-    void draw(WindowManager& window, AssetManager& assetManager);
-
-    b2WorldId getWorldId() const;
-
-    LevelDimensions getSize() const;
-
-    Camera* getCamera();
-
-    std::string_view getName() const;
-
-    size_t getTileCount() const;
-
-    const EntitiesVector& getEntities() const;
-
-    void addEntity(
+    void add_entity(
         b2Polygon polygon,
         b2Vec2 position,
-        b2BodyDef bodyDef = b2DefaultBodyDef(),
-        b2ShapeDef shapeDef = b2DefaultShapeDef(),
-        SDL_FColor hitboxColor = colorToFColor(Colors::Yellow),
+        b2BodyDef body_def = b2DefaultBodyDef(),
+        b2ShapeDef shape_def = b2DefaultShapeDef(),
+        SDL_FColor hitbox_color = color_to_fcolor(colors::yellow),
         SDL_Texture* texture = nullptr,
-        std::optional<b2Vec2> textureSize = std::nullopt
+        std::optional<b2Vec2> texture_size = std::nullopt
     );
 
-    const LevelTileVector& getTiles() const;
+    const LevelTileVector& get_tiles() const;
+    void add_tile(asset_paths::textures::TileTypes tile_id, size_t x, size_t y);
+    void remove_tile(size_t x, size_t y);
 
-    void addTile(AssetPaths::Textures::TileTypes tileId, size_t x, size_t y);
+    const std::vector<Player>& get_players() const;
+    void add_player(InputSource player_source, AssetManager& assets);
+    void update_players(const PlayerSources& player_sources, AssetManager& assets);
 
-    void removeTile(size_t x, size_t y);
+    const LevelDrawInfo& drawn_last_frame() const;
+    void load_required_assets(AssetManager& asset_manager, AudioManager& audio_manager);
+    void unload_required_assets(AssetManager& asset_manager);
 
-    const std::vector<Player>& getPlayers() const;
-
-    void addPlayer(InputSource playerSource, AssetManager& assets);
-
-    void updatePlayers(const PlayerSources& playerSources, AssetManager& assets);
-
-    const LevelDrawInfo& drawnLastFrame() const;
-
-    void loadRequiredAssets(AssetManager& assetManager, AudioManager& audioManager);
-
-    void unloadRequiredAssets(AssetManager& assetManager);
-
-    const LevelAssetsVector& getRequiredAssets() const {
-        return requiredAssets;
+    const LevelAssetsVector& get_required_assets() const {
+        return required_assets_;
     }
 
-    Entity* getPlayerEntity(size_t playerIndex);
+    Entity* get_player_entity(size_t player_index);
 };
 
-std::unique_ptr<Level> getTestLevel(
-    AssetManager& assetManager,
+std::unique_ptr<Level> get_test_level(
+    AssetManager& asset_manager,
     WindowManager& window,
-    AudioManager& audioManager,
-    const LevelAssetsVector& previousAssets
+    AudioManager& audio_manager,
+    const LevelAssetsVector& previous_assets
 );

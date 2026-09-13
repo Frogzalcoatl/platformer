@@ -2,31 +2,36 @@
 #include <array>
 #include <string_view>
 
-namespace AssetPaths {
+namespace asset_paths {
 
-namespace Fonts {
-inline constexpr std::string_view Consolas = "fonts/consola.ttf";
+namespace fonts {
+inline constexpr std::string_view consolas = "fonts/consola.ttf";
 }
 
-namespace Sounds {
-inline constexpr std::string_view Jump = "sounds/jump.wav";
-inline constexpr std::string_view Click = "sounds/click.wav";
-inline constexpr std::string_view Hover = "sounds/hover.wav";
-inline constexpr std::string_view Edit = "sounds/edit.wav";
+namespace sounds {
+inline constexpr std::string_view jump = "sounds/jump.wav";
+inline constexpr std::string_view click = "sounds/click.wav";
+inline constexpr std::string_view hover = "sounds/hover.wav";
+inline constexpr std::string_view edit = "sounds/edit.wav";
 }
 
-namespace Textures {
-inline constexpr std::string_view Missing = "textures/missing.png";
-inline constexpr std::string_view Player = "textures/entities/player.png";
-inline constexpr std::string_view Log = "textures/entities/log.png";
+namespace textures {
+inline constexpr std::string_view missing = "textures/missing.png";
+inline constexpr std::string_view player = "textures/entities/player.png";
+inline constexpr std::string_view log = "textures/entities/log.png";
+
 enum class TileTypes : size_t {
-    Air,
-    Grass,
-    Dirt,
-    Stone,
-    TileCount
+    air,
+    grass,
+    dirt,
+    stone,
+    tile_count
 };
-inline constexpr std::array<std::string_view, static_cast<size_t>(TileTypes::TileCount)> TilePaths =
-    {"", "textures/tiles/grass.png", "textures/tiles/dirt.png", "textures/tiles/stone.png"};
+
+inline constexpr std::array<std::string_view, static_cast<size_t>(TileTypes::tile_count)>
+    tile_paths = {
+        "", "textures/tiles/grass.png", "textures/tiles/dirt.png", "textures/tiles/stone.png"
+};
 }
+
 }

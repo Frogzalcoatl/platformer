@@ -3,12 +3,13 @@
 #include "platformer/game_events.h"
 #include <SDL3_mixer/SDL_mixer.h>
 #include <array>
+#include <filesystem>
 #include <memory>
 #include <string>
 
-inline constexpr size_t SoundTrackCount = 32;
+inline constexpr size_t sound_track_count = 32;
 
-struct MIX_Mixer_Deleter {
+struct MixMixerDeleter {
     void operator()(MIX_Mixer* m) const {
         if (m) {
             MIX_DestroyMixer(m);
@@ -16,73 +17,75 @@ struct MIX_Mixer_Deleter {
         }
     }
 };
-struct MIX_Track_Deleter {
+
+struct MixTrackDeleter {
     void operator()(MIX_Track* t) const {
         if (t) {
             MIX_DestroyTrack(t);
         }
     }
 };
-using UniqueMixer = std::unique_ptr<MIX_Mixer, MIX_Mixer_Deleter>;
-using UniqueTrack = std::unique_ptr<MIX_Track, MIX_Track_Deleter>;
+
+using UniqueMixer = std::unique_ptr<MIX_Mixer, MixMixerDeleter>;
+using UniqueTrack = std::unique_ptr<MIX_Track, MixTrackDeleter>;
 
 class AudioManager {
   private:
-    AssetManager* assetManager;
-    UniqueMixer mixerDevice;
-    std::array<const char*, static_cast<size_t>(AudioCategory::AudioCategoryCount)> TagNames = {
+    AssetManager* asset_manager_;
+    UniqueMixer mixer_device_;
+    std::array<const char*, static_cast<size_t>(AudioCategory::audio_category_count)> tag_names_ = {
         "Master", "Sounds", "Music"
     };
-    std::array<float, static_cast<size_t>(AudioCategory::AudioCategoryCount)> tagGain = {};
-    std::array<UniqueTrack, SoundTrackCount> soundTracks = {};
-    UniqueTrack musicTrack;
-    float currentMusicVolume =
+    std::array<float, static_cast<size_t>(AudioCategory::audio_category_count)> tag_gain_ = {};
+    std::array<UniqueTrack, sound_track_count> sound_tracks_ = {};
+    UniqueTrack music_track_;
+    float current_music_volume_ =
         1.f; // Separate volume multiplier, based on volume passed into playMusic func
-    MIX_Audio* currentMusic = nullptr;
-    std::filesystem::path currentMusicRelativePath;
-    std::string currentMusicName = "";
+    MIX_Audio* current_music_ = nullptr;
+    std::filesystem::path current_music_relative_path_;
+    std::string current_music_name_ = "";
 
   public:
-    AudioManager(AssetManager& assetManager);
+    AudioManager(AssetManager& asset_manager);
 
-    bool playSound(std::string_view relativePath, unsigned int volume = 100, float pitch = 1.f);
+    bool play_sound(std::string_view relative_path, unsigned int volume = 100, float pitch = 1.f);
 
-    bool playMusic(
-        std::string_view relativePath,
+    bool play_music(
+        std::string_view relative_path,
         unsigned int volume = 100,
         float pitch = 1.f,
         bool loop = false
     );
 
-    MIX_Mixer* getMixerDevice() const {
-        return mixerDevice.get();
+    MIX_Mixer* get_mixer_device() const {
+        return mixer_device_.get();
     }
 
-    unsigned int getVolume(AudioCategory category);
+    unsigned int get_volume(AudioCategory category);
 
-    void setVolume(AudioCategory category, unsigned int volume);
+    void set_volume(AudioCategory category, unsigned int volume);
 
-    void pauseCategory(AudioCategory category);
+    void pause_category(AudioCategory category);
 
-    void unpauseCategory(AudioCategory category);
+    void unpause_category(AudioCategory category);
 
-    void clearCurrentMusic();
+    void clear_current_music();
 
-    bool isMusicPlaying() const;
+    bool is_music_playing() const;
 
-    bool isMusicLooping() const;
+    bool is_music_looping() const;
 
-    float getMusicPitch() const;
+    float get_music_pitch() const;
 
-    void setMusicPitch(float pitch);
+    void set_music_pitch(float pitch);
 
-    std::string getCurrentMusicName() const;
+    std::string get_current_music_name() const;
 
-    Sint64 getMusicPlaybackPosition() const; // In seconds
+    Sint64 get_music_playback_position() const; // In seconds
 
-    Sint64 getMusicTimeRemaining() const; // In seconds
+    Sint64 get_music_time_remaining() const; // In seconds
 
-    Sint64 getMusicLength() const; // In seconds
+    Sint64 get_music_length() const; // In seconds
 
-    std::string formattedMusicTime() const; // MM:SS
+    std::string formatted_music_time() const; // MM:SS
 };
