@@ -9,7 +9,7 @@ AlignAfterOpenBracket: BlockIndent
 Cpp11BracedListStyle: true
 BreakStringLiterals: false
 BinPackArguments: false
-BinPackParameters: OnePerLine
+BinPackParameters: false
 AllowShortFunctionsOnASingleLine: None
 AllowShortEnumsOnASingleLine: false
 FixNamespaceComments: false
