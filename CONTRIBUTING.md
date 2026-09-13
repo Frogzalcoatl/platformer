@@ -56,6 +56,7 @@ brew install cmake ninja
 ## Building the Project
 See commands in `.vscode/tasks.json`. 
 They use a preset listed in [CMakePresets.json](https://github.com/Frogzalcoatl/platformer/blob/main/CMakePresets.json).
+Uncomment the line in .clangd matching your selected preset for proper intellisense.
 ```
 cmake --preset windows
 cmake --build build/windows --target run
