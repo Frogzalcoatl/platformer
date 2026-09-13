@@ -12,7 +12,56 @@ When updating the app version, change both `vcpkg.json` and `android-project/app
 * **Arch / Manjaro:** `sudo pacman -S clang`
 * **openSUSE:** `sudo zypper install clang-tools`
 
-### 2. Build Tools
+### 2. Vcpkg
+Install Vcpkg if you do not have it already.
+
+1. Clone the repository
+    ```
+    git clone https://github.com/microsoft/vcpkg.git
+    ```
+
+2. Bootstrap Vcpkg
+
+    **Windows:**
+    ```
+    cd vcpkg
+    .\bootstrap-vcpkg.bat
+    ```
+
+    **Linux/MacOS:**
+    ```
+    cd vcpkg
+    ./bootstrap-vcpkg.sh
+    ```
+
+3. Set Environment Variables Permanently
+    
+    To allow `CMakePresets.json` to find `vcpkg`, set `VCPKG_ROOT` and add it to `PATH`.
+    This is standard practice as outlined by [microsoft](https://learn.microsoft.com/en-us/vcpkg/get_started/get-started?pivots=shell-powershell).
+    The commands below set VCPKG_ROOT to the current directory and add it to path.
+
+    **Windows:**
+    ```
+    setx VCPKG_ROOT "%cd%"
+    setx PATH "%PATH%;%cd%"
+    ```
+
+    **Linux:**
+    ```
+    echo "export VCPKG_ROOT=\"$(pwd)\"" >> ~/.bashrc
+    echo 'export PATH="$VCPKG_ROOT:$PATH"' >> ~/.bashrc
+    source ~/.bashrc
+    ```
+
+    **MacOS:**
+    ```
+    echo "export VCPKG_ROOT=\"$(pwd)\"" >> ~/.zshrc
+    echo 'export PATH="$VCPKG_ROOT:$PATH"' >> ~/.zshrc
+    source ~/.zshrc
+    ```
+
+
+### 3. Build Tools
 **Windows:**
 
 1. Download [Build Tools for Visual Studio](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2026)
@@ -47,9 +96,6 @@ brew install cmake ninja
 **Linux:**
 
 * Install the SDL3 build dependencies [here](https://wiki.libsdl.org/SDL3/README-linux).
-
-### 3. Setup
-Run `setup.sh` (or `setup.bat` on windows) to create a compile_commands.json symlink for the clang language server, and clone Vcpkg locally if not installed globally.
 
 ## Building the Project
 See commands in `.vscode/tasks.json`. 
