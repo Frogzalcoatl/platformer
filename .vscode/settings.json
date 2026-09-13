@@ -1,7 +1,9 @@
 {
     "editor.formatOnSave": true,
     "files.associations": {
-        "*.h": "cpp"
+        "*.h": "cpp",
+        ".clang-format": "yaml",
+        ".clangd": "yaml"
     },
     "java.configuration.updateBuildConfiguration": "automatic",
     "java.import.exclusions": [
