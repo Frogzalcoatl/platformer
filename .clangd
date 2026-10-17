@@ -1,14 +1,4 @@
 CompileFlags:
-  # Uncomment the one matching your active build preset:
-  CompilationDatabase: build/windows
-  # CompilationDatabase: build/windows-clang
-  # CompilationDatabase: build/linux
-  # CompilationDatabase: build/macos
-  # CompilationDatabase: build/android-arm64
-  # CompilationDatabase: build/android-x86_64
-  # CompilationDatabase: build
-  # CompilationDatabase: .
-
   Add:
     - -Wno-unknown-warning-option
     - -Wno-unused-command-line-argument

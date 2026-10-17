@@ -11,5 +11,6 @@
     ],
     "java.diagnostic.filter": [
         "**/android-project/**"
-    ]
+    ],
+    "cmake.copyCompileCommands": "${workspaceFolder}/compile_commands.json",
 }
